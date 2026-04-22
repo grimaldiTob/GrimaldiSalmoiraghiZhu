@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <time.h>
 #include "../external/simdjson/simdjson.h"
 
 /*
@@ -22,8 +23,11 @@ struct TelemetryBatch {
     std::vector<std::string> sensors_name;
     std::vector<int64_t> timestamps; // parsing of timestamps from strings to integer required
     std::vector<double> values; // array of values
+    std::vector<int> priorities;
 };
 
+/** @brief Given a telemetry and a limit it prints the value in the batch
+ */
 void printTelemetry(const TelemetryBatch &batch, int limit = 10) {
     int records = batch.sensors_name.size();
     if(records < limit) {
@@ -44,6 +48,21 @@ void printTelemetry(const TelemetryBatch &batch, int limit = 10) {
                   << std::setw(15) << batch.values[i] << "\n";
     }
     std::cout << std::string(55, '-') << "\n";
+}
+
+/** @brief converts the timestamp present in the collector output files 
+ *  in an integer at epoch time.
+*/
+int64_t parseISO8601(std::string_view time_str) {
+    struct tm tm_struct = {0};
+    // Extract the string_view into a temporary string for the C-API
+    std::string s(time_str); 
+    
+    // Parse the format YYYY-MM-DDTHH:MM:SSZ
+    if (strptime(s.c_str(), "%Y-%m-%dT%H:%M:%SZ", &tm_struct) != nullptr) {
+        return timegm(&tm_struct); // Convert to Unix epoch
+    }
+    return 0; // Return 0 if parsing fails
 }
 
 int main(void) {
@@ -71,27 +90,47 @@ int main(void) {
             continue; // skip to the next line here
         }
 
-        std::string sensor_id;
-        int64_t timestamp;
+        std::string_view sensor_id;
+        std::string_view timestamp;
         double value;
+        std::string_view priority_str; // supported type by simdjson
 
         // check if all the values are of a valid type
-        if (doc["sensor_id"].get(sensor_id) == simdjson::SUCCESS && // return true if the assignment made by .get() does not generate errors.
-            doc["timestamp"].get(timestamp) == simdjson::SUCCESS && // if a value cannot be assigned to a variable it returns an error --> false
+        if (doc["timestamp"].get(timestamp) == simdjson::SUCCESS && // return true if the assignment made by .get() does not generate errors.
+            doc["sensor_id"].get(sensor_id) == simdjson::SUCCESS && // if a value cannot be assigned to a variable it returns an error --> false
             doc["value"].get(value) == simdjson::SUCCESS) 
         {
-            // check the string validity ??? 
+            int64_t timestamp_epoch = parseISO8601(timestamp);
+            int priority = 0; // default value set to 0
+
+            // priority value handling
+            if (doc["priority"].get(priority_str) == simdjson::SUCCESS) {
+                if (priority_str == "HIGH") {
+                    priority = 2;
+                } else if (priority_str == "MEDIUM") {
+                    priority = 1;
+                }
+            }
+            // check the string validity ???
 
             valid_batch.sensors_name.emplace_back(sensor_id);
-            valid_batch.timestamps.emplace_back(timestamp);
+            valid_batch.timestamps.emplace_back(timestamp_epoch);
             valid_batch.values.emplace_back(value);
+            valid_batch.priorities.emplace_back(priority);
             valid_pkg++;
         } else {
             invalid_pkg++; // at least one value type was not correct
             continue;
         }
-
     }
-
+    /*
+        Need to implement:
+            - a continous system that looks in ./collector_output for any .txt file and stays in the loop until we have data in the directory.
+            - priority evaluation --> I was thinking of a system that stores for each timestamp the packets in priority order.
+    */
+    std::cout << "Valid packages: " << valid_pkg << std::endl;
+    std::cout << "Invalid packages: " << invalid_pkg << std::endl;
+    printTelemetry(valid_batch);
+    std::cout << "Finished..." << std::endl;
     return 0;
 }

@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/astralog.dir/src/main.cpp.o CMakeFiles/astralog.dir/src/Ingestor.cpp.o CMakeFiles/astralog.dir/external/simdjson.cpp.o -o astralog

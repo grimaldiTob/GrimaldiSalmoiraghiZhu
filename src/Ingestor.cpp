@@ -53,11 +53,7 @@ int64_t parseISO8601(std::string_view time_str) {
 /** @brief Parses the file that contains a batch of JSON packets received from the spacecraft.
  * Stores the valid data in a `valid_batch` structure and filters out invalid packets.
  */
-void parseTelemetry(simdjson::ondemand::parser& parser, std::string& filename, TelemetryBatch& valid_batch) {
-    // initialize the simdjson parser --> in short: simdjson parses multiple json data in parallel, being memory efficient aswell.
-    // simdjson::ondemand::parser parser; comment it for now considering to initialize it in the main 
-    // TelemetryBatch valid_batch;
-
+void parseTelemetry(simdjson::ondemand::parser& parser, const std::string& filename, TelemetryBatch& valid_batch) {
     // remove the content from the previous file
     valid_batch.sensors_name.clear();
     valid_batch.timestamps.clear();
@@ -125,13 +121,7 @@ void parseTelemetry(simdjson::ondemand::parser& parser, std::string& filename, T
             continue;
         }
     }
-    /*
-        Need to implement:
-            - a continous system that looks in ./collector_output for any .txt file and stays in the loop until we have data in the directory.
-            - priority evaluation --> I was thinking of a system that stores for each timestamp the packets in priority order.
-    */
     std::cout << "Valid packages: " << valid_pkg << std::endl;
     std::cout << "Invalid packages: " << invalid_pkg << std::endl;
     printTelemetry(valid_batch);
-    std::cout << "Finished..." << std::endl;
 }

@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include "../external/simdjson/simdjson.h"
+#include "../external/simdjson.h"
 
 /*
     In Telemetry Batch we store the valid packets after filtering.
@@ -23,4 +23,4 @@ void printTelemetry(const TelemetryBatch &batch, int limit);
 
 int64_t parseISO8601(std::string_view time_str);
 
-void parseTelemetry(simdjson::ondemand::parser &parser, std::string &filename, TelemetryBatch &valid_batch);
+void parseTelemetry(simdjson::ondemand::parser &parser, const std::string &filename, TelemetryBatch &valid_batch);

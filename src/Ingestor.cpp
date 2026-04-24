@@ -1,9 +1,6 @@
-#include <iostream>
+#include "Ingestor.h"
 #include <fstream>
-#include <string>
-#include <vector>
-#include <time.h>
-#include "../external/simdjson/simdjson.h"
+#include <iostream>
 
 /*
     Basic first implementation of an Ingestor Component!
@@ -12,19 +9,6 @@
     collected in ./src/collector_output, filtering invalid packets and
     storing the valid ones in a `TelemetryBatch` structure. 
 */
-
-/*
-    In Telemetry Batch we store the valid packets after filtering.
-    I'm not quite sure we actually need a `timestamp` vector.
-    For sure we need something that tells us how many valid packets
-    were registered in a timestamp.
-*/
-struct TelemetryBatch {
-    std::vector<std::string> sensors_name;
-    std::vector<int64_t> timestamps; // parsing of timestamps from strings to integer required
-    std::vector<double> values; // array of values
-    std::vector<int> priorities;
-};
 
 /** @brief Given a telemetry and a limit it prints the value in the batch
  */
@@ -40,7 +24,7 @@ void printTelemetry(const TelemetryBatch &batch, int limit = 10) {
               << std::setw(20) << "Timestamp"
               << std::setw(20) << "Value"
               << std::setw(15) << "Priority" << "\n";
-    std::cout << std::string(55, '-') << "\n";
+    std::cout << std::string(75, '-') << "\n";
 
     for (size_t i = 0; i < limit; ++i) {
         std::cout << std::left 
@@ -49,7 +33,7 @@ void printTelemetry(const TelemetryBatch &batch, int limit = 10) {
                   << std::setw(20) << batch.values[i]
                   << std::setw(15) << batch.priorities[i] << "\n";
     }
-    std::cout << std::string(55, '-') << "\n";
+    std::cout << std::string(75, '-') << "\n";
 }
 
 /** @brief converts the timestamp present in the collector output files 
@@ -66,15 +50,24 @@ int64_t parseISO8601(std::string_view time_str) {
     return 0; // Return 0 if parsing fails
 }
 
-int main(void) {
+/** @brief Parses the file that contains a batch of JSON packets received from the spacecraft.
+ * Stores the valid data in a `valid_batch` structure and filters out invalid packets.
+ */
+void parseTelemetry(simdjson::ondemand::parser& parser, std::string& filename, TelemetryBatch& valid_batch) {
     // initialize the simdjson parser --> in short: simdjson parses multiple json data in parallel, being memory efficient aswell.
-    simdjson::ondemand::parser parser;
-    TelemetryBatch valid_batch;
+    // simdjson::ondemand::parser parser; comment it for now considering to initialize it in the main 
+    // TelemetryBatch valid_batch;
+
+    // remove the content from the previous file
+    valid_batch.sensors_name.clear();
+    valid_batch.timestamps.clear();
+    valid_batch.values.clear();
+    valid_batch.priorities.clear();
 
     int valid_pkg = 0;
     int invalid_pkg = 0;
 
-    std::ifstream infile("./collector_output/raw_data_1776874413_0000.txt"); // just one file at a time for now
+    std::ifstream infile(filename); // just one file at a time for now
     std::string line;
 
     // get_line takes a ifstream in input and a string and stores the content in the string until it finds the "\n" char 
@@ -122,7 +115,7 @@ int main(void) {
             } 
             // check the string validity ???
 
-            valid_batch.sensors_name.emplace_back(sensor_id);
+            valid_batch.sensors_name.emplace_back(std::string(sensor_id));
             valid_batch.timestamps.emplace_back(timestamp_epoch);
             valid_batch.values.emplace_back(value);
             valid_batch.priorities.emplace_back(priority);
@@ -141,5 +134,4 @@ int main(void) {
     std::cout << "Invalid packages: " << invalid_pkg << std::endl;
     printTelemetry(valid_batch);
     std::cout << "Finished..." << std::endl;
-    return 0;
 }

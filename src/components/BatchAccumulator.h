@@ -22,7 +22,7 @@ public:
     void storeValidData(TelemetryBatch&) override;
         
     // From BatchProviderInterface
-    std::vector<TelemetryBatch> getBatchFile() override;
+    TelemetryBatch getBatchFile() override;
         
 private:
     // are we accumulating batches or files? I would extract the single packets from the Telemetry Batch 
@@ -33,7 +33,7 @@ private:
     // and in the end sort all the packets considering the priority value.
 
     std::shared_ptr<RuleEngineInterface> m_ruleEngine;
-    size_t m_batchSize;                       
+    size_t m_batchSize; // used to check wheter TelemetryBatch reached the limit or not            
         
     void accumulate(TelemetryBatch);
         

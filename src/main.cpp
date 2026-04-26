@@ -19,7 +19,7 @@ int main(void) {
     // initialize the simdjson parser --> in short: simdjson parses multiple json data in parallel, being memory efficient aswell.
     simdjson::ondemand::parser parser;
     TelemetryBatch shared_batch;
-    DataIngestor ingestor = DataIngestor();
+    DataIngestor ingestor;
     const std::string output_dir = "../collector_output";
 
     int count = 0;

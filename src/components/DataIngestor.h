@@ -10,7 +10,7 @@ class DataIngestor {
 
 public:
 
-    DataIngestor(/*std::shared_ptr<InvalidPacketsFilterInterface> filter*/);
+    DataIngestor(/* std::shared_ptr<InvalidPacketsFilterInterface> filter*/);
 
     void printTelemetry(const TelemetryBatch &batch, int limit);
 

@@ -11,6 +11,6 @@ class BatchProviderInterface {
 
     virtual ~BatchProviderInterface() = default;
 
-    virtual std::vector<TelemetryBatch> getBatchFile();
+    virtual TelemetryBatch getBatchFile();
 
 };

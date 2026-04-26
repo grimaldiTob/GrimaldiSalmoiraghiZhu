@@ -19,13 +19,19 @@ public:
     BatchAccumulator(std::shared_ptr<RuleEngineInterface> ruleEngine);
         
     // From BatchAccumulatorInterface
-    void sendValidData(TelemetryBatch) override;
+    void storeValidData(TelemetryBatch&) override;
         
     // From BatchProviderInterface
     std::vector<TelemetryBatch> getBatchFile() override;
         
 private:
-    std::vector<TelemetryBatch> m_batchFile;
+    // are we accumulating batches or files? I would extract the single packets from the Telemetry Batch 
+    // and store them in priority order in other structure "Accumulator" (???)
+    // std::vector<TelemetryBatch m_batchFile;
+    TelemetryBatch m_batchFile; // no point in having a a vector of Telemetrybatch since it is a group of vectors
+    // we can store all the packets received from the Ingestor in this member until we dont reach the batch size 
+    // and in the end sort all the packets considering the priority value.
+
     std::shared_ptr<RuleEngineInterface> m_ruleEngine;
     size_t m_batchSize;                       
         
@@ -33,6 +39,7 @@ private:
         
     bool checkBatchSize() const;
         
-    void notifyBatchAvailability();    
-    
+    void notifyBatchAvailability();
+
+    void sortPriorities();
 };   

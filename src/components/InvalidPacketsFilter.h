@@ -4,6 +4,7 @@
 #include "../interfaces/InvalidPacketsFilterInterface.h"
 #include "../types/TelemetryBatch.h"
 
+// class to discuss 
 class InvalidPacketsFilter : public InvalidPacketsFilterInterface {
 
 private:

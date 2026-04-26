@@ -1,4 +1,4 @@
-#include "Ingestor.h"
+#include "DataIngestor.h"
 #include <fstream>
 #include <iostream>
 
@@ -10,9 +10,12 @@
     storing the valid ones in a `TelemetryBatch` structure. 
 */
 
+// Constructor
+DataIngestor::DataIngestor(/*std::shared_ptr<InvalidPacketsFilterInterface> filter*/) {}
+
 /** @brief Given a telemetry and a limit it prints the value in the batch
  */
-void printTelemetry(const TelemetryBatch &batch, int limit = 10) {
+void DataIngestor::printTelemetry(const TelemetryBatch &batch, int limit = 10) {
     int records = batch.sensors_name.size();
     if(records < limit) {
         limit = records;
@@ -24,7 +27,7 @@ void printTelemetry(const TelemetryBatch &batch, int limit = 10) {
               << std::setw(20) << "Timestamp"
               << std::setw(20) << "Value"
               << std::setw(15) << "Priority" << "\n";
-    std::cout << std::string(75, '-') << "\n";
+    std::cout << std::string(70, '-') << "\n";
 
     for (size_t i = 0; i < limit; ++i) {
         std::cout << std::left 
@@ -33,13 +36,13 @@ void printTelemetry(const TelemetryBatch &batch, int limit = 10) {
                   << std::setw(20) << batch.values[i]
                   << std::setw(15) << batch.priorities[i] << "\n";
     }
-    std::cout << std::string(75, '-') << "\n";
+    std::cout << std::string(70, '-') << "\n";
 }
 
 /** @brief converts the timestamp present in the collector output files 
  *  in an integer at epoch time.
 */
-int64_t parseISO8601(std::string_view time_str) {
+int64_t DataIngestor::parseISO8601(std::string_view time_str) {
     struct tm tm_struct = {0};
     std::string s(time_str); 
     
@@ -53,7 +56,9 @@ int64_t parseISO8601(std::string_view time_str) {
 /** @brief Parses the file that contains a batch of JSON packets received from the spacecraft.
  * Stores the valid data in a `valid_batch` structure and filters out invalid packets.
  */
-void parseTelemetry(simdjson::ondemand::parser& parser, const std::string& filename, TelemetryBatch& valid_batch) {
+void DataIngestor::parseTelemetry(simdjson::ondemand::parser& parser, 
+                                  const std::string& filename, 
+                                  TelemetryBatch& valid_batch){
     // remove the content from the previous file
     valid_batch.sensors_name.clear();
     valid_batch.timestamps.clear();

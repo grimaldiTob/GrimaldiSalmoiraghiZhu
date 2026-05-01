@@ -2,6 +2,7 @@
 #define BASERULE_H
 
 #include <string>
+#include <optional>
 
 enum class RuleType {
     SIMPLE,
@@ -25,7 +26,9 @@ public:
           type(type), 
           priority(priority) {}
     virtual ~BaseRule() = default;
-    virtual bool evaluate(const std::string& input) = 0;
+    virtual std::optional<bool> evaluate(const std::string& input) = 0; 
+    // I changed the return type to std::optional<bool> to allow for a "null" 
+    // state in case of invalid input or other issues during evaluation.
 
     // TO BE DISCUSSED (see comment below)
     std::string getRuleId() const { return rule_id; }

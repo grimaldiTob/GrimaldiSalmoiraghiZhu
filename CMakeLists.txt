@@ -12,7 +12,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
 
 add_executable(astralog 
     ./src/main.cpp 
-    ./src/Ingestor.cpp
+    #./src/Ingestor.cpp
 )
 
 # Integrate simdjson from the external directory
@@ -21,3 +21,10 @@ target_sources(astralog PRIVATE external/simdjson.cpp)
 
 # Tell the compiler where to look for "simdjson.h" when it sees an #include
 target_include_directories(astralog PRIVATE external)
+
+# Test executable for SimpleRule
+add_executable(test_simple_rule
+    tests/test_simple_rule_main.cpp
+    src/types/rules/SimpleRule.cpp
+)
+target_include_directories(test_simple_rule PRIVATE src)

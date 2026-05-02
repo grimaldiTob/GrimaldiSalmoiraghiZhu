@@ -30,7 +30,7 @@ public:
     // From BatchProviderInterface
     TelemetryBatch getBatchFile() override;
 
-    void setRuleEngineInterface(RuleEngineInterface&);
+    void setRuleEngineInterface(std::shared_ptr<RuleEngineInterface>);
         
 private:
     // are we accumulating batches or files? I would extract the single packets from the Telemetry Batch 

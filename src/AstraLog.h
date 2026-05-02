@@ -14,11 +14,11 @@ public:
      * to communicate 
      */
     AstroLog(int batchSize = 100)
-        : m_accumulator(BatchAccumulator(batchSize)),
-          m_ingestor(DataIngestor()),
-          m_evaluator(RuleEngine()) {
-            m_ingestor.setAccumulatorInterface(m_accumulator);
-            m_accumulator.setRuleEngineInterface(m_evaluator);
+        : m_accumulator(std::make_shared<BatchAccumulator>(batchSize)),
+          m_ingestor(std::shared_ptr<DataIngestor>()),
+          m_evaluator(std::shared_ptr<RuleEngine>()) {
+            m_ingestor->setAccumulatorInterface(m_accumulator);
+            m_accumulator->setRuleEngineInterface(m_evaluator);
             // TODO: implement RuleLoader and OutputDispatcher classes
           }
     
@@ -29,9 +29,9 @@ public:
 
 private:
 
-    DataIngestor           m_ingestor;
-    BatchAccumulator    m_accumulator;
-    RuleEngine            m_evaluator;
+    std::shared_ptr<DataIngestor>           m_ingestor;
+    std::shared_ptr<BatchAccumulator>    m_accumulator;
+    std::shared_ptr<RuleEngine>            m_evaluator;
     //RuleLoader              m_loader;
     //OutputDispacther    m_dispatcher;
     //DataBase for stateful rule

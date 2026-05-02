@@ -14,7 +14,7 @@ public:
 
     void ruleParsing(simdjson::ondemand::parser& parser, const std::string &filename);
 
-    void setProviderInterface(BatchProviderInterface&);
+    void setProviderInterface(std::shared_ptr<BatchProviderInterface>);
 
 private:
 

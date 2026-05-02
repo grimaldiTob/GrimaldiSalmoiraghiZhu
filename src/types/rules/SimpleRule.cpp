@@ -5,9 +5,9 @@ std::optional<bool> SimpleRule::evaluate(const std::string& input) {
     // but obviously this depends on how we implement the RuleEngine and how we
     // treat TelemetryBatch inside that component.
 
-    //extract sensor_id and value from input
-    int comma_pos = input.find(',');
-    // If no , is found, if it's at the end of the string, or if there are multiple commas, 
+    // extract sensor_id and value from input
+    size_t comma_pos = input.find(',');
+    // If no ',' is found, if it's at the end of the string, or if there are multiple commas, 
     // it's an invalid input format -> HOW DO WE ANDLES EXCEPTIONS??
     if (comma_pos == std::string::npos || comma_pos == input.length() - 1 || input.find(',', comma_pos + 1) != std::string::npos) {
         // Invalid input format -> HOW DO WE ANDLES EXCEPTIONS??
@@ -20,14 +20,14 @@ std::optional<bool> SimpleRule::evaluate(const std::string& input) {
     // Convert value to a number (assuming it's a double)
     double batch_value;
     try {
-        batch_value = std::stod(batch_value_str);
+        batch_value = std::stod(batch_value_str); // convert string to double
     } catch (const std::exception&) {
         // Invalid value format -> HOW DO WE ANDLES EXCEPTIONS??
         return std::nullopt;
     }
 
     // Check if the sensor_id matches
-    if (this -> sensor_id != batch_sensor_id) {
+    if (this->sensor_id != batch_sensor_id) {
         return std::nullopt;
     }
 

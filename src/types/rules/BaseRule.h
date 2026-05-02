@@ -3,6 +3,7 @@
 
 #include <string>
 #include <optional>
+#include <cmath> 
 
 enum class RuleType {
     SIMPLE,

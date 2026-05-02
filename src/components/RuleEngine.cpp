@@ -4,6 +4,12 @@
 // constructor
 RuleEngine::RuleEngine(std::shared_ptr<BatchProviderInterface> provider) {}
 
+RulePriority RuleEngine::parsePriority(std::string_view prio_str) {
+    if (prio_str == "HIGH") return RulePriority::HIGH;
+    if (prio_str == "MEDIUM") return RulePriority::MEDIUM;
+    return RulePriority::LOW;
+}
+
 /** @brief parses a JSON file passed as argument. 
  * It extracts the values from the json and creates a Rule object (class to implement)
  * for each rule in the file.
@@ -12,7 +18,7 @@ void RuleEngine::ruleParsing(simdjson::ondemand::parser& parser, const std::stri
     std::ifstream infile(filename); // just one file at a time for now
     
     // uncomment this when the Rule class is ready
-    // std::vector<Rule> rule_array;
+    std::vector<std::shared_ptr<BaseRule>> parsed_rules;
 
     simdjson::padded_string json;
     // .get() method assigns the value to the argument passed to the function 
@@ -24,41 +30,47 @@ void RuleEngine::ruleParsing(simdjson::ondemand::parser& parser, const std::stri
     simdjson::ondemand::document doc;
     parser.iterate(json).get(doc); // parser.iterate allows to read the json string and parse the json object into the doc 
 
-    /*
-    Commento tutto sto blocco di codice tanto non aveva molto senso implementare il parsing senza avere la classe Rule su cui basarsi
-    Ad ogni modo questo parsing è più complicato visto che alcune regole hanno dei campi e altre no.
-    La logica è più o meno questa ma ho poco tempo.
-
-    doc can be iterated as an array
     for(simdjson::ondemand::object obj : doc.get_array()) {
-        // Rule rule; when the rule is defined uncomment this
+        std::shared_ptr<BaseRule> current_rule;
         
         // define mandary fields for ALL TYPE OF RULES
-        std::string_view rule_id;
-        std::string_view rule_type;
-        std::string_view priority;
+        std::string_view rule_id_sv = obj["rule_id"].get_string();
+        std::string_view rule_type_sv = obj["type"].get_string();
 
-        // mandatory fields... when classes will be defined we can modify this code 
-        std::string_view sensor_id;
-        std::string_view oprtor;
+        std::string rule_id(rule_id_sv);
+        std::string rule_type(rule_type_sv);
 
-        // for correlated rules
-        std::string_view logic;
-        std::vector<std::string_view> conditions;
-        obj["rule_id"].get(rule_id);
-        obj["type"].get(rule_type);
-        obj["priority"].get(priority);
+        // I dont know if this check should be performed using enums. Since we call this function just at start 
+        // we can consider the string in the json file and check on that 
+        if(rule_type == "simple" || rule_type == "step_difference") {
+            // set values 
+            std::string_view sensor_id_sv = obj["sensor_id"].get_string();
+            std::string sensor_id(sensor_id_sv);
 
-        if(std::string(rule_type) == "correlation"){
-            obj["logic"].get(logic);
+            std::string_view oprtor_sv = obj["operator"].get_string();
+            std::string oprtor(oprtor_sv);
+            double value = obj["value"].get_double();
 
-            simdjson::ondemand::array conditions_array;
-            if (!obj["conditions"].get(conditions_array)) {
-                for (std::string_view cond : conditions_array) {
-                    conditions.emplace_back(std::string(cond));
-                }
+            // priority gets parsed LAST --> simdjson parses reading the order the content of the .json file
+            std::string_view priority_sv = obj["priority"].get_string();
+            RulePriority priority = parsePriority(priority_sv);
+
+            if(rule_type == "simple"){
+                current_rule = std::make_shared<SimpleRule>(
+                        rule_id, priority, sensor_id, oprtor, value
+                );
+            } else {
+                current_rule = std::make_shared<StepDifferenceRule>(
+                        rule_id, priority, sensor_id, oprtor, value
+                );
             }
-        } else if()
+        }
+        if(rule_type == "step_difference"){
+
+        }
+
+        
+
+
     }
-        */
 }

@@ -10,21 +10,26 @@ set(CMAKE_CXX_EXTENSIONS OFF) # Disable compiler-specific extensions (e.g., gnu+
 # -march=native: Allows the compiler to use AVX/AVX2/AVX-512 instructions (critical for simdjson)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
 
-add_executable(astralog 
-    ./src/main.cpp 
-    #./src/Ingestor.cpp
-)
+#add_executable(astralog 
+#    ./src/main.cpp 
+#    #./src/Ingestor.cpp
+#)
 
 # Integrate simdjson from the external directory
 # We compile simdjson.cpp directly into the astralog executable
-target_sources(astralog PRIVATE external/simdjson.cpp)
+# target_sources(astralog PRIVATE external/simdjson.cpp)
 
 # Tell the compiler where to look for "simdjson.h" when it sees an #include
-target_include_directories(astralog PRIVATE external)
+# target_include_directories(astralog PRIVATE external)
 
 # Test executable for SimpleRule
 add_executable(test_simple_rule
     tests/test_simple_rule_main.cpp
     src/types/rules/SimpleRule.cpp
 )
+add_executable(test_step_difference_rule
+    tests/test_step_difference_rule_main.cpp
+    src/types/rules/StepDifferenceRule.cpp
+)
 target_include_directories(test_simple_rule PRIVATE src)
+target_include_directories(test_step_difference_rule PRIVATE src)

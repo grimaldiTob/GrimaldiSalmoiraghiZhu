@@ -8,7 +8,12 @@ std::optional<bool> StepDifferenceRule::evaluate(const std::string& input) {
         return std::nullopt; // Invalid input format
     }
 
+    // corrected check
     std::string batch_sensor_id = input.substr(0, comma_pos);
+    if (sensor_id != batch_sensor_id) {
+        return std::nullopt;
+    }
+
     std::string batch_value_str = input.substr(comma_pos + 1);
 
     double current_value;

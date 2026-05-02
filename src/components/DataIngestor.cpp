@@ -11,7 +11,8 @@
 */
 
 // Constructor
-DataIngestor::DataIngestor(/*std::shared_ptr<InvalidPacketsFilterInterface> filter*/) {}
+DataIngestor::DataIngestor(std::shared_ptr<BatchAccumulatorInterface> batchAccumulator) 
+    : m_batchAccumulator(batchAccumulator) {}
 
 /** @brief Given a telemetry and a limit it prints the value in the batch
  */

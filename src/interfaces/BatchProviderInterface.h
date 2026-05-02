@@ -9,6 +9,8 @@
 
 class BatchProviderInterface {
 
+public:
+
     virtual ~BatchProviderInterface() = default;
 
     virtual TelemetryBatch getBatchFile();

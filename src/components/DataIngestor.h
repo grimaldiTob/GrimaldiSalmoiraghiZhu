@@ -2,25 +2,28 @@
 #include <vector>
 #include <string>
 #include <cstdint>
-#include "../interfaces/InvalidPacketsFilterInterface.h"
 #include "../../external/simdjson.h"
 #include "../types/TelemetryBatch.h"
+#include "../interfaces/BatchAccumulatorInterface.h"
 
 class DataIngestor { 
 
 public:
 
-    DataIngestor(/* std::shared_ptr<InvalidPacketsFilterInterface> filter*/);
+    DataIngestor() = default;
 
     void printTelemetry(const TelemetryBatch &batch, int limit);
 
     int64_t parseISO8601(std::string_view time_str);
 
     void parseTelemetry(simdjson::ondemand::parser &parser, 
-                        const std::string &filename, 
-                        TelemetryBatch &valid_batch);
+                        const std::string        &filename, 
+                        TelemetryBatch        &valid_batch);
+    
+    void setAccumulatorInterface(BatchAccumulatorInterface& accumulatorInterface);
 
 private:
-    // an idea here could be of having a telemetry batch inside the DataIngestor
-    // std::shared_ptr<InvalidPacketsFilterInterface> m_filter;
+    
+    std::shared_ptr<BatchAccumulatorInterface> m_accumulatorInterface;
+
 }; 

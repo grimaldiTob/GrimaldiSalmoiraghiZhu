@@ -118,6 +118,8 @@ pip install -r requirements.txt
 #### 2. Running the Collector
 To avoid module resolution errors, always run the module from the root directory using the `-m` flag.
 
+Before run the command, make sure to not runn with a eduroam connnection
+
 **Example 1: Batch every 100 valid messages**
 ```bash
 python3 -m src.astralog_collector --mode count --limit 100

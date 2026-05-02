@@ -8,6 +8,8 @@
  */
 class BatchAccumulatorInterface {
 
+public:
+
     virtual ~BatchAccumulatorInterface() = default;
 
     // ok so hypotetically this method receives a telemetry batch, which was populated by the ingestor

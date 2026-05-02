@@ -10,10 +10,6 @@
     storing the valid ones in a `TelemetryBatch` structure. 
 */
 
-// Constructor
-DataIngestor::DataIngestor(std::shared_ptr<BatchAccumulatorInterface> batchAccumulator) 
-    : m_batchAccumulator(batchAccumulator) {}
-
 /** @brief Given a telemetry and a limit it prints the value in the batch
  */
 void DataIngestor::printTelemetry(const TelemetryBatch &batch, int limit = 10) {
@@ -55,16 +51,12 @@ int64_t DataIngestor::parseISO8601(std::string_view time_str) {
 }
 
 /** @brief Parses the file that contains a batch of JSON packets received from the spacecraft.
- * Stores the valid data in a `valid_batch` structure and filters out invalid packets.
+ * Stores the valid data in a `m_validBatch` structure and filters out invalid packets.
  */
-void DataIngestor::parseTelemetry(simdjson::ondemand::parser& parser, 
-                                  const std::string& filename, 
-                                  TelemetryBatch& valid_batch){
+void DataIngestor::parseTelemetry(simdjson::ondemand::parser& parser, const std::string& filename){
+
     // remove the content from the previous file
-    valid_batch.sensors_name.clear();
-    valid_batch.timestamps.clear();
-    valid_batch.values.clear();
-    valid_batch.priorities.clear();
+    m_validBatch.clear();
 
     int valid_pkg = 0;
     int invalid_pkg = 0;
@@ -115,12 +107,8 @@ void DataIngestor::parseTelemetry(simdjson::ondemand::parser& parser,
                     continue;
                 }
             } 
-            // check the string validity ???
-
-            valid_batch.sensors_name.emplace_back(std::string(sensor_id));
-            valid_batch.timestamps.emplace_back(timestamp_epoch);
-            valid_batch.values.emplace_back(value);
-            valid_batch.priorities.emplace_back(priority);
+            // check the string validity ??? I 
+            m_validBatch.emplaceBack(std::string(sensor_id), timestamp_epoch, value, priority);
             valid_pkg++;
         } else {
             invalid_pkg++; // at least one value type was not correct
@@ -129,5 +117,28 @@ void DataIngestor::parseTelemetry(simdjson::ondemand::parser& parser,
     }
     std::cout << "Valid packages: " << valid_pkg << std::endl;
     std::cout << "Invalid packages: " << invalid_pkg << std::endl;
-    printTelemetry(valid_batch);
+    printTelemetry(m_validBatch);
+
+    // Finally send valid package
+    sendValidBatchToAccumulator(); 
+
+}
+
+void DataIngestor::sendValidBatchToAccumulator() {
+    
+    if (!m_accumulatorInterface) {
+        throw std::runtime_error("m_accumulatorInterface is null");
+    }
+
+    m_accumulatorInterface->storeValidData(m_validBatch);
+}
+
+void DataIngestor::setAccumulatorInterface(std::shared_ptr<BatchAccumulatorInterface> accumulatorInterface) {
+
+    if (!m_accumulatorInterface) {
+        throw std::runtime_error("DataIngestor received a null pointer as parameter");
+    }
+
+    m_accumulatorInterface = accumulatorInterface;
+    
 }

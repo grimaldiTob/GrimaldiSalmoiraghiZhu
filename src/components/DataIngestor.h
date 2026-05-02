@@ -16,14 +16,15 @@ public:
 
     int64_t parseISO8601(std::string_view time_str);
 
-    void parseTelemetry(simdjson::ondemand::parser &parser, 
-                        const std::string        &filename, 
-                        TelemetryBatch        &valid_batch);
+    void parseTelemetry(simdjson::ondemand::parser &parser, const std::string &filename);
     
-    void setAccumulatorInterface(BatchAccumulatorInterface& accumulatorInterface);
+    void setAccumulatorInterface(std::shared_ptr<BatchAccumulatorInterface> accumulatorInterface);
 
 private:
-    
-    std::shared_ptr<BatchAccumulatorInterface> m_accumulatorInterface;
 
+    std::shared_ptr<BatchAccumulatorInterface> m_accumulatorInterface;
+    TelemetryBatch m_validBatch; // this batch contains valid data and will be send it to the accumulator
+
+    void sendValidBatchToAccumulator();
+    
 }; 

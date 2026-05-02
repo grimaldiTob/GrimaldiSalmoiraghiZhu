@@ -28,9 +28,16 @@ struct TelemetryBatch {
         priorities.clear();
     }
 
+    void emplaceBack(std::string id, int64_t timestamp, double value, int priority) {
+        sensors_name.emplace_back(std::string(id));
+        timestamps.emplace_back(timestamp);
+        values.emplace_back(value);
+        priorities.emplace_back(priority);
+    }
+
     bool addMeausurement(std::string id, int64_t timestamp, double value, int priority) {
         if(sensors_name.size()) {
-            
+
         }
     }
 

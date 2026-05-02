@@ -31,5 +31,10 @@ add_executable(test_step_difference_rule
     tests/test_step_difference_rule_main.cpp
     src/types/rules/StepDifferenceRule.cpp
 )
+add_executable(test_logical_correlation_rule
+    tests/test_logical_correlation_rule.cpp
+    src/types/rules/LogicalCorrelationRule.cpp
+)
 target_include_directories(test_simple_rule PRIVATE src)
 target_include_directories(test_step_difference_rule PRIVATE src)
+target_include_directories(test_logical_correlation_rule PRIVATE src)

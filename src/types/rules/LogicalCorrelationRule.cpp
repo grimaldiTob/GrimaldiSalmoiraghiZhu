@@ -26,7 +26,7 @@ std::optional<bool> LogicalCorrelationRule::evaluate_internal(
 }
 */
 
-std::optional<bool> LogicalCorrelationRule::evaluate(const BatchAccumulator& accumulator, 
+std::optional<bool> LogicalCorrelationRule::evaluate(BatchAccumulator& accumulator, 
         std::unordered_map<std::string, std::optional<bool>>& cache) {
 	if (cache.count(this->rule_id)) {
         return cache[this->rule_id];

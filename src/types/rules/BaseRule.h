@@ -4,6 +4,8 @@
 #include <string>
 #include <optional>
 #include <cmath> 
+#include <unordered_map>
+#include "../components/BatchAccumulator.h"
 
 enum class RuleType {
     SIMPLE,
@@ -27,7 +29,8 @@ public:
           type(type), 
           priority(priority) {}
     virtual ~BaseRule() = default;
-    virtual std::optional<bool> evaluate(const std::string& input) = 0; 
+    virtual std::optional<bool> evaluate(const BatchAccumulator& accumulator, 
+        std::unordered_map<std::string, std::optional<bool>>& cache) = 0; 
     // I changed the return type to std::optional<bool> to allow for a "null" 
     // state in case of invalid input or other issues during evaluation.
 

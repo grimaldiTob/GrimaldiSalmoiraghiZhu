@@ -65,12 +65,5 @@ void RuleEngine::ruleParsing(simdjson::ondemand::parser& parser, const std::stri
                 );
             }
         }
-        if(rule_type == "step_difference"){
-
-        }
-
-        
-
-
     }
 }

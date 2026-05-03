@@ -11,10 +11,10 @@ public:
         const std::string& rule_id,
         RulePriority priority,
         const std::string& logic, // either "AND" or "OR"
-        const std::vector<std::string>& condition_rule_ids
+        const std::vector<std::shared_ptr<BaseRule>>& condition_rules
     ) : BaseRule(rule_id, RuleType::CORRELATION, priority),
         logic(logic),
-        condition_rule_ids(condition_rule_ids) {}
+        condition_rules(condition_rule_ids) {}
 
 
     // What am I about to do is an incredible mess, I know. 
@@ -32,7 +32,8 @@ public:
     ) const;
 
     // Override required by BaseRule
-    std::optional<bool> evaluate(const std::string& input) override;
+    std::optional<bool> evaluate(const BatchAccumulator& accumulator, 
+        std::unordered_map<std::string, std::optional<bool>>& cache) override;
 
     std::string getLogic() const { return logic; }
     const std::vector<std::string>& getConditionRuleIds() const { return condition_rule_ids; }

@@ -1,48 +1,41 @@
 #include "SimpleRule.h"
 
-std::optional<bool> SimpleRule::evaluate(const std::string& input) {
-    // For now I am assuming input is a string in the format "sensor_id,value"
-    // but obviously this depends on how we implement the RuleEngine and how we
-    // treat TelemetryBatch inside that component.
+std::optional<bool> SimpleRule::evaluate(const BatchAccumulator& accumulator, 
+        std::unordered_map<std::string, std::optional<bool>>& cache) {
+    if(cache.count(this->rule_id)){
+        return cache[this->rule_id]; // return the result stored in the cache
+    }
+    bool rule = false;
+    bool sensor_found = false;
 
-    // extract sensor_id and value from input
-    size_t comma_pos = input.find(',');
-    // If no ',' is found, if it's at the end of the string, or if there are multiple commas, 
-    // it's an invalid input format -> HOW DO WE ANDLES EXCEPTIONS??
-    if (comma_pos == std::string::npos || comma_pos == input.length() - 1 || input.find(',', comma_pos + 1) != std::string::npos) {
-        // Invalid input format -> HOW DO WE ANDLES EXCEPTIONS??
-        return std::nullopt;
+    // to implement the batch size function
+    for (size_t i = 0; i < accumulator.getBatchSize(); ++i){
+        if(accumulator.getBatchFile().sensors_name[i] == this->sensor_id){
+            sensor_found = true;
+            double current_value = accumulator.getBatchFile().values[i];
+
+            if (op == "==")
+                return current_value == value;
+            else if (op == "!=")
+                return current_value != value;
+            else if (op == "<")
+                return current_value < value;
+            else if (op == "<=")
+                return current_value <= value;
+            else if (op == ">")
+                return current_value > value;
+            else if (op == ">=")
+                return current_value >= value;
+            else
+            {
+                // Invalid operator -> HOW DO WE ANDLES EXCEPTIONS??
+                return std::nullopt;
+            }
+        }
+    }
+    if (!sensor_found) {
+        return std::nullopt; // Sensor wasn't in this batch at all
     }
 
-    std::string batch_sensor_id = input.substr(0, comma_pos);
-    std::string batch_value_str = input.substr(comma_pos + 1);
-
-    // Convert value to a number (assuming it's a double)
-    double batch_value;
-    try {
-        batch_value = std::stod(batch_value_str); // convert string to double
-    } catch (const std::exception&) {
-        // Invalid value format -> HOW DO WE ANDLES EXCEPTIONS??
-        return std::nullopt;
-    }
-
-    // Check if the sensor_id matches
-    if (this->sensor_id != batch_sensor_id) {
-        return std::nullopt;
-    }
-
-    // Evaluate the rule based on the operator 
-    // I don't like this verbose if-else structure, but I'll leave it for now. 
-    // I am sure we could replace it with some kind of map from operator to lambda...
-    if (op == "==") return batch_value == value;
-    else if (op == "!=") return batch_value != value;
-    else if (op == "<") return batch_value < value;
-    else if (op == "<=") return batch_value <= value;
-    else if (op == ">") return batch_value > value;
-    else if (op == ">=") return batch_value >= value;
-    else {
-        // Invalid operator -> HOW DO WE ANDLES EXCEPTIONS??
-        return std::nullopt;
-    }
-    return std::nullopt;
+    return rule;
 }

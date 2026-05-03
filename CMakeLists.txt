@@ -22,6 +22,30 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
 # Tell the compiler where to look for "simdjson.h" when it sees an #include
 # target_include_directories(astralog PRIVATE external)
 
+# --------------------------------------------------------------------
+# Catch2 — fetched remotely at configure time via FetchContent
+# --------------------------------------------------------------------
+include(FetchContent)
+ 
+FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG        v3.7.1   # pin to a stable release; bump as needed
+)
+FetchContent_MakeAvailable(Catch2)
+
+# Used to check if Catch's directory is already exist 
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+include(Catch)
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Enable CTest so you can run: cmake --build . && ctest
+# ---------------------------------------------------------------------------
+enable_testing()
+# ---------------------------------------------------------------------------
+
+
 # Test executable for SimpleRule
 add_executable(test_simple_rule
     tests/test_simple_rule_main.cpp
@@ -38,3 +62,18 @@ add_executable(test_logical_correlation_rule
 target_include_directories(test_simple_rule PRIVATE src)
 target_include_directories(test_step_difference_rule PRIVATE src)
 target_include_directories(test_logical_correlation_rule PRIVATE src)
+
+# Catch2 TEST
+# --------------------------------------------------------------
+add_executable(test_simple_rule_main_catch2
+    tests/test_simple_rule_main_catch2.cpp
+    src/types/rules/SimpleRule.cpp
+)
+ 
+target_include_directories(test_simple_rule_main_catch2 PRIVATE src)
+ 
+# Link against Catch2::Catch2WithMain so we don't need to write main() ourselves
+target_link_libraries(test_simple_rule_main_catch2 PRIVATE Catch2::Catch2WithMain)
+ 
+# Auto-register every TEST_CASE with CTest
+catch_discover_tests(test_simple_rule_main_catch2)

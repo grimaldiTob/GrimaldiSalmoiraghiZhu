@@ -14,9 +14,24 @@ class RuleEngine : public RuleEngineInterface {
 
 public:
 
+    /*
+        Main design choice here is:
+            Are we having a batchAccumulator with a reference to the ruleEngine,
+            or a RuleEngine with a BatchAccumulator attribute?
+
+            I am more for the second option since the ruleEngine is the logic of
+            our program, having both the rules and the batch allows to evaluate 
+            rules all in one structure (this is also the main Rule Engine use case)
+    */
     RuleEngine() = default;
 
     RuleEngine(std::shared_ptr<BatchProviderInterface> provider);
+
+    // use const obj& in order to avoid reallocating on each call
+    const std::vector<std::shared_ptr<BaseRule>>& getRulesList() { return rules_list; };
+    const BatchAccumulator& getAccumulator() { return accumulator; }
+    const std::unordered_map<std::string, std::vector<double>>& getMeasurementsHistory() { return measurements_history; };
+    const std::unordered_map<std::string, std::optional<bool>>& getRulesCache() { return rules_cache; };
 
     void ruleParsing(simdjson::ondemand::parser& parser, const std::string &filename);
 
@@ -24,11 +39,15 @@ public:
 
     RulePriority parsePriority(std::string_view);
 
+    void resetCache();
+
 private:
     // vector in which we store all rules
-    std::vector<BaseRule> rules_list;
+    std::vector<std::shared_ptr<BaseRule>> rules_list;
 
     BatchAccumulator accumulator;
+
+    std::unordered_map<std::string, std::vector<double>> measurements_history;
 
     // map in which we store the cache result for the evaluated rules
     // in particular key = "rule_id" --> value = boolean

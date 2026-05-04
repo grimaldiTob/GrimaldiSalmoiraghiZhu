@@ -28,7 +28,10 @@ public:
     void storeValidData(TelemetryBatch&) override;
         
     // From BatchProviderInterface
-    TelemetryBatch getBatchFile() override;
+    TelemetryBatch getBatchFile() override { return m_batchFile; };
+
+    // to implement
+    size_t getBatchSize() { return m_batchSize;  };
 
     void setRuleEngineInterface(std::shared_ptr<RuleEngineInterface>);
         
@@ -41,7 +44,7 @@ private:
     // and in the end sort all the packets considering the priority value.
 
     TelemetryBatch                        m_batchFile;
-    std::shared_ptr<RuleEngineInterface> m_ruleEngine;
+    std::shared_ptr<RuleEngineInterface> m_ruleEngine; // I dont think we need this reference here.
     size_t                                m_batchSize; // used to check wheter TelemetryBatch reached the limit or not            
         
     void accumulate(TelemetryBatch);

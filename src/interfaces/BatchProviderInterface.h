@@ -13,6 +13,6 @@ public:
 
     virtual ~BatchProviderInterface() = default;
 
-    virtual TelemetryBatch getBatchFile();
+    virtual TelemetryBatch getBatchFile() = 0;
 
 };

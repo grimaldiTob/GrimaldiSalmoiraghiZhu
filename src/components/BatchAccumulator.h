@@ -30,7 +30,8 @@ public:
     // From BatchProviderInterface
     TelemetryBatch getBatchFile() override { return m_batchFile; };
 
-    // to implement
+    const std::unordered_map<std::string, std::vector<double>>& getMeasurementsHistory() { return measurements_history; };
+
     size_t getBatchSize() { return m_batchSize;  };
 
     void setRuleEngineInterface(std::shared_ptr<RuleEngineInterface>);
@@ -47,6 +48,8 @@ private:
     std::shared_ptr<RuleEngineInterface> m_ruleEngine; // I dont think we need this reference here.
     size_t                                m_batchSize; // used to check wheter TelemetryBatch reached the limit or not            
         
+    std::unordered_map<std::string, std::vector<double>> measurements_history;
+
     void accumulate(TelemetryBatch);
         
     bool checkBatchSize() const;

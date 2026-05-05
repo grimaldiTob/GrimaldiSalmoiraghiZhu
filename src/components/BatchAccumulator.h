@@ -1,7 +1,8 @@
 #pragma once
 
 #include <memory>
-#include<vector>
+#include <vector>
+#include <unordered_map>
 
 #include "TelemetryBatch.h"
 #include "BatchFile.h"
@@ -28,11 +29,11 @@ public:
     void storeValidData(TelemetryBatch&) override;
         
     // From BatchProviderInterface
-    TelemetryBatch getBatchFile() override { return m_batchFile; };
+    TelemetryBatch getBatchFile() const override { return m_batchFile; };
 
     const std::unordered_map<std::string, std::vector<double>>& getMeasurementsHistory() { return measurements_history; };
 
-    size_t getBatchSize() { return m_batchSize;  };
+    size_t getBatchSize() const { return m_batchSize;  };
 
     void setRuleEngineInterface(std::shared_ptr<RuleEngineInterface>);
         

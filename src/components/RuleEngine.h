@@ -27,8 +27,6 @@ public:
     */
     RuleEngine() = default;
 
-    RuleEngine(std::shared_ptr<BatchProviderInterface> provider);
-
     // use const obj& in order to avoid reallocating on each call
     const std::vector<std::shared_ptr<BaseRule>>& getRulesList() { return rules_list; };
     const BatchAccumulator& getAccumulator() { return accumulator; }

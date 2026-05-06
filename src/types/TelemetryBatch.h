@@ -9,7 +9,6 @@ struct TelemetryBatch {
     std::vector<int64_t>       timestamps;
     std::vector<double>            values;
     std::vector<int>           priorities;
-    int capacity; // TODO: TO be removed, since already implemented in BatchAccumulator
 
     explicit TelemetryBatch(size_t reserveSize = 0) {
         if (reserveSize) {
@@ -17,7 +16,6 @@ struct TelemetryBatch {
             timestamps.reserve(reserveSize);
             values.reserve(reserveSize);
             priorities.reserve(reserveSize);
-            capacity = reserveSize;
         }
     }
 

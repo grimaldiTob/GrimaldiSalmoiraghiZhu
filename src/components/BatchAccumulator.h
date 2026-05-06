@@ -49,7 +49,6 @@ private:
     // and in the end sort all the packets considering the priority value.
 
     TelemetryBatch                        m_batchFile;
-    std::shared_ptr<RuleEngineInterface> m_ruleEngine; // I dont think we need this reference here.
     size_t                                m_batchSize; // used to check wheter TelemetryBatch reached the limit or not
 
     // including the measurement history in the BatchAccumulator;

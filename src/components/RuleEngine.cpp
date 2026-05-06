@@ -1,8 +1,8 @@
 #include "RuleEngine.h"
 #include <fstream>
 
-// constructor
-RuleEngine::RuleEngine(std::shared_ptr<BatchProviderInterface> provider) {}
+/** @brief Helper method which maps priority strings to the enum values.
+  */
 
 RulePriority RuleEngine::parsePriority(std::string_view prio_str) {
     if (prio_str == "HIGH") return RulePriority::HIGH;

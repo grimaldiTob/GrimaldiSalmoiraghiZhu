@@ -1,6 +1,6 @@
 #include "StatefulRule.h"
 
-std::optional<bool> StatefulRule::evaluate(const BatchAccumulator& accumulator, 
+std::optional<bool> StatefulRule::evaluate(BatchAccumulator& accumulator, 
         std::unordered_map<std::string, std::optional<bool>>& cache) {
 
     if(cache.count(this->rule_id)){

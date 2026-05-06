@@ -1,2 +1,67 @@
 collector_output/
 build/
+
+# Various Latex related stuff for the RADD
+## Core latex/pdflatex auxiliary files:
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+.*.lb
+
+## Intermediate documents:
+*.dvi
+*.xdv
+*-converted-to.*
+
+## Bibliography distributions (if using bibtex/biblatex):
+*.bbl
+*.bcf
+*.blg
+*-blx.aux
+*-blx.bib
+*.run.xml
+
+## Glossary / Index / Makeindex:
+*.glo
+*.idx
+*.ilg
+*.ind
+*.ist
+*.glg
+*.gls
+*.nlo
+*.nls
+
+## Package-specific files:
+# tikz
+*.makefile
+*.figlist
+*.gui
+*.help
+*.pgfstat
+
+# minted
+_minted*
+*.pyg
+
+# listings
+*.lol
+
+# synctex (used for jump-to-source)
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.synctex.gz(busy)
+
+## Overleaf specific / OS files
+.DS_Store
+*.swp
+*.bak

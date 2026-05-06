@@ -21,7 +21,7 @@ public:
         value(value) {}
 
     // Override required by BaseRule
-    std::optional<bool> evaluate(BatchAccumulator& accumulator, 
+    std::optional<bool> evaluate(const BatchAccumulator& accumulator, 
         std::unordered_map<std::string, std::optional<bool>>& cache) override;
 
     std::string getSensorId() const { return sensor_id; }

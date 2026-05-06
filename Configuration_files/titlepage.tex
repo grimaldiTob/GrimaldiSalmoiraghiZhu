@@ -1,0 +1,51 @@
+\definecolor{bluePoli}{cmyk}{0.4,0.1,0,0.4}
+\begin{titlepage}
+    \begin{tikzpicture}[remember picture, overlay]
+        % background
+        \def\tilesize{2cm} 
+                
+                % Start tiling from the bottom-left to the top-right
+                \foreach \x in {0, 1, ..., 15} {% 
+                    \foreach \y in {0, 1, ..., 20} {%
+                        \node[opacity=0.05, inner sep=0pt, outer sep = 0pt, anchor=south west] 
+                        at ([xshift=\x*\tilesize, yshift=\y*\tilesize]current page.south west) {
+                            \includegraphics[width=\tilesize, height=\tilesize]{images/line-in-motion.pdf}
+                        };
+                    }
+                }
+        % The vertical accent bar
+        \fill[bluePoli] (current page.north west) ++(1.5cm,0) rectangle ++(0.3cm,-\paperheight);
+    \end{tikzpicture}
+
+    \hspace{2cm}
+    \begin{minipage}{0.8\textwidth}
+        \vspace{2cm}
+        \sffamily
+        {\Large \color{gray} Requirement Analysis and Design Document} \\[0.25cm]
+
+        {\Huge \textbf{Astralog-HPC}} \\[0.1cm]
+
+        {\large \textit{High-Performance Computing Space Mission Logging System}}
+        
+        \vspace{3cm}
+        
+        \textbf{PREPARED BY} \\
+        Luca Salmoiraghi \\
+        Tobia Grimaldi \\
+        Dong Hua Zhu
+        
+        \vspace{2cm}
+        
+        \textbf{PROJECT SCOPE} \\
+        This document outlines the domain assumptios, functional and non-functional requirements, 
+        system architecture, and design patterns for the Astralog-HPC environment.
+        
+        \vspace{1cm}
+
+        \textbf{DATE OF CREATION} \\
+        April 4, 2026
+        
+        \textbf{LAST UPDATED ON} \\
+        \today
+    \end{minipage}
+\end{titlepage}

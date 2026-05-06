@@ -3,8 +3,6 @@
 #include <iostream>
 
 /*
-    Basic first implementation of an Ingestor Component!
-
     Main functionality of the script is to read content of JSON packets
     collected in ./src/collector_output, filtering invalid packets and
     storing the valid ones in a `TelemetryBatch` structure. 

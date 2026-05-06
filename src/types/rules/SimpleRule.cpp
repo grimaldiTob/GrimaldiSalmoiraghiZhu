@@ -1,6 +1,6 @@
 #include "SimpleRule.h"
 
-std::optional<bool> SimpleRule::evaluate(const BatchAccumulator& accumulator, 
+std::optional<bool> SimpleRule::evaluate(BatchAccumulator& accumulator, 
         std::unordered_map<std::string, std::optional<bool>>& cache) {
     if(cache.count(this->rule_id)){
         return cache[this->rule_id]; // return the result stored in the cache
@@ -28,7 +28,7 @@ std::optional<bool> SimpleRule::evaluate(const BatchAccumulator& accumulator,
                 return current_value >= value;
             else
             {
-                // Invalid operator -> HOW DO WE HANDLE EXCEPTIONS??
+                // Invalid operator -> HOW DO WE ANDLES EXCEPTIONS??
                 return std::nullopt;
             }
         }

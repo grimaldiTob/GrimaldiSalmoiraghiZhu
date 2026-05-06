@@ -16,7 +16,8 @@ public:
           value(value),
           previous_value(std::nullopt) {} 
 
-    std::optional<bool> evaluate(const std::string& input) override;
+    std::optional<bool> evaluate(BatchAccumulator& accumulator, 
+        std::unordered_map<std::string, std::optional<bool>>& cache) override;
 
     std::string getSensorId() const { return sensor_id; }
     std::string getOperator() const { return op; }

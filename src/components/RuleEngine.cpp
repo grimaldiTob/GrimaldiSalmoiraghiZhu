@@ -1,9 +1,7 @@
 #include "RuleEngine.h"
 #include <fstream>
 
-/** @brief Helper method which maps priority strings to the enum values.
-  */
-
+/** @brief Helper method which maps priority strings to the enum values.*/
 RulePriority RuleEngine::parsePriority(std::string_view prio_str) {
     if (prio_str == "HIGH") return RulePriority::HIGH;
     if (prio_str == "MEDIUM") return RulePriority::MEDIUM;

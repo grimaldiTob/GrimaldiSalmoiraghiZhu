@@ -41,13 +41,6 @@ public:
     void storeResultHistory();
 
 private:
-    // are we accumulating batches or files? I would extract the single packets from the Telemetry Batch 
-    // and store them in priority order in other structure "Accumulator" (???)
-    // std::vector<TelemetryBatch m_batchFile;
-    // TelemetryBatch m_batchFile; // no point in having a a vector of Telemetrybatch since it is a group of vectors
-    // we can store all the packets received from the Ingestor in this member until we dont reach the batch size 
-    // and in the end sort all the packets considering the priority value.
-
     TelemetryBatch                        m_batchFile;
     size_t                                m_batchSize; // used to check wheter TelemetryBatch reached the limit or not
 

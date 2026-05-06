@@ -64,6 +64,45 @@ void RuleEngine::ruleParsing(simdjson::ondemand::parser& parser, const std::stri
                         rule_id, priority, sensor_id, oprtor, value
                 );
             }
+        } else if (rule_type == "stateful") {
+            std::string_view sensor_id_sv = obj["sensor_id"].get_string();
+            std::string sensor_id(sensor_id_sv);
+
+            std::string_view oprtor_sv = obj["operator"].get_string();
+            std::string oprtor(oprtor_sv);
+            double value = obj["value"].get_double();
+
+            double consecutive_meas = obj["consecutive_measurements"].get_double();
+
+            std::string_view priority_sv = obj["priority"].get_string();
+            RulePriority priority = parsePriority(priority_sv);
+            current_rule = std::make_shared<StatefulRule>(
+                rule_id, priority, sensor_id, oprtor, consecutive_meas, value);
+        } else if (rule_type == "correlation") {
+            std::string_view logic_sv = obj["logic"].get_string();
+            std::string logic(logic_sv);
+
+            std::vector<std::shared_ptr<BaseRule>> corr_rules;
+            std::vector<std::string> condition_ids;
+            for (auto id_val : obj["conditions"].get_array()) {
+                condition_ids.emplace_back(id_val.get_string());
+            }
+
+            for (const std::string& target_id : condition_ids) {
+                for (size_t i = 0; i < rules_list.size();++i)
+                {
+                    // if we find a match of the rule id we add it to the corr rules arraiy
+                    if (rules_list[i]->getRuleId() == target_id) { 
+                        corr_rules.push_back(rules_list[i]);
+                        break;
+                    }
+                }
+            }
+
+            std::string_view priority_sv = obj["priority"].get_string();
+            RulePriority priority = parsePriority(priority_sv);
+            current_rule = std::make_shared<LogicalCorrelationRule>(
+                rule_id, priority, logic, corr_rules);
         }
     }
 }

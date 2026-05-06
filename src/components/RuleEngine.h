@@ -8,6 +8,8 @@
 #include "../rules/BaseRule.h"
 #include "../rules/SimpleRule.h"
 #include "../rules/StepDifferenceRule.h"
+#include "../rules/StatefulRule.h"
+#include "../rules/LogicalCorrelationRule.h"
 #include "BatchAccumulator.h"
 
 class RuleEngine : public RuleEngineInterface {
@@ -30,7 +32,6 @@ public:
     // use const obj& in order to avoid reallocating on each call
     const std::vector<std::shared_ptr<BaseRule>>& getRulesList() { return rules_list; };
     const BatchAccumulator& getAccumulator() { return accumulator; }
-    const std::unordered_map<std::string, std::vector<double>>& getMeasurementsHistory() { return measurements_history; };
     const std::unordered_map<std::string, std::optional<bool>>& getRulesCache() { return rules_cache; };
 
     void ruleParsing(simdjson::ondemand::parser& parser, const std::string &filename);
@@ -46,8 +47,6 @@ private:
     std::vector<std::shared_ptr<BaseRule>> rules_list;
 
     BatchAccumulator accumulator;
-
-    std::unordered_map<std::string, std::vector<double>> measurements_history;
 
     // map in which we store the cache result for the evaluated rules
     // in particular key = "rule_id" --> value = boolean

@@ -35,7 +35,10 @@ public:
     size_t getBatchSize() { return m_batchSize;  };
 
     void setRuleEngineInterface(std::shared_ptr<RuleEngineInterface>);
-        
+
+    // methods that clears the batch when it finishes evaluation and stores result in the history
+    void storeResultHistory();
+
 private:
     // are we accumulating batches or files? I would extract the single packets from the Telemetry Batch 
     // and store them in priority order in other structure "Accumulator" (???)
@@ -46,10 +49,12 @@ private:
 
     TelemetryBatch                        m_batchFile;
     std::shared_ptr<RuleEngineInterface> m_ruleEngine; // I dont think we need this reference here.
-    size_t                                m_batchSize; // used to check wheter TelemetryBatch reached the limit or not            
-        
+    size_t                                m_batchSize; // used to check wheter TelemetryBatch reached the limit or not
+
+    // including the measurement history in the BatchAccumulator;
     std::unordered_map<std::string, std::vector<double>> measurements_history;
 
+    // If Batch Accumulator is in RuleEngine these method must be set as public 
     void accumulate(TelemetryBatch);
         
     bool checkBatchSize() const;

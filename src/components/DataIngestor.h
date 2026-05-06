@@ -12,7 +12,7 @@ public:
 
     DataIngestor() = default;
 
-    void printTelemetry(const TelemetryBatch &batch, int limit);
+    void printTelemetry(const TelemetryBatch &batch, int limit); // this method will eventually get erased
 
     int64_t parseISO8601(std::string_view time_str);
 

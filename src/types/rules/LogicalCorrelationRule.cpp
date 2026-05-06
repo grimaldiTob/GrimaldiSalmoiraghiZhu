@@ -1,4 +1,4 @@
-#include "LogicalCorrelationRule.hpp"
+#include "LogicalCorrelationRule.h"
 
 #include <sstream>
 #include <algorithm>

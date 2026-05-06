@@ -30,8 +30,6 @@ public:
     double getConsecutiveMeas() const { return consecutive_meas; }
 
 private:
-    // hypothetically we could consider of creating enums for all of these strings 
-    // in this case we just have "AND" or "OR" so it would be much more efficient than having a string
     const std::string sensor_id;
     const std::string oprtor;
     const double value;

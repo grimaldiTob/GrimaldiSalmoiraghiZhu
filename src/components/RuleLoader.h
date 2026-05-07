@@ -4,12 +4,6 @@
 #include <string>
 #include <memory>
 #include "../interfaces/RuleLoaderInterface.h"
-#include "../rules/BaseRule.h"
-#include "../rules/SimpleRule.h"
-#include "../rules/StepDifferenceRule.h"
-#include "../rules/StatefulRule.h"
-#include "../rules/LogicalCorrelationRule.h"
-#include "../../external/simdjson.h"
 
 class RuleLoader : public RuleLoaderInterface {
 public:
@@ -23,5 +17,7 @@ public:
      * @param rules_list The list to populate with parsed rules.
      */
     void loadRules(simdjson::ondemand::parser& parser, const std::string& filename, std::vector<std::shared_ptr<BaseRule>>& rules_list) override;
+private: 
+    RulePriority parsePriority(std::string_view prio_str);
 };
 

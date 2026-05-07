@@ -1,20 +1,31 @@
-#include "RuleLoader.h"
 #include <fstream>
+#include <iostream>
+
+#include "RuleLoader.h"
+#include "../rules/SimpleRule.h"
+#include "../rules/StepDifferenceRule.h"
+#include "../rules/StatefulRule.h"
+#include "../rules/LogicalCorrelationRule.h"
+
 /** @brief Helper method which maps priority strings to the enum values.*/
-RulePriority RuleEngine::parsePriority(std::string_view prio_str) {
+RulePriority RuleLoader::parsePriority(std::string_view prio_str) {
     if (prio_str == "HIGH") return RulePriority::HIGH;
     if (prio_str == "MEDIUM") return RulePriority::MEDIUM;
     return RulePriority::LOW;
 }
 
 /** @brief parses a JSON file passed as argument. 
- * It extracts the values from the json and creates a Rule object (class to implement)
- * for each rule in the file.
+ * It extracts the values from the json and creates a Rule object
+ * for each rule in the file. It then adds the created rule to the rules list passed as argument.
+ * TODO: Is the rule vector concept fine? Rules are statically loaded at the start of the program, 
+ * so we can just have a vector of rules.
+ * TODO: Should we split this function into multiple subroutins (one for each rule type)? 
+ * This way we ensure higher modularity and readibility. Moreover, the addition of a new rule type 
+ * would just require to add a new helper function.  
  */
-void RuleEngine::ruleParsing(simdjson::ondemand::parser& parser, const std::string& filename) {
+void RuleLoader::loadRules(simdjson::ondemand::parser& parser, const std::string& filename, std::vector<std::shared_ptr<BaseRule>>& rules_list) {
     std::ifstream infile(filename); // just one file at a time for now
     
-    // uncomment this when the Rule class is ready
     std::vector<std::shared_ptr<BaseRule>> parsed_rules;
 
     simdjson::padded_string json;
@@ -29,18 +40,15 @@ void RuleEngine::ruleParsing(simdjson::ondemand::parser& parser, const std::stri
 
     for(simdjson::ondemand::object obj : doc.get_array()) {
         std::shared_ptr<BaseRule> current_rule;
-        
-        // define mandary fields for ALL TYPE OF RULES
+
+        // Extract mandatory fields for all rules
         std::string_view rule_id_sv = obj["rule_id"].get_string();
         std::string_view rule_type_sv = obj["type"].get_string();
 
         std::string rule_id(rule_id_sv);
         std::string rule_type(rule_type_sv);
 
-        // I dont know if this check should be performed using enums. Since we call this function just at start 
-        // we can consider the string in the json file and check on that 
-        if(rule_type == "simple" || rule_type == "step_difference") {
-            // set values 
+        if (rule_type == "simple" || rule_type == "step_difference") {
             std::string_view sensor_id_sv = obj["sensor_id"].get_string();
             std::string sensor_id(sensor_id_sv);
 
@@ -52,14 +60,10 @@ void RuleEngine::ruleParsing(simdjson::ondemand::parser& parser, const std::stri
             std::string_view priority_sv = obj["priority"].get_string();
             RulePriority priority = parsePriority(priority_sv);
 
-            if(rule_type == "simple"){
-                current_rule = std::make_shared<SimpleRule>(
-                        rule_id, priority, sensor_id, oprtor, value
-                );
+            if (rule_type == "simple") {
+                current_rule = std::make_shared<SimpleRule>(rule_id, priority, sensor_id, oprtor, value);
             } else {
-                current_rule = std::make_shared<StepDifferenceRule>(
-                        rule_id, priority, sensor_id, oprtor, value
-                );
+                current_rule = std::make_shared<StepDifferenceRule>(rule_id, priority, sensor_id, oprtor, value);
             }
         } else if (rule_type == "stateful") {
             std::string_view sensor_id_sv = obj["sensor_id"].get_string();
@@ -73,8 +77,7 @@ void RuleEngine::ruleParsing(simdjson::ondemand::parser& parser, const std::stri
 
             std::string_view priority_sv = obj["priority"].get_string();
             RulePriority priority = parsePriority(priority_sv);
-            current_rule = std::make_shared<StatefulRule>(
-                rule_id, priority, sensor_id, oprtor, consecutive_meas, value);
+            current_rule = std::make_shared<StatefulRule>(rule_id, priority, sensor_id, oprtor, consecutive_meas, value);
         } else if (rule_type == "correlation") {
             std::string_view logic_sv = obj["logic"].get_string();
             std::string logic(logic_sv);
@@ -86,11 +89,9 @@ void RuleEngine::ruleParsing(simdjson::ondemand::parser& parser, const std::stri
             }
 
             for (const std::string& target_id : condition_ids) {
-                for (size_t i = 0; i < rules_list.size();++i)
-                {
-                    // if we find a match of the rule id we add it to the corr rules arraiy
-                    if (rules_list[i]->getRuleId() == target_id) { 
-                        corr_rules.push_back(rules_list[i]);
+                for (const auto& rule : rules_list) {
+                    if (rule->getRuleId() == target_id) {
+                        corr_rules.push_back(rule);
                         break;
                     }
                 }
@@ -98,8 +99,11 @@ void RuleEngine::ruleParsing(simdjson::ondemand::parser& parser, const std::stri
 
             std::string_view priority_sv = obj["priority"].get_string();
             RulePriority priority = parsePriority(priority_sv);
-            current_rule = std::make_shared<LogicalCorrelationRule>(
-                rule_id, priority, logic, corr_rules);
+            current_rule = std::make_shared<LogicalCorrelationRule>(rule_id, priority, logic, corr_rules);
+        }
+
+        if (current_rule) {
+            rules_list.push_back(current_rule);
         }
     }
 }

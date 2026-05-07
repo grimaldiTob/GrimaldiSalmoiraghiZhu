@@ -19,24 +19,29 @@ public:
     RuleEngine() = default;
 
     // use const obj& in order to avoid reallocating on each call
-    const std::vector<std::shared_ptr<BaseRule>>& getRulesList() { return rules_list; };
-    const BatchAccumulator& getAccumulator() { return accumulator; }
-    const std::unordered_map<std::string, std::optional<bool>>& getRulesCache() { return rules_cache; };
+    const std::vector<std::shared_ptr<BaseRule>>& getRulesList() const { return rules_list; };
+    const BatchAccumulator& getAccumulator() const { return accumulator; }
+    const std::unordered_map<std::string, std::optional<bool>>& getRulesCache() const { return rules_cache; };
 
     void ruleParsing(simdjson::ondemand::parser& parser, const std::string &filename);
 
     void setProviderInterface(std::shared_ptr<BatchProviderInterface>);
 
-    RulePriority parsePriority(std::string_view);
-
+    
     void resetCache();
+    
+    private:
 
-private:
+    std::shared_ptr<BatchProviderInterface> provider;
+    
     // vector in which we store all rules
     std::vector<std::shared_ptr<BaseRule>> rules_list;
-
+    
     BatchAccumulator accumulator;
-
+    
     // map in which we store the cache result for the evaluated rules
     std::unordered_map<std::string, std::optional<bool>> rules_cache;
+
+    // make it private since it is an helper internal to the class.
+    RulePriority parsePriority(std::string_view);
 };

@@ -2,9 +2,7 @@
 #include <fstream>
 #include <iostream>
 
-/** @brief Given a telemetry and a limit it prints the value in the batch
- */
-void DataIngestor::printTelemetry(const TelemetryBatch &batch, int limit = 10) {
+void DataIngestor::printTelemetry(const TelemetryBatch &batch, int limit = 10) const {
     int records = batch.sensors_name.size();
     if(records < limit) {
         limit = records;
@@ -28,9 +26,6 @@ void DataIngestor::printTelemetry(const TelemetryBatch &batch, int limit = 10) {
     std::cout << std::string(70, '-') << "\n";
 }
 
-/** @brief converts the timestamp present in the collector output files 
- *  in an integer at epoch time.
-*/
 int64_t DataIngestor::parseISO8601(std::string_view time_str) {
     struct tm tm_struct = {0};
     std::string s(time_str); 
@@ -42,9 +37,6 @@ int64_t DataIngestor::parseISO8601(std::string_view time_str) {
     return 0; // Return 0 if parsing fails
 }
 
-/** @brief Parses the file that contains a batch of JSON packets received from the spacecraft.
- * Stores the valid data in a `m_validBatch` structure and filters out invalid packets.
- */
 void DataIngestor::parseTelemetry(simdjson::ondemand::parser& parser, const std::string& filename){
 
     // remove the content from the previous file

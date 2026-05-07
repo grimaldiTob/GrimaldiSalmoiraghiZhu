@@ -19,6 +19,10 @@ struct TelemetryBatch {
         }
     }
 
+    size_t getSize() const {
+        return sensors_name.size();
+    }
+
     void clear() {
         sensors_name.clear();
         timestamps.clear();
@@ -32,4 +36,9 @@ struct TelemetryBatch {
         values.emplace_back(value);
         priorities.emplace_back(priority);
     }
+
+    void append(TelemetryBatch &added) {
+        
+    }
+
 };

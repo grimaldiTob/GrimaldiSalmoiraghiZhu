@@ -14,45 +14,61 @@
  * @brief Accumulates valid packets into a local batch for processing.
  * Implements BatchAccumulatorInterface for ingestion and BatchProviderInterface for retrieval.
  */
-
-class BatchAccumulator : public BatchAccumulatorInterface, public BatchProviderInterface {
+class BatchAccumulator : public BatchAccumulatorInterface {
 
 public:
 
-    BatchAccumulator() = default;
+    /**
+     * @brief Constructor 
+     */
+    BatchAccumulator::BatchAccumulator(size_t batchSize = 100) : m_batchSize(batchSize) {}
+    
+    
+    /*============ GETTER ============*/
+    size_t         getBatchSize() const;
+    TelemetryBatch getBatchFile() const;
 
-    BatchAccumulator(size_t batchSize = 100);
+    /*========================== SETTER ============================*/
+    void setEvaluator(std::shared_ptr<RuleEngineInterface> evaluator);
 
-    BatchAccumulator(std::shared_ptr<RuleEngineInterface> ruleEngine, size_t batchSize);
-        
-    // From BatchAccumulatorInterface
-    void storeValidData(TelemetryBatch&) override;
-        
-    // From BatchProviderInterface
-    TelemetryBatch getBatchFile() const override { return m_batchFile; };
+    /**
+     * @brief Store a validated telemetry batch into the accumulator.
+     *
+     * This method accepts a batch of telemetry data that has already been validated
+     * by the DataIngestor and accumulates it internally. Once the batch reaches the
+     * configured size threshold, the accumulated batch becomes
+     * available for processing by the rule engine.
+     */
+    void storeValidData(TelemetryBatch &validBatch) override;
+    
+    /**
+     * @brief TODO
+     */
+    const std::unordered_map<std::string, std::vector<double>>& getMeasurementsHistory() const;
 
-    const std::unordered_map<std::string, std::vector<double>>& getMeasurementsHistory() { return measurements_history; };
-
-    size_t getBatchSize() const { return m_batchSize;  };
-
-    void setRuleEngineInterface(std::shared_ptr<RuleEngineInterface>);
-
-    // methods that clears the batch when it finishes evaluation and stores result in the history
+    /**
+     * @brief Saving results
+     * 
+     * methods that clears the batch when it finishes evaluation and stores result in the history
+     */
     void storeResultHistory();
+    
+    /** 
+     * @brief Accumulate the batch 
+     */
+    void accumulate(TelemetryBatch);
 
 private:
-    TelemetryBatch                        m_batchFile;
-    size_t                                m_batchSize; // used to check wheter TelemetryBatch reached the limit or not
 
-    // including the measurement history in the BatchAccumulator;
-    std::unordered_map<std::string, std::vector<double>> measurements_history;
-
-    // If Batch Accumulator is in RuleEngine these method must be set as public 
-    void accumulate(TelemetryBatch);
-        
-    bool checkBatchSize() const;
-        
-    void notifyBatchAvailability();
-
+    size_t checkBatchSize(size_t addedSize) const;
     void sortPriorities();
+    void handleOverUploading();
+
+    /* ============================= ATTRIBUTE ====================*/
+    size_t                                               m_batchSize;            // used to check wheter TelemetryBatch 
+    TelemetryBatch                                       m_batchFile;            // the current batch
+    TelemetryBatch                                       m_batchTmp;             // the temporal batch
+    std::shared_ptr<RuleEngineInterface>                 m_evaluator;            // interface provided by the RuleEngine class
+    std::unordered_map<std::string, std::vector<double>> m_measurementsHistory;  // including the measurement history in the BatchAccumulator;
+
 };   

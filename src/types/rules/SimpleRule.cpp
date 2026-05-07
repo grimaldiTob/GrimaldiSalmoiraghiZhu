@@ -28,7 +28,7 @@ std::optional<bool> SimpleRule::evaluate(BatchAccumulator& accumulator,
                 return current_value >= value;
             else
             {
-                // Invalid operator -> HOW DO WE ANDLES EXCEPTIONS??
+                // Invalid operator -> HOW DO WE HANDLE EXCEPTIONS??
                 return std::nullopt;
             }
         }

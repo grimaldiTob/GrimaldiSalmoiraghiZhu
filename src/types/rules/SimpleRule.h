@@ -5,6 +5,14 @@
 
 class SimpleRule : public BaseRule {
 public:
+    /**
+     * @brief Constructor for SimpleRule.
+     * @param rule_id Unique identifier for the rule.
+     * @param priority Priority level of the rule (HIGH, MEDIUM, LOW).
+     * @param sensor_id Identifier of the sensor to which the rule applies.
+     * @param op Operator for comparison (e.g., ">", "<", "==").
+     * @param value Value to compare the sensor reading against.
+     */
     SimpleRule(const std::string& rule_id, 
                RulePriority priority, 
                const std::string& sensor_id,

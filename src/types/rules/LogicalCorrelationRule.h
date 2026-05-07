@@ -7,6 +7,13 @@
 
 class LogicalCorrelationRule : public BaseRule {
 public:
+    /**
+     * @brief Constructor for LogicalCorrelationRule.
+     * @param rule_id Unique identifier for the rule.
+     * @param priority Priority level of the rule (HIGH, MEDIUM, LOW).
+     * @param logic Logical operator for combining conditions ("AND" or "OR").
+     * @param condition_rules_ Vector of shared pointers to the rules to combine.
+     */
     LogicalCorrelationRule(
         const std::string& rule_id,
         RulePriority priority,

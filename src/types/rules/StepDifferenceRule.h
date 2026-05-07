@@ -5,6 +5,15 @@
 
 class StepDifferenceRule : public BaseRule {
 public:
+    /**
+     * @brief Constructor for StepDifferenceRule.
+     * @param rule_id Unique identifier for the rule.
+     * @param priority Priority level of the rule (HIGH, MEDIUM, LOW).
+     * @param sensor_id Identifier of the sensor to which the rule applies.
+     * @param op Operator for comparison (e.g., ">", "<", "==").
+     * @param value Value to compare the sensor reading against.
+     * @param previous_value optional parameter to store the previous sensor value for step difference calculation.
+     */
     StepDifferenceRule(const std::string& rule_id, 
                RulePriority priority, 
                const std::string& sensor_id,

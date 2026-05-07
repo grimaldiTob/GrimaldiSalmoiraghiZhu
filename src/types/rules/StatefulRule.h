@@ -7,6 +7,15 @@
 
 class StatefulRule : public BaseRule {
 public:
+    /**
+     * @brief Constructor for StatefulRule.
+     * @param rule_id Unique identifier for the rule.
+     * @param priority Priority level of the rule (HIGH, MEDIUM, LOW).
+     * @param sensor_id Identifier of the sensor to which the rule applies.
+     * @param oprtor Operator for comparison (e.g., ">", "<", "==").
+     * @param consecutive_meas Number of consecutive measurements required.
+     * @param value Value to compare the sensor reading against.
+     */
     StatefulRule(
         const std::string& rule_id,
         RulePriority priority,

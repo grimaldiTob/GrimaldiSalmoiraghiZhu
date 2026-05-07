@@ -23,17 +23,16 @@ public:
     const BatchAccumulator& getAccumulator() const { return accumulator; }
     const std::unordered_map<std::string, std::optional<bool>>& getRulesCache() const { return rules_cache; };
 
-    void ruleParsing(simdjson::ondemand::parser& parser, const std::string &filename);
-
     void setProviderInterface(std::shared_ptr<BatchProviderInterface>);
 
-    
+    void evaluateRules();
+
     void resetCache();
     
     private:
 
     std::shared_ptr<BatchProviderInterface> provider;
-    
+
     // vector in which we store all rules
     std::vector<std::shared_ptr<BaseRule>> rules_list;
     

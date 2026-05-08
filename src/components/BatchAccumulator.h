@@ -26,7 +26,7 @@ public:
     
     /*============ GETTER ============*/
     size_t         getBatchSize() const;
-    TelemetryBatch getBatchFile() const;
+    const TelemetryBatch& getBatchFile() const;
 
     /*========================== SETTER ============================*/
     void setEvaluator(std::shared_ptr<RuleEngineInterface> evaluator);

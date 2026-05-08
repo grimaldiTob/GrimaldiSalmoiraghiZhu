@@ -4,7 +4,8 @@ size_t BatchAccumulator::getBatchSize() const {
     return m_batchSize;
 }
 
-TelemetryBatch BatchAccumulator::getBatchFile() const {
+// modified the method so it is not returning by value the whole batch 
+const TelemetryBatch& BatchAccumulator::getBatchFile() const {
     return m_batchFile;
 }
 
@@ -30,7 +31,7 @@ void BatchAccumulator::storeValidData(TelemetryBatch &validBatch) {
 
 }
 
-
+// non capisco Mike
 class A {
 
     void methodA();

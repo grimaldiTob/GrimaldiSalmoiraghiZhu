@@ -14,6 +14,16 @@ RulePriority RuleLoader::parsePriority(std::string_view prio_str) {
     return RulePriority::LOW;
 }
 
+/** @brief Take the rules_list passed as an argument and sorts the value given 
+ * the priority attribute of the rule.
+ */
+void RuleLoader::sortRules(std::vector<std::shared_ptr<BaseRule>>& rules_list) {
+    std::sort(rules_list.begin(), rules_list.end(),
+        [](const auto& a, const auto& b) {
+            return a->getPriority() < b->getPriority();
+        });
+}
+
 /** @brief parses a JSON file passed as argument. 
  * It extracts the values from the json and creates a Rule object
  * for each rule in the file. It then adds the created rule to the rules list passed as argument.
@@ -24,20 +34,19 @@ RulePriority RuleLoader::parsePriority(std::string_view prio_str) {
  * would just require to add a new helper function.  
  */
 void RuleLoader::loadRules(simdjson::ondemand::parser& parser, const std::string& filename, std::vector<std::shared_ptr<BaseRule>>& rules_list) {
-    std::ifstream infile(filename); // just one file at a time for now
-    
     std::vector<std::shared_ptr<BaseRule>> parsed_rules;
-
+    
     simdjson::padded_string json;
     // .get() method assigns the value to the argument passed to the function 
     if(simdjson::padded_string::load(filename).get(json)) {
         std::cerr << "Cannot load the file. Check the filename." << std::endl;
         return; // skip
     }
-
+    
     simdjson::ondemand::document doc;
     parser.iterate(json).get(doc); // parser.iterate allows to read the json string and parse the json object into the doc 
-
+    int high_priority_rules = 0;
+    
     for(simdjson::ondemand::object obj : doc.get_array()) {
         std::shared_ptr<BaseRule> current_rule;
 
@@ -103,7 +112,8 @@ void RuleLoader::loadRules(simdjson::ondemand::parser& parser, const std::string
         }
 
         if (current_rule) {
-            rules_list.push_back(current_rule);
+            rules_list.emplace_back(current_rule);
         }
     }
+    sortRules(rules_list);
 }

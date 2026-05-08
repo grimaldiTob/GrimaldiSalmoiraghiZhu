@@ -37,4 +37,4 @@ class A {
     void methodA();
 
     void methodB();
-}
+};

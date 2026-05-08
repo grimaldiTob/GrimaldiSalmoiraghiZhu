@@ -34,7 +34,6 @@ void RuleLoader::sortRules(std::vector<std::shared_ptr<BaseRule>>& rules_list) {
  * would just require to add a new helper function.  
  */
 void RuleLoader::loadRules(simdjson::ondemand::parser& parser, const std::string& filename, std::vector<std::shared_ptr<BaseRule>>& rules_list) {
-    std::vector<std::shared_ptr<BaseRule>> parsed_rules;
     
     simdjson::padded_string json;
     // .get() method assigns the value to the argument passed to the function 
@@ -45,7 +44,6 @@ void RuleLoader::loadRules(simdjson::ondemand::parser& parser, const std::string
     
     simdjson::ondemand::document doc;
     parser.iterate(json).get(doc); // parser.iterate allows to read the json string and parse the json object into the doc 
-    int high_priority_rules = 0;
     
     for(simdjson::ondemand::object obj : doc.get_array()) {
         std::shared_ptr<BaseRule> current_rule;
@@ -96,7 +94,7 @@ void RuleLoader::loadRules(simdjson::ondemand::parser& parser, const std::string
             for (auto id_val : obj["conditions"].get_array()) {
                 condition_ids.emplace_back(id_val.get_string());
             }
-
+            // this approach is not working if the correlation rules gets parsed BEFORE the simple rule.
             for (const std::string& target_id : condition_ids) {
                 for (const auto& rule : rules_list) {
                     if (rule->getRuleId() == target_id) {

@@ -10,12 +10,6 @@ public:
     RuleLoader() = default;
     ~RuleLoader() override = default;
 
-    /**
-     * Parses a JSON file and loads rules into the provided rules list.
-     * @param parser The simdjson parser instance.
-     * @param filename The name of the JSON file to parse.
-     * @param rules_list The list to populate with parsed rules.
-     */
     void loadRules(simdjson::ondemand::parser& parser, const std::string& filename, std::vector<std::shared_ptr<BaseRule>>& rules_list) override;
 
 private:
@@ -25,5 +19,11 @@ private:
     // RuleLoader attribute. I'm not sure if it is right or not since the RuleLoader
     // is just loading rules (and not storing) but might be usefull to consider this.
     void sortRules(std::vector<std::shared_ptr<BaseRule>>& rules_list);
+
+    // Subroutinf for each ruel type
+    std::shared_ptr<BaseRule> parseSimpleRule(simdjson::ondemand::object& obj);
+    std::shared_ptr<BaseRule> parseStepDifferenceRule(simdjson::ondemand::object& obj);
+    std::shared_ptr<BaseRule> parseStatefulRule(simdjson::ondemand::object& obj);
+    std::shared_ptr<BaseRule> parseLogicalCorrelationRule(simdjson::ondemand::object& obj, const std::vector<std::shared_ptr<BaseRule>>& rules_list);
 };
 

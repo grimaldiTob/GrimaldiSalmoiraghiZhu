@@ -33,85 +33,181 @@ void RuleLoader::sortRules(std::vector<std::shared_ptr<BaseRule>>& rules_list) {
  * This way we ensure higher modularity and readibility. Moreover, the addition of a new rule type 
  * would just require to add a new helper function.  
  */
+// void RuleLoader::loadRules(simdjson::ondemand::parser& parser, const std::string& filename, std::vector<std::shared_ptr<BaseRule>>& rules_list) {
+    
+//     simdjson::padded_string json;
+//     // .get() method assigns the value to the argument passed to the function 
+//     if(simdjson::padded_string::load(filename).get(json)) {
+//         std::cerr << "Cannot load the file. Check the filename." << std::endl;
+//         return; // skip
+//     }
+    
+//     simdjson::ondemand::document doc;
+//     parser.iterate(json).get(doc); // parser.iterate allows to read the json string and parse the json object into the doc 
+    
+//     for(simdjson::ondemand::object obj : doc.get_array()) {
+//         std::shared_ptr<BaseRule> current_rule;
+
+//         // Extract mandatory fields for all rules
+//         std::string_view rule_id_sv = obj["rule_id"].get_string();
+//         std::string_view rule_type_sv = obj["type"].get_string();
+
+//         std::string rule_id(rule_id_sv);
+//         std::string rule_type(rule_type_sv);
+
+//         if (rule_type == "simple" || rule_type == "step_difference") {
+//             std::string_view sensor_id_sv = obj["sensor_id"].get_string();
+//             std::string sensor_id(sensor_id_sv);
+
+//             std::string_view oprtor_sv = obj["operator"].get_string();
+//             std::string oprtor(oprtor_sv);
+//             double value = obj["value"].get_double();
+
+//             // priority gets parsed LAST --> simdjson parses reading the order the content of the .json file
+//             std::string_view priority_sv = obj["priority"].get_string();
+//             RulePriority priority = parsePriority(priority_sv);
+
+//             if (rule_type == "simple") {
+//                 current_rule = std::make_shared<SimpleRule>(rule_id, priority, sensor_id, oprtor, value);
+//             } else {
+//                 current_rule = std::make_shared<StepDifferenceRule>(rule_id, priority, sensor_id, oprtor, value);
+//             }
+//         } else if (rule_type == "stateful") {
+//             std::string_view sensor_id_sv = obj["sensor_id"].get_string();
+//             std::string sensor_id(sensor_id_sv);
+
+//             std::string_view oprtor_sv = obj["operator"].get_string();
+//             std::string oprtor(oprtor_sv);
+//             double value = obj["value"].get_double();
+
+//             double consecutive_meas = obj["consecutive_measurements"].get_double();
+
+//             std::string_view priority_sv = obj["priority"].get_string();
+//             RulePriority priority = parsePriority(priority_sv);
+//             current_rule = std::make_shared<StatefulRule>(rule_id, priority, sensor_id, oprtor, consecutive_meas, value);
+//         } else if (rule_type == "correlation") {
+//             std::string_view logic_sv = obj["logic"].get_string();
+//             std::string logic(logic_sv);
+
+//             std::vector<std::shared_ptr<BaseRule>> corr_rules;
+//             std::vector<std::string> condition_ids;
+//             for (auto id_val : obj["conditions"].get_array()) {
+//                 condition_ids.emplace_back(id_val.get_string());
+//             }
+//             // this approach is not working if the correlation rules gets parsed BEFORE the simple rule.
+//             for (const std::string& target_id : condition_ids) {
+//                 for (const auto& rule : rules_list) {
+//                     if (rule->getRuleId() == target_id) {
+//                         corr_rules.push_back(rule);
+//                         break;
+//                     }
+//                 }
+//             }
+
+//             std::string_view priority_sv = obj["priority"].get_string();
+//             RulePriority priority = parsePriority(priority_sv);
+//             current_rule = std::make_shared<LogicalCorrelationRule>(rule_id, priority, logic, corr_rules);
+//         }
+
+//         if (current_rule) {
+//             rules_list.emplace_back(current_rule);
+//         }
+//     }
+//     sortRules(rules_list);
+// }
+
+// I am commenting the previous implementation since I am attentimpting to split the function into multiple
+// subroutines, one for each rule type. 
+
+/**
+* Parses a JSON file and loads rules into the provided rules list.
+* @param parser The simdjson parser instance.
+* @param filename The name of the JSON file to parse.
+* @param rules_list The list to populate with parsed rules.
+*/
 void RuleLoader::loadRules(simdjson::ondemand::parser& parser, const std::string& filename, std::vector<std::shared_ptr<BaseRule>>& rules_list) {
-    
     simdjson::padded_string json;
-    // .get() method assigns the value to the argument passed to the function 
-    if(simdjson::padded_string::load(filename).get(json)) {
+    if (simdjson::padded_string::load(filename).get(json)) {
         std::cerr << "Cannot load the file. Check the filename." << std::endl;
-        return; // skip
+        return;
     }
-    
+
     simdjson::ondemand::document doc;
     parser.iterate(json).get(doc); // parser.iterate allows to read the json string and parse the json object into the doc 
-    
-    for(simdjson::ondemand::object obj : doc.get_array()) {
+
+    for (simdjson::ondemand::object obj : doc.get_array()) {
         std::shared_ptr<BaseRule> current_rule;
 
-        // Extract mandatory fields for all rules
-        std::string_view rule_id_sv = obj["rule_id"].get_string();
+        // Extract only the type, since it is needed to choose the right parsing function. 
+        // All other fields are parsed in the specific parsing function.
         std::string_view rule_type_sv = obj["type"].get_string();
-
-        std::string rule_id(rule_id_sv);
         std::string rule_type(rule_type_sv);
 
-        if (rule_type == "simple" || rule_type == "step_difference") {
-            std::string_view sensor_id_sv = obj["sensor_id"].get_string();
-            std::string sensor_id(sensor_id_sv);
-
-            std::string_view oprtor_sv = obj["operator"].get_string();
-            std::string oprtor(oprtor_sv);
-            double value = obj["value"].get_double();
-
-            // priority gets parsed LAST --> simdjson parses reading the order the content of the .json file
-            std::string_view priority_sv = obj["priority"].get_string();
-            RulePriority priority = parsePriority(priority_sv);
-
-            if (rule_type == "simple") {
-                current_rule = std::make_shared<SimpleRule>(rule_id, priority, sensor_id, oprtor, value);
-            } else {
-                current_rule = std::make_shared<StepDifferenceRule>(rule_id, priority, sensor_id, oprtor, value);
-            }
+        if (rule_type == "simple") {
+            current_rule = parseSimpleRule(obj);
+        } else if (rule_type == "step_difference") {
+            current_rule = parseStepDifferenceRule(obj);
         } else if (rule_type == "stateful") {
-            std::string_view sensor_id_sv = obj["sensor_id"].get_string();
-            std::string sensor_id(sensor_id_sv);
-
-            std::string_view oprtor_sv = obj["operator"].get_string();
-            std::string oprtor(oprtor_sv);
-            double value = obj["value"].get_double();
-
-            double consecutive_meas = obj["consecutive_measurements"].get_double();
-
-            std::string_view priority_sv = obj["priority"].get_string();
-            RulePriority priority = parsePriority(priority_sv);
-            current_rule = std::make_shared<StatefulRule>(rule_id, priority, sensor_id, oprtor, consecutive_meas, value);
+            current_rule = parseStatefulRule(obj);
         } else if (rule_type == "correlation") {
-            std::string_view logic_sv = obj["logic"].get_string();
-            std::string logic(logic_sv);
-
-            std::vector<std::shared_ptr<BaseRule>> corr_rules;
-            std::vector<std::string> condition_ids;
-            for (auto id_val : obj["conditions"].get_array()) {
-                condition_ids.emplace_back(id_val.get_string());
-            }
-            // this approach is not working if the correlation rules gets parsed BEFORE the simple rule.
-            for (const std::string& target_id : condition_ids) {
-                for (const auto& rule : rules_list) {
-                    if (rule->getRuleId() == target_id) {
-                        corr_rules.push_back(rule);
-                        break;
-                    }
-                }
-            }
-
-            std::string_view priority_sv = obj["priority"].get_string();
-            RulePriority priority = parsePriority(priority_sv);
-            current_rule = std::make_shared<LogicalCorrelationRule>(rule_id, priority, logic, corr_rules);
+            current_rule = parseLogicalCorrelationRule(obj, rules_list);
         }
 
         if (current_rule) {
             rules_list.emplace_back(current_rule);
         }
     }
+
     sortRules(rules_list);
+}
+
+
+std::shared_ptr<BaseRule> RuleLoader::parseSimpleRule(simdjson::ondemand::object& obj) {
+    std::string rule_id(obj["rule_id"].get_string().value()); // The .value() method seems to be needed to convert from simdjson::ondemand::string to std::string
+    double value = obj["value"].get_double();
+    std::string sensor_id(obj["sensor_id"].get_string().value());
+    std::string oprtor(obj["operator"].get_string().value());
+    RulePriority priority = parsePriority(obj["priority"].get_string().value());
+
+    return std::make_shared<SimpleRule>(rule_id, priority, sensor_id, oprtor, value);
+}
+
+std::shared_ptr<BaseRule> RuleLoader::parseStepDifferenceRule(simdjson::ondemand::object& obj) {
+    std::string rule_id(obj["rule_id"].get_string().value());
+    std::string sensor_id(obj["sensor_id"].get_string().value());
+    std::string oprtor(obj["operator"].get_string().value());
+    double value = obj["value"].get_double();
+    RulePriority priority = parsePriority(obj["priority"].get_string().value());
+
+    return std::make_shared<StepDifferenceRule>(rule_id, priority, sensor_id, oprtor, value);
+}
+
+std::shared_ptr<BaseRule> RuleLoader::parseStatefulRule(simdjson::ondemand::object& obj) {
+    std::string rule_id(obj["rule_id"].get_string().value());
+    std::string sensor_id(obj["sensor_id"].get_string().value());
+    std::string oprtor(obj["operator"].get_string().value());
+    double value = obj["value"].get_double();
+    double consecutive_meas = obj["consecutive_measurements"].get_double();
+    RulePriority priority = parsePriority(obj["priority"].get_string().value());
+
+    return std::make_shared<StatefulRule>(rule_id, priority, sensor_id, oprtor, consecutive_meas, value);
+}
+
+std::shared_ptr<BaseRule> RuleLoader::parseLogicalCorrelationRule(simdjson::ondemand::object& obj, const std::vector<std::shared_ptr<BaseRule>>& rules_list) {
+    std::string rule_id(obj["rule_id"].get_string().value());
+    std::string logic(obj["logic"].get_string().value());
+
+    std::vector<std::shared_ptr<BaseRule>> corr_rules;
+    for (auto id_val : obj["conditions"].get_array()) {
+        std::string target_id(id_val.get_string().value());
+        for (const auto& rule : rules_list) {
+            if (rule->getRuleId() == target_id) {
+                corr_rules.push_back(rule);
+                break;
+            }
+        }
+    }
+
+    RulePriority priority = parsePriority(obj["priority"].get_string().value());
+    return std::make_shared<LogicalCorrelationRule>(rule_id, priority, logic, corr_rules);
 }

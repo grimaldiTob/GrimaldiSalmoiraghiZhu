@@ -1,6 +1,6 @@
 #include "BatchAccumulator.h"
 
-size_t BatchAccumulator::getBatchSize() const {
+const size_t BatchAccumulator::getBatchSize() const {
     return m_batchSize;
 }
 

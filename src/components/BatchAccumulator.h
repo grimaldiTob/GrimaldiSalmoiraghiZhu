@@ -25,7 +25,7 @@ public:
     
     
     /*============ GETTER ============*/
-    size_t         getBatchSize() const;
+    const size_t         getBatchSize() const;
     const TelemetryBatch& getBatchFile() const;
 
     /*========================== SETTER ============================*/

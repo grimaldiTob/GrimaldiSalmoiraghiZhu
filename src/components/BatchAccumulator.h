@@ -3,9 +3,11 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include <thread>
 
 #include "TelemetryBatch.h"
 #include "BatchFile.h"
+#include "ThreadSafeBuffer.h"
 #include "../interfaces/BatchProviderInterface.h"
 #include "../interfaces/BatchAccumulatorInterface.h"
 #include "../interfaces/RuleEngineInterface.h"
@@ -21,11 +23,21 @@ public:
     /**
      * @brief Constructor 
      */
-    BatchAccumulator::BatchAccumulator(size_t batchSize = 100) : m_batchSize(batchSize) {}
-    
+    BatchAccumulator::BatchAccumulator(ThreadSafeBuffer<TelemetryBatch> buffer, size_t batchSize = 100) 
+        : m_buffer(buffer),
+          m_batchSize(batchSize) {}
+
+    // Overloading operator() allows the object to be passed directly to std::thread
+    void operator()() {
+
+        m_buffer.push(m_batchFile);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        m_buffer.finish_production();   
+
+    }
     
     /*============ GETTER ============*/
-    const size_t         getBatchSize() const;
+    const size_t          getBatchSize() const;
     const TelemetryBatch& getBatchFile() const;
 
     /*========================== SETTER ============================*/
@@ -56,13 +68,13 @@ public:
     /** 
      * @brief Accumulate the batch 
      */
-    void accumulate(TelemetryBatch);
+    void accumulate(const TelemetryBatch& batch);
 
 private:
 
-    size_t checkBatchSize(size_t addedSize) const;
+    bool checkBatchSize(size_t addedSize) const;
+    size_t getOverflowSize(size_t addedSize) const;
     void sortPriorities();
-    void handleOverUploading();
 
     /* ============================= ATTRIBUTE ====================*/
     size_t                                               m_batchSize;            // used to check wheter TelemetryBatch 
@@ -70,5 +82,6 @@ private:
     TelemetryBatch                                       m_batchTmp;             // the temporal batch
     std::shared_ptr<RuleEngineInterface>                 m_evaluator;            // interface provided by the RuleEngine class
     std::unordered_map<std::string, std::vector<double>> m_measurementsHistory;  // including the measurement history in the BatchAccumulator;
+    ThreadSafeBuffer<TelemetryBatch>&                    m_buffer;               // buffer/queue to store batches that ary ready to be processed 
 
 };   

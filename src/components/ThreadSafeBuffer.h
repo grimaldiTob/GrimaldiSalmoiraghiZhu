@@ -2,6 +2,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <chrono>
+#include "TelemetryBatch.h"
 
 /**
  * This template class entirely hides the synchronization logic (mutexes, locks, CVs) 
@@ -60,11 +61,13 @@ public:
 
 private:
 
-    std::queue<T>           m_queue;
-    std::mutex              m_mtx;
-    std::condition_variable m_cvProducer;
-    std::condition_variable m_cvConsumer;
-    size_t                  m_maxSize;
-    bool                    m_isFinished;
+    std::queue<T>           m_queue;         // Underlying container holding buffered items; access guarded by `m_mtx`.
+    std::mutex              m_mtx;           // Mutex protecting `m_queue`, `m_isFinished`, and other shared state.
+    std::condition_variable m_cvProducer;    // Notified when space becomes available so a producer can push.
+    std::condition_variable m_cvConsumer;    // Notified when an item is pushed or production is finished so consumers can pop/exit.
+    size_t                  m_maxSize;       // Maximum number of items allowed in the buffer before producers block.
+    bool                    m_isFinished;    // True when producers have finished producing (no more items will be pushed).
 
 };
+
+template class ThreadSafeBuffer<TelemetryBatch>;

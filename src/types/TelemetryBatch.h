@@ -37,8 +37,4 @@ struct TelemetryBatch {
         priorities.emplace_back(priority);
     }
 
-    void append(TelemetryBatch &added) {
-        
-    }
-
 };

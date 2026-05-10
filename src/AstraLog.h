@@ -2,6 +2,7 @@
 #include "components/DataIngestor.h"
 #include "components/BatchAccumulator.h"
 #include "components/RuleEngine.h"
+#include "components/RuleLoader.h"
 #include <memory>
 
 class AstroLog {
@@ -17,9 +18,7 @@ public:
         : m_accumulator(std::make_shared<BatchAccumulator>(batchSize)),
           m_ingestor(std::shared_ptr<DataIngestor>()),
           m_evaluator(std::shared_ptr<RuleEngine>()) {
-            m_ingestor->setAccumulatorInterface(m_accumulator);
-            m_accumulator->setRuleEngineInterface(m_evaluator);
-            // TODO: implement RuleLoader and OutputDispatcher classes
+            // TODO: set the interfaces
           }
     
     // Might be usefull for debugging
@@ -29,10 +28,10 @@ public:
 
 private:
 
-    std::shared_ptr<DataIngestor>           m_ingestor;
+    std::shared_ptr<DataIngestor>        m_ingestor;
     std::shared_ptr<BatchAccumulator>    m_accumulator;
-    std::shared_ptr<RuleEngine>            m_evaluator;
-    //RuleLoader              m_loader;
+    std::shared_ptr<RuleEngine>          m_evaluator;
+    RuleLoader                           m_loader;
     //OutputDispacther    m_dispatcher;
     //DataBase for stateful rule
 

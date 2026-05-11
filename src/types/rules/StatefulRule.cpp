@@ -3,6 +3,10 @@
 std::optional<bool> StatefulRule::evaluate(TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) {
 
+    if (!database) {
+        return std::nullopt;
+    }
+
     if(cache.count(this->rule_id)){
         return cache[this->rule_id];
     }
@@ -24,6 +28,11 @@ std::optional<bool> StatefulRule::evaluate(TelemetryBatch& batch,
                 // In fact, I am not even sure are present database allows us to retrieve the measurements 
                 //in a way that we can check if they are from consecutive time steps or not, 
                 //since we are just storing the last n measurements without timestamps.
+
+                // Ok approaches are two in this case. Either we store a vector of tuples...(value, timestamp)
+                // or any possible way of measuring consecutive measuremets, or we put a NaN in the moment in which
+                // there is no measurement. 
+                // Also, what to do if there is a missing measurement? Consider the rule as true, or false and continue checking?
 
             }
 

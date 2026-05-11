@@ -18,7 +18,8 @@ void RuleEngine::resetCache() {
  */
 void RuleEngine::evaluateRules() {
     for(auto& rule : rules_list) {
-        rule->evaluate(accumulator, rules_cache);
+
+        rule->evaluate(batch, rules_cache);
 
         // hypothetically we could think of storing result in cache here 
         // instead of the evaluate rule

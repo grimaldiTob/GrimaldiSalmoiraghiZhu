@@ -17,15 +17,15 @@ bool BatchAccumulator::checkBatchSize(size_t addedSize) const {
     return m_batchFile.getSize() + addedSize >= m_batchSize; 
 }
 
-size_t BatchAccumulator::getOverflowSize(size_t addedSize) const {
-    
-    size_t totalSize = m_batchFile.getSize() + addedSize; 
+size_t BatchAccumulator::getOverflowSize(size_t addedSize) const {    
+    size_t totalSize = m_batchFile.getSize() + addedSize; // total number of objects I have 
     return (totalSize == m_batchSize) ? 0 : (totalSize - m_batchSize); 
-
 }
 
 void BatchAccumulator::accumulate(const TelemetryBatch &batch) {
     size_t size = batch.getSize();
+
+    // it can be parallelized
     for(int i = 0; i < size; i++) {
         std::string sensors_name = batch.sensors_name[i];
         int64_t        timestamp = batch.timestamps[i];
@@ -44,7 +44,7 @@ void BatchAccumulator::storeValidData(TelemetryBatch &validBatch) {
     }
 
     // Prepare a cache in case of overflow values
-    TelemetryBatch cacheBatch;
+    TelemetryBatch cacheBatch; // non abbiamo già m_batchTmp nella classe ??? 
 
     // Notice that if overflow = 0 then we do not enter into any loops
     size_t overflowSize = getOverflowSize(validBatch.getSize());
@@ -60,6 +60,9 @@ void BatchAccumulator::storeValidData(TelemetryBatch &validBatch) {
 
     // start the evaluation 
     //m_evaluator.evaluation(); TODO
+
+    // if we use the thread safe buffer no need to call this here or no ???
+    // please comment more
 
     // safely clear the current batch file
     m_batchFile.clear(); 

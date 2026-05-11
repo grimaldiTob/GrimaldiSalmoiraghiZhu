@@ -20,7 +20,7 @@ public:
 
     // Safely push an item into the buffer
     void push(T item) {
-        std::unique_lock<std::mutex> lock(m_mtx);
+        std::unique_lock<std::mutex> lock(m_mtx); // only one thread at a time can hold this lock
         
         // Wait until there is room in the buffer
         m_cvProducer.wait(lock, [this]() { return m_queue.size() < m_maxSize; });

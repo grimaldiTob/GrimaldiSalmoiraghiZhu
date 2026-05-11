@@ -36,7 +36,7 @@ public:
     // vector in which we store all rules
     std::vector<std::shared_ptr<BaseRule>> rules_list;
     
-    BatchAccumulator accumulator;
+    TelemetryBatch batch;
     
     // map in which we store the cache result for the evaluated rules
     std::unordered_map<std::string, std::optional<bool>> rules_cache;

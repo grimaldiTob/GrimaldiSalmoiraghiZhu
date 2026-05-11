@@ -59,7 +59,7 @@ void BatchAccumulator::storeValidData(TelemetryBatch &validBatch) {
     }
 
     // start the evaluation 
-    //m_evaluator.evaluation(); TODO
+    //m_evaluator.evaluation(); 
 
     // if we use the thread safe buffer no need to call this here or no ???
     // please comment more
@@ -70,4 +70,8 @@ void BatchAccumulator::storeValidData(TelemetryBatch &validBatch) {
     //reload the values in the cache into the m_batchFile before starting to store new data
     accumulate(cacheBatch);
 
+}
+
+void BatchAccumulator::storeResultHistory() {
+    
 }

@@ -32,7 +32,7 @@ public:
     }
 
     // Safely pop an item. Returns false if the buffer is empty AND production is done.
-    bool pop(T& item) {
+    bool pop() {
         std::unique_lock<std::mutex> lock(m_mtx);
         
         // Wait until there is an item OR production is finished

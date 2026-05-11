@@ -60,7 +60,6 @@ public:
 
     /**
      * @brief Saving results
-     * 
      * methods that clears the batch when it finishes evaluation and stores result in the history
      */
     void storeResultHistory();
@@ -81,7 +80,8 @@ private:
     TelemetryBatch                                       m_batchFile;            // the current batch
     TelemetryBatch                                       m_batchTmp;             // the temporal batch
     std::shared_ptr<RuleEngineInterface>                 m_evaluator;            // interface provided by the RuleEngine class
-    std::unordered_map<std::string, std::vector<double>> m_measurementsHistory;  // including the measurement history in the BatchAccumulator;
+
+    // std::unordered_map<std::string, std::vector<double>> m_measurementsHistory;  // including the measurement history in the BatchAccumulator;
     ThreadSafeBuffer<TelemetryBatch>&                    m_buffer;               // buffer/queue to store batches that ary ready to be processed 
 
 };   

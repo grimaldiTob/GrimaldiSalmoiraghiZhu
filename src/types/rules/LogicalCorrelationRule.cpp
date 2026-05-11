@@ -3,7 +3,7 @@
 #include <sstream>
 #include <algorithm>
 
-std::optional<bool> LogicalCorrelationRule::evaluate(BatchAccumulator& accumulator, 
+std::optional<bool> LogicalCorrelationRule::evaluate(TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) {
 	if (cache.count(this->rule_id)) {
         return cache[this->rule_id];
@@ -13,23 +13,22 @@ std::optional<bool> LogicalCorrelationRule::evaluate(BatchAccumulator& accumulat
 
     if (logic == "AND") {
 		for (auto& child : condition_rules) {
-			
-			// call the evaluate function for the SimpleRule
-            std::optional<bool> child_result = child->evaluate(accumulator, cache); 
+			// Call the evaluate function for the child rule
+            std::optional<bool> child_result = child->evaluate(batch, cache); 
             
             if (!child_result.value()) {
 				final_result = false;
-                break; // we just need one rule to be false in this case
+                break; // We just need one rule to be false in this case
             }
         }
 		final_result = true; // Set to true if no rule is false
     } 
     else if (logic == "OR") {
 		for (const auto& child : condition_rules) {
-			auto child_result = child->evaluate(accumulator, cache);
+			auto child_result = child->evaluate(batch, cache);
             if (child_result.value()) {
 				final_result = true;
-                break; // it is enough one rule is true
+                break; // It is enough if one rule is true
             }
         }
     }

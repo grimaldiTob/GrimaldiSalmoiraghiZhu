@@ -1,5 +1,4 @@
-#ifndef STEPDIFFERENCERULE_H
-#define STEPDIFFERENCERULE_H
+#pragma once
 
 #include "BaseRule.h"
 
@@ -25,7 +24,7 @@ public:
           value(value),
           previous_value(std::nullopt) {} 
 
-    std::optional<bool> evaluate(BatchAccumulator& accumulator, 
+    std::optional<bool> evaluate(TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) override;
 
     std::string getSensorId() const { return sensor_id; }
@@ -41,6 +40,4 @@ private:
 
     std::optional<double> previous_value; // we make it a class parameter
 };
-
-#endif // STEPDIFFERENCERULE_H
 

@@ -1,7 +1,7 @@
-#ifndef STATEFULRULE_H
-#define STATEFULRULE_H
+#pragma once
 
 #include "BaseRule.h"
+#include "../../interfaces/MeasDatabaseInterface.h" 
 #include <vector>
 #include <unordered_map>
 
@@ -30,7 +30,7 @@ public:
         value(value) {}
 
     // Override required by BaseRule
-    std::optional<bool> evaluate(BatchAccumulator& accumulator, 
+    std::optional<bool> evaluate(TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) override;
 
     std::string getSensorId() const { return sensor_id; }
@@ -43,6 +43,9 @@ private:
     const std::string oprtor;
     const double value;
     const double consecutive_meas;
+    MeasDatabaseInterface* database; // pointer to the measurement database
+    // I am using a traditional, C-style pointer, since
+    // BaseRule is not the owner of the database, which likely
+    // needs no shared ownership nor automatic memory management,
+    // since it should be created at program startup and destroyed at shutdown.
 };
-
-#endif // LOGICALCORRELATIONRULE_H

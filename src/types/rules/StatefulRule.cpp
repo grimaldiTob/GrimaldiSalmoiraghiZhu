@@ -1,23 +1,35 @@
 #include "StatefulRule.h"
 
-std::optional<bool> StatefulRule::evaluate(BatchAccumulator& accumulator, 
+std::optional<bool> StatefulRule::evaluate(TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) {
 
     if(cache.count(this->rule_id)){
         return cache[this->rule_id];
     }
+
     bool rule = false;
     bool sensor_found = false;
 
-    for (size_t i = 0; i < accumulator.getBatchSize();++i) {
-        if(accumulator.getBatchFile().sensors_name[i] == this->sensor_id) {
+    for(size_t i = 0; i < batch.getSize(); ++i) {
+        if(batch.sensors_name[i] == this->sensor_id) {
             sensor_found = true;
 
-            const std::vector<double>& hist = accumulator.getMeasurementsHistory().at(sensor_id);
-            if(hist.empty() || hist.size() < consecutive_meas - 1)
-                return true; // return true if there are no past measurement or there is not at least n measurements in the history array
-            std::vector<double> past_meas(hist.end() - consecutive_meas + 1, hist.end()); // take the last `consecutive_meas` element
-            double current_value = accumulator.getBatchFile().values[i];
+            // Access the measurement history from the database
+            const auto& history = database->getMeasHistory();
+            if (history.find(sensor_id) == history.end() || history.at(sensor_id).size() < consecutive_meas - 1) {
+                return true; // Not enough history, return true? What if there are enough measurements, but they are not 
+                // from consecutive time steps? 
+                // Say we need five measurements, but the history contains t_{n - 1}, t_{n - 3}, t_{n - 4}, t_{n - 5}, t_{n - 6} (missing t_{n - 2}), 
+                //should we return true or false? 
+                // In fact, I am not even sure are present database allows us to retrieve the measurements 
+                //in a way that we can check if they are from consecutive time steps or not, 
+                //since we are just storing the last n measurements without timestamps.
+
+            }
+
+            const std::vector<double>& hist = history.at(sensor_id);
+            std::vector<double> past_meas(hist.end() - consecutive_meas + 1, hist.end()); // Last `consecutive_meas` elements
+            double current_value = batch.values[i];
 
             /* Ok I'm not a fan of lambdas but in this case MAYBE we could be getting 
             better code since this looks like a mess. */
@@ -75,6 +87,7 @@ std::optional<bool> StatefulRule::evaluate(BatchAccumulator& accumulator,
             }
         }
     }
+
     cache[this->rule_id] = rule;
     return rule;
 }

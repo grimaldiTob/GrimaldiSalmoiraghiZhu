@@ -14,7 +14,9 @@ void MeasDatabase::storeResult(std::string sensor_id, double value) {
  * IDEA: erase n values for all sensors??? Or just erase n values for a given
  * sensor_id??? I suppose we will get more measurements from one sensor becuase 
  * of packets filtering. What if some sensors has undreds of measurements and 
- * some have just a few?
+ * some have just a few? 
+ * Luca: Makes sense, should we decide to remove a fixed treshold of measurements 
+ * from the database,starting from the sensors which have more measurements?
  */
 void MeasDatabase::clearMeasurements(int n) {
     /*

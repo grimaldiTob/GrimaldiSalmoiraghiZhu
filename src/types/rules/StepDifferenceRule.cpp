@@ -1,23 +1,21 @@
 #include "StepDifferenceRule.h"
 
-std::optional<bool> StepDifferenceRule::evaluate(BatchAccumulator& accumulator, 
+std::optional<bool> StepDifferenceRule::evaluate(TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) {
 
     if(cache.count(this->rule_id)){
         return cache[this->rule_id]; // return the result stored in the cache
     }
-    bool rule = false;
     bool sensor_found = false;
 
-    // to implement the batch size function
-    for (size_t i = 0; i < accumulator.getBatchSize(); ++i){
-        if(accumulator.getBatchFile().sensors_name[i] == this->sensor_id){
+    for (size_t i = 0; i < batch.getSize(); ++i){
+        if(batch.sensors_name[i] == this->sensor_id){
             sensor_found = true;
-            double current_value = accumulator.getBatchFile().values[i];
+            double current_value = batch.values[i];
 
             // case in which there is no previous value
             if (!previous_value.has_value()) {
-                // yhis is the very first reading so we cannot calculate a difference yet.
+                // This is the very first reading so we cannot calculate a difference yet.
                 previous_value = current_value;
                 return true; // I guess we just return true ??? 
             }
@@ -36,5 +34,5 @@ std::optional<bool> StepDifferenceRule::evaluate(BatchAccumulator& accumulator,
         return std::nullopt; // Sensor wasn't in this batch at all
     }
 
-    return rule;
+    return false; // Default rule evaluation result
 }

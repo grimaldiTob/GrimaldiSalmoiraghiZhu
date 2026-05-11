@@ -1,8 +1,8 @@
-#ifndef LOGICALCORRELATIONRULE_H
-#define LOGICALCORRELATIONRULE_H
+#pragma once
 
 #include "BaseRule.h"
 #include <vector>
+#include <memory>
 #include <unordered_map>
 
 class LogicalCorrelationRule : public BaseRule {
@@ -25,7 +25,7 @@ public:
 
 
     // Override required by BaseRule
-    std::optional<bool> evaluate(BatchAccumulator& accumulator, 
+    std::optional<bool> evaluate(TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) override;
 
     std::string getLogic() const { return logic; }
@@ -35,5 +35,3 @@ private:
     std::string logic; // "AND" or "OR"
     std::vector<std::shared_ptr<BaseRule>> condition_rules;   // IDs of rules to combine
 };
-
-#endif // LOGICALCORRELATIONRULE_H

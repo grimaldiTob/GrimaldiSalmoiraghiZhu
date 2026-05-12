@@ -1,5 +1,7 @@
 
 class RuleEngineInterface {
+
+public:
     virtual ~RuleEngineInterface() = 0;
 
     virtual void evaluateRules() = 0;

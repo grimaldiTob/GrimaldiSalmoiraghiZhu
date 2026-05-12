@@ -11,6 +11,7 @@
 #include "../interfaces/BatchProviderInterface.h"
 #include "../interfaces/BatchAccumulatorInterface.h"
 #include "../interfaces/RuleEngineInterface.h"
+#include "../interfaces/MeasDatabaseInterface.h"
 
 /**
  * @brief Accumulates valid packets into a local batch for processing.
@@ -20,31 +21,35 @@ class BatchAccumulator : public BatchAccumulatorInterface {
 
 public:
 
-    /**
-     * @brief Constructor 
-     */
-    BatchAccumulator::BatchAccumulator(ThreadSafeBuffer<TelemetryBatch> buffer, size_t batchSize = 100) 
-        : m_buffer(buffer),
+    // This will be the final constructor but at the moment for the serial implementation
+    // the BatchAccumulator keeps the RuleEngine interface to invoke rule evaluation processing
+    // /** @brief Constructor */
+    // BatchAccumulator::BatchAccumulator(ThreadSafeBuffer<TelemetryBatch>& buffer, size_t batchSize = 100) 
+    //     : m_buffer(buffer),
+    //       m_batchSize(batchSize) {}
+
+    /** @brief Constructor used for the serial basic implementation */
+    BatchAccumulator::BatchAccumulator(RuleEngineInterface& evaluator, MeasDatabaseInterface database, size_t batchSize = 100)
+        : m_evaluator(evaluator),
+          m_database(database),
           m_batchSize(batchSize) {}
 
-    // Overloading operator() allows the object to be passed directly to std::thread
-    void operator()() {
+    // // Overloading operator() allows the object to be passed directly to std::thread
+    // void operator()() {
 
-        m_buffer.push(m_batchFile);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        m_buffer.finish_production();   
+    //     m_buffer.push(m_batchFile);
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //     m_buffer.finish_production();   
 
-    }
+    // }
     
     /*============ GETTER ============*/
     const size_t          getBatchSize() const;
     const TelemetryBatch& getBatchFile() const;
 
-    /*========================== SETTER ============================*/
-    void setEvaluator(std::shared_ptr<RuleEngineInterface> evaluator);
+    /*========================*/
 
-    /**
-     * @brief Store a validated telemetry batch into the accumulator.
+    /** @brief Store a validated telemetry batch into the accumulator.
      *
      * This method accepts a batch of telemetry data that has already been validated
      * by the DataIngestor and accumulates it internally. Once the batch reaches the
@@ -53,35 +58,17 @@ public:
      */
     void storeValidData(TelemetryBatch &validBatch) override;
     
-    /**
-     * @brief TODO
-     */
-    const std::unordered_map<std::string, std::vector<double>>& getMeasurementsHistory() const;
-
-    /**
-     * @brief Saving results
-     * methods that clears the batch when it finishes evaluation and stores result in the history
-     */
-    void storeResultHistory();
+    /* =============== INTERNAL METHODS ==========*/
+    bool checkBatchSize(size_t addedSize) const;           // Return true if the new size of the batch is greather than m_batcSize
+    size_t getOverflowSize(size_t addedSize) const;        // Return the number of elements that are more 
+    void storeResult(std::string id, double value) const;  // Store the results into the m_database
+    void accumulate(const TelemetryBatch& batch);          // Accumulate the batch into m_batchFile
     
-    /** 
-     * @brief Accumulate the batch 
-     */
-    void accumulate(const TelemetryBatch& batch);
-
-private:
-
-    bool checkBatchSize(size_t addedSize) const;
-    size_t getOverflowSize(size_t addedSize) const;
-    void sortPriorities();
-
     /* ============================= ATTRIBUTE ====================*/
-    size_t                                               m_batchSize;            // used to check wheter TelemetryBatch 
-    TelemetryBatch                                       m_batchFile;            // the current batch
-    TelemetryBatch                                       m_batchTmp;             // the temporal batch
-    std::shared_ptr<RuleEngineInterface>                 m_evaluator;            // interface provided by the RuleEngine class
-
-    // std::unordered_map<std::string, std::vector<double>> m_measurementsHistory;  // including the measurement history in the BatchAccumulator;
-    ThreadSafeBuffer<TelemetryBatch>&                    m_buffer;               // buffer/queue to store batches that ary ready to be processed 
+    size_t                                m_batchSize;    // used to check wheter TelemetryBatch 
+    TelemetryBatch                        m_batchFile;    // the current batch
+    RuleEngineInterface&                  m_evaluator;    // interface to trigger the RuleEngine.evaluation() (will be discarded once included the queue)
+    MeasDatabaseInterface&                m_database;     // interface to store data into the MeasDatabase class
+    //ThreadSafeBuffer<TelemetryBatch>&     m_buffer;     // buffer/queue to store batches that ary ready to be processed (will be uncomment once included the queue)
 
 };   

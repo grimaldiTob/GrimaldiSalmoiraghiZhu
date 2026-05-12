@@ -4,13 +4,8 @@ const size_t BatchAccumulator::getBatchSize() const {
     return m_batchSize;
 }
 
-// modified the method so it is not returning by value the whole batch 
 const TelemetryBatch& BatchAccumulator::getBatchFile() const {
     return m_batchFile;
-}
-
-void BatchAccumulator::setEvaluator(std::shared_ptr<RuleEngineInterface> evaluator) {
-    m_evaluator = evaluator;
 }
 
 bool BatchAccumulator::checkBatchSize(size_t addedSize) const {
@@ -31,7 +26,10 @@ void BatchAccumulator::accumulate(const TelemetryBatch &batch) {
         int64_t        timestamp = batch.timestamps[i];
         double             value = batch.values[i];
         int             priority = batch.priorities[i];
+        // accumulate the single meausurement
         m_batchFile.emplaceBack(sensors_name, timestamp, value, priority);
+        // send the single measuruement to the database
+        m_database.storeResult(sensors_name, value); 
     }
 }
 
@@ -44,7 +42,7 @@ void BatchAccumulator::storeValidData(TelemetryBatch &validBatch) {
     }
 
     // Prepare a cache in case of overflow values
-    TelemetryBatch cacheBatch; // non abbiamo già m_batchTmp nella classe ??? 
+    TelemetryBatch cacheBatch; // non abbiamo già m_batchTmp nella classe ??? [Mike] Mi ero dimenticato di togliere m_batchTmp ma alla fine ha la stessa logica, solo diversa implementazione 
 
     // Notice that if overflow = 0 then we do not enter into any loops
     size_t overflowSize = getOverflowSize(validBatch.getSize());
@@ -58,11 +56,13 @@ void BatchAccumulator::storeValidData(TelemetryBatch &validBatch) {
         cacheBatch.emplaceBack(sensors_name, timestamp, value, priority);
     }
 
-    // start the evaluation 
-    //m_evaluator.evaluation(); 
+    // trigger the rule evaluation processing (Once included the queue it will eventually be commented)
+    m_evaluator.evaluateRules(); 
 
     // if we use the thread safe buffer no need to call this here or no ???
-    // please comment more
+    // [Mike: I didn't understand the question, but at the moment do not care about the queue, 
+    // the queue implementation will be included after the serial prototype of the software]  
+    // please comment more [Mike: yes sorry i will try to comment more]
 
     // safely clear the current batch file
     m_batchFile.clear(); 
@@ -72,6 +72,6 @@ void BatchAccumulator::storeValidData(TelemetryBatch &validBatch) {
 
 }
 
-void BatchAccumulator::storeResultHistory() {
-    
+void BatchAccumulator::storeResult(std::string id, double value) const {
+    m_database.storeResult(id, value);
 }

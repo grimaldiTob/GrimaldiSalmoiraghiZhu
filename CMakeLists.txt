@@ -60,3 +60,18 @@ target_link_libraries(test_simple_rule PRIVATE Catch2::Catch2WithMain)
 
 # Auto-register tests for test_simple_rule
 catch_discover_tests(test_simple_rule)
+
+# Test executable for StepDifferenceRule
+add_executable(test_step_difference_rule
+    tests/test_step_difference_rule.cpp
+    src/types/rules/StepDifferenceRule.cpp
+)
+
+# Include directories for test_step_difference_rule
+target_include_directories(test_step_difference_rule PRIVATE src)
+
+# Link Catch2 for test_step_difference_rule
+target_link_libraries(test_step_difference_rule PRIVATE Catch2::Catch2WithMain)
+
+# Auto-register tests for test_step_difference_rule
+catch_discover_tests(test_step_difference_rule)

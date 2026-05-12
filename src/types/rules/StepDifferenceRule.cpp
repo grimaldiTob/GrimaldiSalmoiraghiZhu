@@ -2,10 +2,16 @@
 
 std::optional<bool> StepDifferenceRule::evaluate(TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) {
-
+    
     if(cache.count(this->rule_id)){
         return cache[this->rule_id]; // return the result stored in the cache
     }
+
+    // Validate operator before processing
+    if (op != "==" && op != "!=" && op != "<" && op != "<=" && op != ">" && op != ">=") {
+        return std::nullopt; // Invalid operator
+    }
+
     bool sensor_found = false;
 
     for (size_t i = 0; i < batch.getSize(); ++i){
@@ -27,12 +33,12 @@ std::optional<bool> StepDifferenceRule::evaluate(TelemetryBatch& batch,
             else if (op == "<") return step_diff < value;
             else if (op == "<=") return step_diff <= value;
             else if (op == ">") return step_diff > value;
-            else if (op == ">=") return step_diff >= value;            
+            else if (op == ">=") return step_diff >= value;
         }
     }
     if (!sensor_found) {
         return std::nullopt; // Sensor wasn't in this batch at all
     }
 
-    return false; // Default rule evaluation result
+    return std::nullopt; // Default to nullopt for any other case
 }

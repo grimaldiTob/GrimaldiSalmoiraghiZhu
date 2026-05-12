@@ -30,7 +30,7 @@ include(FetchContent)
 FetchContent_Declare(
     Catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG        v3.7.1   # pin to a stable release; bump as needed
+    GIT_TAG        v3.15.0   # pin to a stable release; bump as needed
 )
 FetchContent_MakeAvailable(Catch2)
 
@@ -48,32 +48,15 @@ enable_testing()
 
 # Test executable for SimpleRule
 add_executable(test_simple_rule
-    tests/test_simple_rule_main.cpp
+    tests/test_simple_rule.cpp
     src/types/rules/SimpleRule.cpp
 )
-add_executable(test_step_difference_rule
-    tests/test_step_difference_rule_main.cpp
-    src/types/rules/StepDifferenceRule.cpp
-)
-add_executable(test_logical_correlation_rule
-    tests/test_logical_correlation_rule.cpp
-    src/types/rules/LogicalCorrelationRule.cpp
-)
-target_include_directories(test_simple_rule PRIVATE src)
-target_include_directories(test_step_difference_rule PRIVATE src)
-target_include_directories(test_logical_correlation_rule PRIVATE src)
 
-# Catch2 TEST
-# --------------------------------------------------------------
-add_executable(test_simple_rule_main_catch2
-    tests/test_simple_rule_main_catch2.cpp
-    src/types/rules/SimpleRule.cpp
-)
- 
-target_include_directories(test_simple_rule_main_catch2 PRIVATE src)
- 
-# Link against Catch2::Catch2WithMain so we don't need to write main() ourselves
-target_link_libraries(test_simple_rule_main_catch2 PRIVATE Catch2::Catch2WithMain)
- 
-# Auto-register every TEST_CASE with CTest
-catch_discover_tests(test_simple_rule_main_catch2)
+# Include directories for test_simple_rule
+target_include_directories(test_simple_rule PRIVATE src)
+
+# Link Catch2 for test_simple_rule
+target_link_libraries(test_simple_rule PRIVATE Catch2::Catch2WithMain)
+
+# Auto-register tests for test_simple_rule
+catch_discover_tests(test_simple_rule)

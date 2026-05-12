@@ -109,20 +109,5 @@ void DataIngestor::parseTelemetry(simdjson::ondemand::parser& parser, const std:
 }
 
 void DataIngestor::sendValidBatchToAccumulator() {
-    
-    if (!m_accumulatorInterface) {
-        throw std::runtime_error("m_accumulatorInterface is null");
-    }
-
-    m_accumulatorInterface->storeValidData(m_validBatch);
-}
-
-void DataIngestor::setAccumulatorInterface(std::shared_ptr<BatchAccumulatorInterface> accumulatorInterface) {
-
-    if (!m_accumulatorInterface) {
-        throw std::runtime_error("DataIngestor received a null pointer as parameter");
-    }
-
-    m_accumulatorInterface = accumulatorInterface;
-    
+    m_accumulator.storeValidData(m_validBatch);
 }

@@ -58,13 +58,13 @@ public:
      */
     void storeValidData(TelemetryBatch &validBatch) override;
     
-    /* =============== INTERNAL METHODS ==========*/
+    /* =============== INTERNAL METHODS ===================*/
     bool checkBatchSize(size_t addedSize) const;           // Return true if the new size of the batch is greather than m_batcSize
     size_t getOverflowSize(size_t addedSize) const;        // Return the number of elements that are more 
     void storeResult(std::string id, double value) const;  // Store the results into the m_database
     void accumulate(const TelemetryBatch& batch);          // Accumulate the batch into m_batchFile
     
-    /* ============================= ATTRIBUTE ====================*/
+    /* ============================= ATTRIBUTE ===========*/
     size_t                                m_batchSize;    // used to check wheter TelemetryBatch 
     TelemetryBatch                        m_batchFile;    // the current batch
     RuleEngineInterface&                  m_evaluator;    // interface to trigger the RuleEngine.evaluation() (will be discarded once included the queue)

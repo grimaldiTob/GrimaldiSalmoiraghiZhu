@@ -57,7 +57,9 @@ public:
      * available for processing by the rule engine.
      */
     void storeValidData(TelemetryBatch &validBatch) override;
-    
+
+ private:   
+ 
     /* =============== INTERNAL METHODS ===================*/
     bool checkBatchSize(size_t addedSize) const;           // Return true if the new size of the batch is greather than m_batcSize
     size_t getOverflowSize(size_t addedSize) const;        // Return the number of elements that are more 

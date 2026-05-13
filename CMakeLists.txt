@@ -75,3 +75,18 @@ target_link_libraries(test_step_difference_rule PRIVATE Catch2::Catch2WithMain)
 
 # Auto-register tests for test_step_difference_rule
 catch_discover_tests(test_step_difference_rule)
+
+# Test executable for StatefulRule
+add_executable(test_stateful_rule
+    tests/test_stateful_rule.cpp
+    src/types/rules/StatefulRule.cpp
+)
+
+# Include directories for test_stateful_rule
+target_include_directories(test_stateful_rule PRIVATE src)
+
+# Link Catch2 for test_stateful_rule
+target_link_libraries(test_stateful_rule PRIVATE Catch2::Catch2WithMain)
+
+# Auto-register tests for test_stateful_rule
+catch_discover_tests(test_stateful_rule)

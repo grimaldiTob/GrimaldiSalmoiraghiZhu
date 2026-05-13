@@ -35,5 +35,5 @@ std::optional<bool> SimpleRule::evaluate(TelemetryBatch& batch,
         return std::nullopt; // Sensor wasn't in this batch at all
     }
 
-    return false; // Default rule evaluation result
+    return std::nullopt; // Default rule evaluation result
 }

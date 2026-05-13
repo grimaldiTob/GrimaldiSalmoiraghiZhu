@@ -1,17 +1,25 @@
 #include "StatefulRule.h"
+#include <algorithm> // for std::find
 
 std::optional<bool> StatefulRule::evaluate(TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) {
 
+    // Check if the database pointer is valid
     if (!database) {
         return std::nullopt;
     }
 
+    // Check if the operator is valid
+    if (oprtor != "==" && oprtor != "!=" && oprtor != "<" && oprtor != "<=" && oprtor != ">" && oprtor != ">=") {
+        return std::nullopt; // Invalid operator
+    }
+
+    // Check if the result is already cached
     if(cache.count(this->rule_id)){
         return cache[this->rule_id];
     }
 
-    bool rule = false;
+    std::optional<bool> rule = std::nullopt;
     bool sensor_found = false;
 
     for(size_t i = 0; i < batch.getSize(); ++i) {
@@ -61,10 +69,7 @@ std::optional<bool> StatefulRule::evaluate(TelemetryBatch& batch,
             } 
             else if (oprtor == ">=") {
                 if (current_value >= value) rule = true;
-            } 
-            else {
-                return std::nullopt; // return error if the operator is wrong           
-            }        
+            }
 
             if(rule) break;
 
@@ -89,12 +94,13 @@ std::optional<bool> StatefulRule::evaluate(TelemetryBatch& batch,
                 else if (oprtor == ">=" && past_value >= value) {
                     rule = true;
                 } 
-                else {
-                    return std::nullopt; 
-                }
                 if(rule) break;
             }
         }
+    }
+
+    if (!sensor_found) {
+        return std::nullopt; // Sensor wasn't in this batch at all
     }
 
     cache[this->rule_id] = rule;

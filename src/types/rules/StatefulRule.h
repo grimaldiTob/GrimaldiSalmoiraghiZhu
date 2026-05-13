@@ -47,7 +47,7 @@ private:
     const std::string oprtor;
     const double value;
     const double consecutive_meas;
-    MeasDatabaseInterface* database; // pointer to the measurement database
+    MeasDatabaseInterface* database = nullptr; // pointer to the measurement database
     // I am using a traditional, C-style pointer, since
     // BaseRule is not the owner of the database, which likely
     // needs no shared ownership nor automatic memory management,

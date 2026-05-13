@@ -3,7 +3,7 @@
 #include <sstream>
 #include <algorithm>
 
-std::optional<bool> LogicalCorrelationRule::evaluate(TelemetryBatch& batch, 
+std::optional<bool> LogicalCorrelationRule::evaluate(const TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) {
 	if (cache.count(this->rule_id)) {
         return cache[this->rule_id];

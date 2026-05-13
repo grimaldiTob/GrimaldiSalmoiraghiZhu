@@ -1,7 +1,7 @@
 #include "StatefulRule.h"
 #include <algorithm> // for std::find
 
-std::optional<bool> StatefulRule::evaluate(TelemetryBatch& batch, 
+std::optional<bool> StatefulRule::evaluate(const TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) {
 
     // Check if the database pointer is valid

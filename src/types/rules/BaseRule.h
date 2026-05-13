@@ -28,7 +28,7 @@ public:
           type(type), 
           priority(priority) {}
     virtual ~BaseRule() = default;
-    virtual std::optional<bool> evaluate(TelemetryBatch& batch, 
+    virtual std::optional<bool> evaluate(const TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) = 0; 
     // I changed the return type to std::optional<bool> to allow for a "null" 
     // state in case of invalid input or other issues during evaluation.

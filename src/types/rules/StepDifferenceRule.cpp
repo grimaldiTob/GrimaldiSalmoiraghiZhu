@@ -1,6 +1,6 @@
 #include "StepDifferenceRule.h"
 
-std::optional<bool> StepDifferenceRule::evaluate(TelemetryBatch& batch, 
+std::optional<bool> StepDifferenceRule::evaluate(const TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) {
     
     if(cache.count(this->rule_id)){

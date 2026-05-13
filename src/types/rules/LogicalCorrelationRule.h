@@ -25,7 +25,7 @@ public:
 
 
     // Override required by BaseRule
-    std::optional<bool> evaluate(TelemetryBatch& batch, 
+    std::optional<bool> evaluate(const TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) override;
 
     std::string getLogic() const { return logic; }

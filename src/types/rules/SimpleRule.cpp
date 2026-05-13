@@ -1,6 +1,6 @@
 #include "SimpleRule.h"
 
-std::optional<bool> SimpleRule::evaluate(TelemetryBatch& batch, 
+std::optional<bool> SimpleRule::evaluate(const TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) {
     if(cache.count(this->rule_id)){
         return cache[this->rule_id]; // return the result stored in the cache

@@ -23,7 +23,7 @@ public:
           value(value) {}
 
     // Overridden evaluate method (implementation in .cpp file)
-    std::optional<bool> evaluate(TelemetryBatch& batch, 
+    std::optional<bool> evaluate(const TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) override;
 
     // TO BE DISCUSSED (see comment in BaseRule.h)

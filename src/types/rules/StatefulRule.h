@@ -30,7 +30,7 @@ public:
         value(value) {}
 
     // Override required by BaseRule
-    std::optional<bool> evaluate(TelemetryBatch& batch, 
+    std::optional<bool> evaluate(const TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) override;
 
     // assigns the database interface to the pointer.

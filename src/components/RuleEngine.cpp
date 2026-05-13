@@ -31,6 +31,6 @@ void RuleEngine::evaluateRules() {
         
         // so we can think of like parallelizing over 'HIGH', 'MEDIUM', 'LOW' priorities but not all of them.
     }
-    accumulator.storeResultHistory(); // store the values of the accumulator in the history map
+    // accumulator.storeResultHistory(); // store the values of the accumulator in the history map
     resetCache(); // reset rules cache 
 }

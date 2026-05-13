@@ -16,7 +16,7 @@ void RuleEngine::resetCache() {
  * For each rule checks if there is a match between the measurement in the
  * batch and evaluates the rule
  */
-void RuleEngine::evaluateRules() {
+void RuleEngine::evaluateRules(const TelemetryBatch& batch) {
     for(auto& rule : rules_list) {
 
         rule->evaluate(batch, rules_cache);
@@ -33,4 +33,16 @@ void RuleEngine::evaluateRules() {
     }
     // accumulator.storeResultHistory(); // store the values of the accumulator in the history map
     resetCache(); // reset rules cache 
+}
+
+
+void RuleEngine::run() {
+
+    TelemetryBatch currentBatch;
+
+    // This loop should handle all the complex multithreading logic.
+    while(m_broker.pop(currentBatch)) {
+        // Once successfully pulls data into batch, the thread starts the evaluation logic
+        evaluateRules(currentBatch);
+    }
 }

@@ -5,7 +5,7 @@
 #include "TelemetryBatch.h"
 
 /**
- * This template class entirely hides the synchronization logic (mutexes, locks, CVs) 
+ * This template class entirely hides(encaplusaltion) the synchronization logic (mutexes, locks, CVs) 
  * from the outside world.
  * 
  * In our specifc project (T = TelematryBatch) acts as a thread-safe broker between the BatchAccumulator and the RuleEngine.
@@ -32,7 +32,11 @@ public:
     }
 
     // Safely pop an item. Returns false if the buffer is empty AND production is done.
-    bool pop() {
+    // [the pop must return true or false and passed the batch through the parameter
+    // to enable multithreaded programming, in particular in the RuleEngine.run() there is a loop
+    // that continue try to fetch a batche from the queue as long as it reads true. 
+    // For also safety reason, is better to keep this signature whenever exceptions occur] 
+    bool pop(T& item) {
         std::unique_lock<std::mutex> lock(m_mtx);
         
         // Wait until there is an item OR production is finished

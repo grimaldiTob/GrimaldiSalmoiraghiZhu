@@ -56,33 +56,6 @@ static int64_t parseISO8601(std::string_view time_str) {
     return 0; // Return 0 if parsing fails
 }
 
-// TEST_CASE("Ciao", "[DataIngestor]") {
-
-//     MockBatchAccumulator mockBatchAccumulator;
-//     DataIngestor dataIngestor(mockBatchAccumulator);
-//     simdjson::ondemand::parser parser;
-
-//     // This file has Total 50 measurements =  47 valid + 3 valid 
-//     // (provided thanks to a python script located in src directory)
-//     std::string filePath("../src/collector_output/raw_data_1777721417_0000.txt ");
-
-//     SECTION("Initialization") {
-//         REQUIRE(mockBatchAccumulator.callCount == 0);
-//         REQUIRE(mockBatchAccumulator.batch.getSize() == 0);
-//     }
-
-//     SECTION("Data Parsing") {
-//         REQUIRE_NOTHROW(dataIngestor.parseTelemetry(parser, filePath));
-//     }
-    
-//     SECTION("Check that ") {
-//          REQUIRE(mockBatchAccumulator.callCount == 1);
-//          REQUIRE(mockBatchAccumulator.batch.getSize() == 47);        
-//      }
-
-
-// }
-
 TEST_CASE("DataIngestor File Loading and Error Handling", "[DataIngestor][FileIO]") {
 
     MockBatchAccumulator mockAccumulator;
@@ -162,7 +135,7 @@ TEST_CASE("Real File Integration Test", "[Integration][FileIO]") {
 
     }
 
-    // Print a success message to the console showing how many batches it read!
+    // Print a success message to the console showing how many batches it read
     WARN("Success! Read real external file. Batches extracted: " << mockAccumulator.callCount);
 
 }

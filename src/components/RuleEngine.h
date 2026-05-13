@@ -11,32 +11,43 @@
 #include "../rules/StatefulRule.h"
 #include "../rules/LogicalCorrelationRule.h"
 #include "BatchAccumulator.h"
+#include "ThreadSafeBuffer.h"
 
 class RuleEngine : public RuleEngineInterface {
 
 public:
 
-    RuleEngine() = default;
+    explicit RuleEngine(ThreadSafeBuffer<TelemetryBatch>& broker)
+        : m_broker(broker) {}
 
     // use const obj& in order to avoid reallocating on each call
     const std::vector<std::shared_ptr<BaseRule>>& getRulesList() const { return rules_list; };
-    const BatchAccumulator& getAccumulator() const { return accumulator; }
     const std::unordered_map<std::string, std::optional<bool>>& getRulesCache() const { return rules_cache; };
 
     void setProviderInterface(std::shared_ptr<BatchProviderInterface>);
 
-    void evaluateRules();
+    // Protect the batch as read-only since the RuleEngine has to read and make evaluation without modify it
+    void evaluateRules(const TelemetryBatch& batch);
 
     void resetCache();
-    
-    private:
 
-    std::shared_ptr<BatchProviderInterface> provider;
+    // The entry point for the Consumer Thread
+    void run();
+    
+private:
+
+    // The queue which the class will retrieve the batch from 
+    ThreadSafeBuffer<TelemetryBatch>& m_broker;      
 
     // vector in which we store all rules
     std::vector<std::shared_ptr<BaseRule>> rules_list;
     
-    TelemetryBatch batch;
+
+    // if we have exactly one consumer thread, keeping it as an attribute might work,
+    // but can introduce hidden bugs into a multithreaded system (for parallelization)
+    // I think is better to move it to a local variable in RuleEnginerun() and evaluateRules takes
+    // as parameter the local batch
+    //TelemetryBatch batch; 
     
     // map in which we store the cache result for the evaluated rules
     std::unordered_map<std::string, std::optional<bool>> rules_cache;

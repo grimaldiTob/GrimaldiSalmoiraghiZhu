@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <thread>
+#include <string>
 
 #include "TelemetryBatch.h"
 #include "BatchFile.h"
@@ -21,18 +22,21 @@ class BatchAccumulator : public BatchAccumulatorInterface {
 
 public:
 
-    // This will be the final constructor but at the moment for the serial implementation
-    // the BatchAccumulator keeps the RuleEngine interface to invoke rule evaluation processing
-    // /** @brief Constructor */
-    // BatchAccumulator::BatchAccumulator(ThreadSafeBuffer<TelemetryBatch>& buffer, size_t batchSize = 100) 
-    //     : m_buffer(buffer),
-    //       m_batchSize(batchSize) {}
-
-    /** @brief Constructor used for the serial basic implementation */
-    BatchAccumulator::BatchAccumulator(RuleEngineInterface& evaluator, MeasDatabaseInterface database, size_t batchSize = 100)
-        : m_evaluator(evaluator),
+    /** @brief Constructor */
+    explicit BatchAccumulator(ThreadSafeBuffer<TelemetryBatch>& broker, 
+                              MeasDatabaseInterface& database, 
+                              size_t batchSize = 100) 
+        : m_broker(broker),
           m_database(database),
           m_batchSize(batchSize) {}
+
+    // IF YOU WANT TO USE THE SEQUENTIAL LOGIC WITHOUT THE QUEUE DISCOMMENT BELOW CONSTRUCTOR AND COMMENT ABOVE CONSTRUCTOR()
+    // AND REMEMBER TO COMMENT THE m_buffer also 
+    /** @brief Constructor used for the serial basic implementation */
+    // BatchAccumulator(RuleEngineInterface& evaluator, MeasDatabaseInterface database, size_t batchSize = 100)
+    //     : m_evaluator(evaluator),
+    //       m_database(database),
+    //       m_batchSize(batchSize) {}
 
     // // Overloading operator() allows the object to be passed directly to std::thread
     // void operator()() {
@@ -44,7 +48,7 @@ public:
     // }
     
     /*============ GETTER ============*/
-    const size_t          getBatchSize() const;
+    size_t          getBatchSize() const;
     const TelemetryBatch& getBatchFile() const;
 
     /*========================*/
@@ -69,8 +73,8 @@ public:
     /* ============================= ATTRIBUTE ===========*/
     size_t                                m_batchSize;    // used to check wheter TelemetryBatch 
     TelemetryBatch                        m_batchFile;    // the current batch
-    RuleEngineInterface&                  m_evaluator;    // interface to trigger the RuleEngine.evaluation() (will be discarded once included the queue)
+    //RuleEngineInterface&                  m_evaluator;    // interface to trigger the RuleEngine.evaluation() (will be discarded once included the queue)
     MeasDatabaseInterface&                m_database;     // interface to store data into the MeasDatabase class
-    //ThreadSafeBuffer<TelemetryBatch>&     m_buffer;     // buffer/queue to store batches that ary ready to be processed (will be uncomment once included the queue)
+    ThreadSafeBuffer<TelemetryBatch>&     m_broker;     // buffer/queue to store batches that ary ready to be processed (will be uncomment once included the queue)
 
 };   

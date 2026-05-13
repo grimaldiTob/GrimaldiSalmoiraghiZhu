@@ -5,6 +5,7 @@
 #include "components/RuleEngine.h"
 #include "components/RuleLoader.h"
 #include "components/MeasDatabase.h"
+#include "components/ThreadSafeBuffer.h"
 #include "../../external/simdjson.h"
 
 
@@ -19,9 +20,10 @@ public:
      */
     AstroLog(int batchSize = 100) {
         m_database = std::make_unique<MeasDatabase>();
+        m_broker = std::shared_ptr<ThreadSafeBuffer<TelemetryBatch>>();
         m_ingestor = std::make_unique<DataIngestor>();
-        m_accumulator = std::make_unique<BatchAccumulator>(*m_evaluator, *m_database, batchSize);
-        m_evaluator = std::make_unique<RuleEngine>(); // TODO: make a constructor that instanciate every interfaces used by this class
+        m_accumulator = std::make_unique<BatchAccumulator>(m_broker, m_database, batchSize);
+        m_evaluator = std::make_unique<RuleEngine>(m_broker); // TODO: make a constructor that instanciate every interfaces used by this class
         m_loader = std::make_unique<RuleLoader>();    // TODO: make a constructor that instaciate every interfaces used by this class
     }
     
@@ -35,10 +37,10 @@ public:
 
 private:
 
-    std::unique_ptr<DataIngestor>          m_ingestor;
-    std::unique_ptr<BatchAccumulator>      m_accumulator;  
-    std::unique_ptr<RuleEngine>            m_evaluator;
-    std::unique_ptr<RuleLoader>            m_loader;
-    std::unique_ptr<MeasDatabase>          m_database;
-
+    std::unique_ptr<DataIngestor>                     m_ingestor;
+    std::unique_ptr<BatchAccumulator>                 m_accumulator;  
+    std::unique_ptr<RuleEngine>                       m_evaluator;
+    std::unique_ptr<RuleLoader>                       m_loader;
+    std::unique_ptr<MeasDatabase>                     m_database;
+    std::shared_ptr<ThreadSafeBuffer<TelemetryBatch>> m_broker;
 };

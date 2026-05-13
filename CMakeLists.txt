@@ -90,3 +90,17 @@ target_link_libraries(test_stateful_rule PRIVATE Catch2::Catch2WithMain)
 
 # Auto-register tests for test_stateful_rule
 catch_discover_tests(test_stateful_rule)
+
+# Test executable for TelemetryBatch
+add_executable(test_telemetry_batch
+    tests/types/test_telemetry_batch.cpp
+)
+
+# Include directories for test_telemetry_batch
+target_include_directories(test_telemetry_batch PRIVATE src)
+
+# Link Catch2 for test_telemetry_batch
+target_link_libraries(test_telemetry_batch PRIVATE Catch2::Catch2WithMain)
+
+# Auto-register tests for test_telemetry_batch
+catch_discover_tests(test_telemetry_batch)

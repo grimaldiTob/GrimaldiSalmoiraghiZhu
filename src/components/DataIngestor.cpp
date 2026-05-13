@@ -1,6 +1,7 @@
 #include "DataIngestor.h"
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 
 void DataIngestor::printTelemetry(const TelemetryBatch &batch, int limit = 10) const {
     int records = batch.sensors_name.size();
@@ -44,6 +45,18 @@ void DataIngestor::parseTelemetry(simdjson::ondemand::parser& parser, const std:
 
     int valid_pkg = 0;
     int invalid_pkg = 0;
+
+    // Read iteratively of record NDJSON
+    simdjson::padded_string fileStream;
+    auto error = simdjson::padded_string::load(filename).get(fileStream);
+
+    // Throw an exception containing the exact simdjson error message
+    if (error) 
+        throw std::runtime_error("SIMDJSON ERROR: " + std::string(simdjson::error_message(error)));
+
+    // Throw an error in case of reading an empty file
+    if (fileStream.size() == 0) 
+        throw std::runtime_error("DataIngestor Error: The file exists, but it is completely empty (0 bytes)!");
 
     std::ifstream infile(filename); // just one file at a time for now
     std::string line;

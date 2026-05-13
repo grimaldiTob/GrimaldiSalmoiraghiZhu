@@ -93,7 +93,7 @@ catch_discover_tests(test_stateful_rule)
 
 # Test executable for TelemetryBatch
 add_executable(test_telemetry_batch
-    tests/types/test_telemetry_batch.cpp
+    tests/types/test_TelemetryBatch.cpp
 )
 
 # Include directories for test_telemetry_batch
@@ -104,3 +104,19 @@ target_link_libraries(test_telemetry_batch PRIVATE Catch2::Catch2WithMain)
 
 # Auto-register tests for test_telemetry_batch
 catch_discover_tests(test_telemetry_batch)
+
+# Test executable for DataIngestor
+add_executable(test_data_ingestor
+    tests/components/test_data_ingestor.cpp
+    src/components/DataIngestor.cpp
+    external/simdjson.cpp
+)
+
+# Include directories for test_data_ingestor
+target_include_directories(test_data_ingestor PRIVATE src)
+
+# Link Catch2 for test_data_ingestor
+target_link_libraries(test_data_ingestor PRIVATE Catch2::Catch2WithMain)
+
+# Auto-register tests for test_data_ingestor
+catch_discover_tests(test_data_ingestor)

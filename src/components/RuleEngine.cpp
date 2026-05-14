@@ -12,6 +12,16 @@ void RuleEngine::resetCache() {
                   });
 }
 
+/** @brief method that populates the rules_list calling the loadRules()
+ * method through the loader interface object.
+ */
+void RuleEngine::setRulesList(RuleLoaderInterface& loader,
+                              simdjson::ondemand::parser& parser) {
+    rules_list.clear();
+    rules_cache.clear(); // avoid stale cache entries
+    loader.loadRules(parser, RULES_FILENAME, rules_list);
+}
+
 /** @brief Method which evaluates all the rules stored in the rules_list
  * For each rule checks if there is a match between the measurement in the
  * batch and evaluates the rule

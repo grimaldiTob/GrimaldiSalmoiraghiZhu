@@ -76,7 +76,7 @@ public:
     TelemetryBatch                        m_batchFile;    // the current batch
     TelemetryBatch                        m_batchTmp;     // better keep track of the cache
     // RuleEngineInterface&                  m_evaluator;    // interface to trigger the RuleEngine.evaluation() (will be discarded once included the queue)
-    MeasDatabaseInterface&                m_database;     // interface to store data into the MeasDatabase class
+    // MeasDatabaseInterface&                m_database;     // interface to store data into the MeasDatabase class
     ThreadSafeBuffer<TelemetryBatch>&     m_broker;     // buffer/queue to store batches that ary ready to be processed (will be uncomment once included the queue)
 
 };   

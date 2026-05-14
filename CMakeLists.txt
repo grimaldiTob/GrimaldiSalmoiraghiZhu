@@ -46,7 +46,7 @@ enable_testing()
 # ---------------------------------------------------------------------------
 
 
-# Test executable for SimpleRule
+##################### Test executable for SimpleRule #####################
 add_executable(test_simple_rule
     tests/test_simple_rule.cpp
     src/types/rules/SimpleRule.cpp
@@ -61,7 +61,7 @@ target_link_libraries(test_simple_rule PRIVATE Catch2::Catch2WithMain)
 # Auto-register tests for test_simple_rule
 catch_discover_tests(test_simple_rule)
 
-# Test executable for StepDifferenceRule
+################# Test executable for StepDifferenceRule ##################
 add_executable(test_step_difference_rule
     tests/test_step_difference_rule.cpp
     src/types/rules/StepDifferenceRule.cpp
@@ -76,7 +76,7 @@ target_link_libraries(test_step_difference_rule PRIVATE Catch2::Catch2WithMain)
 # Auto-register tests for test_step_difference_rule
 catch_discover_tests(test_step_difference_rule)
 
-# Test executable for StatefulRule
+####################### Test executable for StatefulRule ####################
 add_executable(test_stateful_rule
     tests/test_stateful_rule.cpp
     src/types/rules/StatefulRule.cpp
@@ -91,7 +91,7 @@ target_link_libraries(test_stateful_rule PRIVATE Catch2::Catch2WithMain)
 # Auto-register tests for test_stateful_rule
 catch_discover_tests(test_stateful_rule)
 
-# Test executable for TelemetryBatch
+###############à######### Test executable for TelemetryBatch #######################
 add_executable(test_telemetry_batch
     tests/types/test_TelemetryBatch.cpp
 )
@@ -120,3 +120,24 @@ target_link_libraries(test_data_ingestor PRIVATE Catch2::Catch2WithMain)
 
 # Auto-register tests for test_data_ingestor
 catch_discover_tests(test_data_ingestor)
+
+##################### Test executable for RuleLoader #####################
+add_executable(test_rule_loader
+    tests/test_RuleLoader.cpp
+    src/components/RuleLoader.cpp
+    src/types/rules/SimpleRule.cpp
+    src/types/rules/StepDifferenceRule.cpp
+    src/types/rules/StatefulRule.cpp
+    src/types/rules/LogicalCorrelationRule.cpp
+    external/simdjson.cpp
+)
+
+# Include directories for test_rule_loader
+target_include_directories(test_rule_loader PRIVATE src)
+
+# Link Catch2 for test_rule_loader
+target_link_libraries(test_rule_loader PRIVATE Catch2::Catch2WithMain)
+
+# Auto-register tests for test_rule_loader
+catch_discover_tests(test_rule_loader)
+

@@ -25,7 +25,7 @@ public:
         // Wait until there is room in the buffer
         m_cvProducer.wait(lock, [this]() { return m_queue.size() < m_maxSize; });
 
-        m_queue.push(item);
+        m_queue.push(std::move(item));
         
         lock.unlock();
         m_cvConsumer.notify_one(); // Wake up a consumer
@@ -46,7 +46,10 @@ public:
             return false; // Nothing left to consume
         }
 
-        item = m_queue.front();
+        // other approach would be to move the ownership instead.
+        // we will do this operation many times on different cores so
+        // having a copy of the batch in the RuleEngine is not good for memory.
+        item = std::move(m_queue.front());
         m_queue.pop();
         
         lock.unlock();

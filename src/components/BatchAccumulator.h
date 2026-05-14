@@ -50,6 +50,7 @@ public:
     /*============ GETTER ============*/
     size_t          getBatchSize() const;
     const TelemetryBatch& getBatchFile() const;
+    const TelemetryBatch& getBatchTmp() const;
 
     /*========================*/
 
@@ -68,12 +69,13 @@ public:
     bool checkBatchSize(size_t addedSize) const;           // Return true if the new size of the batch is greather than m_batcSize
     size_t getOverflowSize(size_t addedSize) const;        // Return the number of elements that are more 
     void storeResult(std::string id, double value) const;  // Store the results into the m_database
-    void accumulate(const TelemetryBatch& batch);          // Accumulate the batch into m_batchFile
+    void accumulate(int start);          // Accumulate the batch into m_batchFile
     
     /* ============================= ATTRIBUTE ===========*/
     size_t                                m_batchSize;    // used to check wheter TelemetryBatch 
     TelemetryBatch                        m_batchFile;    // the current batch
-    //RuleEngineInterface&                  m_evaluator;    // interface to trigger the RuleEngine.evaluation() (will be discarded once included the queue)
+    TelemetryBatch                        m_batchTmp;     // better keep track of the cache
+    // RuleEngineInterface&                  m_evaluator;    // interface to trigger the RuleEngine.evaluation() (will be discarded once included the queue)
     MeasDatabaseInterface&                m_database;     // interface to store data into the MeasDatabase class
     ThreadSafeBuffer<TelemetryBatch>&     m_broker;     // buffer/queue to store batches that ary ready to be processed (will be uncomment once included the queue)
 

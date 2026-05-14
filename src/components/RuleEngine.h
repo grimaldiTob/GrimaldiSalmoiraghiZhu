@@ -13,13 +13,16 @@
 #include "BatchAccumulator.h"
 #include "ThreadSafeBuffer.h"
 #include "../interfaces/RuleLoaderInterface.h"
+#include "../interfaces/MeasDatabaseInterface.h"
 
 class RuleEngine : public RuleEngineInterface {
 
 public:
 
-    explicit RuleEngine(ThreadSafeBuffer<TelemetryBatch>& broker)
-        : m_broker(broker) {}
+    explicit RuleEngine(ThreadSafeBuffer<TelemetryBatch>& broker,
+                        MeasDatabaseInterface& db)
+        : m_broker(broker),
+          db(db) {}
 
     // use const obj& in order to avoid reallocating on each call
     const std::vector<std::shared_ptr<BaseRule>>& getRulesList() const { return rules_list; };
@@ -45,7 +48,9 @@ private:
     const std::string RULES_FILENAME = "rules.json";
 
     // The queue which the class will retrieve the batch from 
-    ThreadSafeBuffer<TelemetryBatch>& m_broker;      
+    ThreadSafeBuffer<TelemetryBatch>& m_broker;
+
+    MeasDatabaseInterface& db;
 
     // vector in which we store all rules
     std::vector<std::shared_ptr<BaseRule>> rules_list;

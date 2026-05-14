@@ -95,6 +95,8 @@ void BatchAccumulator::storeValidData(TelemetryBatch &validBatch) {
 
 // logic of this method need to be rewritten, since we need a database just for the stateful rules
 // there is no need to store all the results but just the one associated to the rules that require it.
+/*
 void BatchAccumulator::storeResult(std::string id, double value) const {
     m_database.storeResult(id, value);
 }
+*/

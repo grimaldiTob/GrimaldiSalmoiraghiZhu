@@ -20,6 +20,13 @@ void RuleEngine::setRulesList(RuleLoaderInterface& loader,
     rules_list.clear();
     rules_cache.clear(); // avoid stale cache entries
     loader.loadRules(parser, RULES_FILENAME, rules_list);
+
+    for(auto& rule : rules_list) {
+        if(rule->getType() == RuleType::STATEFUL) {
+            auto* stateful_rule = dynamic_cast<StatefulRule *>(rule.get());
+            stateful_rule->setMeasDatabase(db);
+        }
+    }
 }
 
 /** @brief Method which evaluates all the rules stored in the rules_list

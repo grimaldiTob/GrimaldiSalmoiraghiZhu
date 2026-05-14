@@ -24,10 +24,8 @@ public:
 
     /** @brief Constructor */
     explicit BatchAccumulator(ThreadSafeBuffer<TelemetryBatch>& broker, 
-                              MeasDatabaseInterface& database, 
                               size_t batchSize = 100) 
         : m_broker(broker),
-          m_database(database),
           m_batchSize(batchSize) {}
 
     // IF YOU WANT TO USE THE SEQUENTIAL LOGIC WITHOUT THE QUEUE DISCOMMENT BELOW CONSTRUCTOR AND COMMENT ABOVE CONSTRUCTOR()

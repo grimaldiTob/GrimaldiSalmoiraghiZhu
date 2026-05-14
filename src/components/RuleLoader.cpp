@@ -2,10 +2,10 @@
 #include <iostream>
 
 #include "RuleLoader.h"
-#include "../rules/SimpleRule.h"
-#include "../rules/StepDifferenceRule.h"
-#include "../rules/StatefulRule.h"
-#include "../rules/LogicalCorrelationRule.h"
+#include "../types/rules/SimpleRule.h"
+#include "../types/rules/StepDifferenceRule.h"
+#include "../types/rules/StatefulRule.h"
+#include "../types/rules/LogicalCorrelationRule.h"
 
 /** @brief Helper method which maps priority strings to the enum values.*/
 RulePriority RuleLoader::parsePriority(std::string_view prio_str) {

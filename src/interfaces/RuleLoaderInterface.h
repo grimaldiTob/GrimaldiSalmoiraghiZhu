@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include "../rules/BaseRule.h"
+#include "../types/rules/BaseRule.h"
 #include "../../external/simdjson.h"
 
 class RuleLoaderInterface {

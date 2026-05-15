@@ -45,6 +45,35 @@ include(Catch)
 enable_testing()
 # ---------------------------------------------------------------------------
 
+######################### Test executable for TelemetryBatch #######################
+add_executable(test_telemetry_batch
+    tests/types/test_TelemetryBatch.cpp
+)
+
+# Include directories for test_telemetry_batch
+target_include_directories(test_telemetry_batch PRIVATE src)
+
+# Link Catch2 for test_telemetry_batch
+target_link_libraries(test_telemetry_batch PRIVATE Catch2::Catch2WithMain)
+
+# Auto-register tests for test_telemetry_batch
+catch_discover_tests(test_telemetry_batch)
+
+# Test executable for DataIngestor
+add_executable(test_data_ingestor
+    tests/components/test_data_ingestor.cpp
+    src/components/DataIngestor.cpp
+    external/simdjson.cpp
+)
+
+# Include directories for test_data_ingestor
+target_include_directories(test_data_ingestor PRIVATE src)
+
+# Link Catch2 for test_data_ingestor
+target_link_libraries(test_data_ingestor PRIVATE Catch2::Catch2WithMain)
+
+# Auto-register tests for test_data_ingestor
+catch_discover_tests(test_data_ingestor)
 
 ##################### Test executable for SimpleRule #####################
 add_executable(test_simple_rule
@@ -91,37 +120,23 @@ target_link_libraries(test_stateful_rule PRIVATE Catch2::Catch2WithMain)
 # Auto-register tests for test_stateful_rule
 catch_discover_tests(test_stateful_rule)
 
-###############à######### Test executable for TelemetryBatch #######################
-add_executable(test_telemetry_batch
-    tests/types/test_TelemetryBatch.cpp
+################# Test executable for LogicalCorrelationRule #################
+add_executable(test_logical_correlation_rule
+    tests/test_logical_correlation_rule.cpp
+    src/types/rules/LogicalCorrelationRule.cpp
+    src/types/rules/SimpleRule.cpp
 )
 
-# Include directories for test_telemetry_batch
-target_include_directories(test_telemetry_batch PRIVATE src)
+# Include directories for test_logical_correlation_rule
+target_include_directories(test_logical_correlation_rule PRIVATE src)
 
-# Link Catch2 for test_telemetry_batch
-target_link_libraries(test_telemetry_batch PRIVATE Catch2::Catch2WithMain)
+# Link Catch2 for test_logical_correlation_rule
+target_link_libraries(test_logical_correlation_rule PRIVATE Catch2::Catch2WithMain)
 
-# Auto-register tests for test_telemetry_batch
-catch_discover_tests(test_telemetry_batch)
+# Auto-register tests for test_logical_correlation_rule
+catch_discover_tests(test_logical_correlation_rule)
 
-# Test executable for DataIngestor
-add_executable(test_data_ingestor
-    tests/components/test_data_ingestor.cpp
-    src/components/DataIngestor.cpp
-    external/simdjson.cpp
-)
-
-# Include directories for test_data_ingestor
-target_include_directories(test_data_ingestor PRIVATE src)
-
-# Link Catch2 for test_data_ingestor
-target_link_libraries(test_data_ingestor PRIVATE Catch2::Catch2WithMain)
-
-# Auto-register tests for test_data_ingestor
-catch_discover_tests(test_data_ingestor)
-
-##################### Test executable for RuleLoader #####################
+##################### Test executable for RuleLoader #########################
 add_executable(test_rule_loader
     tests/test_RuleLoader.cpp
     src/components/RuleLoader.cpp

@@ -16,9 +16,14 @@ std::optional<bool> LogicalCorrelationRule::evaluate(const TelemetryBatch& batch
 			// Call the evaluate function for the child rule
             std::optional<bool> child_result = child->evaluate(batch, cache); 
             
-            if (!child_result.value()) {
-				final_result = false;
-                break; // We just need one rule to be false in this case
+            try {
+                if (!child_result.value()) {
+                    final_result = false;
+                    break; // We just need one rule to be false in this case
+                }
+            } catch (const std::exception& e) {
+                // One of the child rules returned nullopt, we can consider this as a failure for the AND logic
+                return std::nullopt;
             }
         }
 		final_result = true; // Set to true if no rule is false
@@ -26,9 +31,14 @@ std::optional<bool> LogicalCorrelationRule::evaluate(const TelemetryBatch& batch
     else if (logic == "OR") {
 		for (const auto& child : condition_rules) {
 			auto child_result = child->evaluate(batch, cache);
-            if (child_result.value()) {
-				final_result = true;
-                break; // It is enough if one rule is true
+            try {
+                if (child_result.value()) {
+					final_result = true;
+                    break; // It is enough if one rule is true
+                }
+            } catch (const std::exception& e) {
+                // One of the child rules returned nullopt, we can consider this as a failure for the OR logic
+                return std::nullopt;
             }
         }
     }

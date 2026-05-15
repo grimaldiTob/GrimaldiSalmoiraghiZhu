@@ -9,6 +9,8 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <fstream> // for file operations
+#include <cstdio> // for std::remove
 
 TEST_CASE("RuleLoader loads rules correctly", "[RuleLoader]") {
     // Arrange
@@ -56,12 +58,17 @@ TEST_CASE("RuleLoader loads rules correctly", "[RuleLoader]") {
     simdjson::padded_string json_padded(json_content);
 
     // Convert simdjson::padded_string to std::string
-    // Our method loadRules expects a std::string, but
-    // simdjson works with padded_string for performance reasons.
     std::string json_string(json_padded.data(), json_padded.size());
 
+    // Write to a temporary file
+    std::string test_file = "test_rules.json";
+    std::ofstream file(test_file);
+    file << json_content;
+    file.close();
+
+
     // Act
-    ruleLoader.loadRules(parser, json_string, rules_list);
+    ruleLoader.loadRules(parser, test_file, rules_list);
 
     // Assert
     REQUIRE(rules_list.size() == 4);
@@ -99,4 +106,7 @@ TEST_CASE("RuleLoader loads rules correctly", "[RuleLoader]") {
     REQUIRE(correlation_rule->getConditionRuleIds().size() == 2);
     REQUIRE(correlation_rule->getConditionRuleIds()[0]->getRuleId() == "R1");
     REQUIRE(correlation_rule->getConditionRuleIds()[1]->getRuleId() == "R2");
+
+    // Cleanup
+    std::remove(test_file.c_str());
 }

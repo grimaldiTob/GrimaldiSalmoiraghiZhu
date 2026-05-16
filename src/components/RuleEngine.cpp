@@ -29,14 +29,45 @@ void RuleEngine::setRulesList(RuleLoaderInterface& loader,
     }
 }
 
+void RuleEngine::checkRuleResult() {
+    bool all_true = true;
+    // std::unordered_map<std::string, std::optional<bool>> failed_rules;
+    std::vector<std::shared_ptr<BaseRule>> failed_rules;
+    failed_rules.reserve(rules_list.size()); // reserve hypotetically the size of the entire cache size
+
+    // iterate in the rule list and 
+    for (auto& rule : rules_list) {
+        const std::string& rule_id = rule->getRuleId();
+        auto it = rules_cache.find(rule_id); // find returns the pointer to the entry associated to the rule_id
+        if (it == rules_cache.end() || !it->second.value_or(false)) { // value_or() used for std::optional<bool>
+            all_true = false;
+            // failed_rules.emplace(rule, it == rules_cache.end() ? std::nullopt : it->second); 
+            failed_rules.emplace_back(rule); 
+            // if the rule was not found return std::nullopt otherwise the value (either false or std::nullopt again) 
+        }
+    }
+
+    if (!m_outputDispatcher) {
+        return;
+    }
+
+    if (all_true) {
+        m_outputDispatcher->appendValidData(db);
+        return;
+    }
+
+    m_outputDispatcher->appendAlarms(db, failed_rules);
+}
+
 /** @brief Method which evaluates all the rules stored in the rules_list
  * For each rule checks if there is a match between the measurement in the
  * batch and evaluates the rule
  */
 void RuleEngine::evaluateRules(const TelemetryBatch& batch) {
     for(auto& rule : rules_list) {
-
-        rule->evaluate(batch, rules_cache);
+        const std::string& rule_id = rule->getRuleId();
+        auto result = rule->evaluate(batch, rules_cache);
+        rules_cache[rule_id] = result;
 
         // hypothetically we could think of storing result in cache here 
         // instead of the evaluate rule
@@ -48,13 +79,18 @@ void RuleEngine::evaluateRules(const TelemetryBatch& batch) {
         
         // so we can think of like parallelizing over 'HIGH', 'MEDIUM', 'LOW' priorities but not all of them.
     }
+    checkRuleResult();
+
     // accumulator.storeResultHistory(); // store the values of the accumulator in the history map
     resetCache(); // reset rules cache 
 }
 
-
+/** @brief this method runs the whole loop of our application.
+ * The call to pop() method ensures that there is at least one
+ * element in the queue. This makes the loop efficient and 
+ * coherent with the data stream received from the broker.
+ */
 void RuleEngine::run() {
-
     TelemetryBatch currentBatch;
 
     // This loop should handle all the complex multithreading logic.

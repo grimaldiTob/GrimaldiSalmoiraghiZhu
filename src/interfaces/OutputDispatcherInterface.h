@@ -1,13 +1,14 @@
 #include <string>
 #include <optional>
 #include <unordered_map>
+#include "MeasDatabaseInterface.h"
 
 class OutputDispatcherInterface {
 public:
     virtual ~OutputDispatcherInterface() = default;
 
-    virtual void appendValidData(const TelemetryBatch&) = 0;
+    virtual void appendValidData(const MeasDatabaseInterface&) = 0;
 
-    virtual void appendAlarms(const TelemetryBatch&, 
-                     const std::unordered_map<std::string, std::optional<bool>>&) = 0;
+    virtual void appendAlarms(const MeasDatabaseInterface&, 
+                     const std::vector<std::shared_ptr<BaseRule>>&) = 0;
 };

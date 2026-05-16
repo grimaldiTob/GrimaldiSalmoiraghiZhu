@@ -14,6 +14,7 @@
 #include "ThreadSafeBuffer.h"
 #include "../interfaces/RuleLoaderInterface.h"
 #include "../interfaces/MeasDatabaseInterface.h"
+#include "../interfaces/OutputDispatcherInterface.h"
 
 class RuleEngine : public RuleEngineInterface {
 
@@ -29,6 +30,7 @@ public:
     const std::unordered_map<std::string, std::optional<bool>>& getRulesCache() const { return rules_cache; };
 
     void setProviderInterface(std::shared_ptr<BatchProviderInterface>);
+    void setOutputDispatcher(OutputDispatcherInterface& dispatcher) { m_outputDispatcher = &dispatcher; }
 
     
     // Protect the batch as read-only since the RuleEngine has to read and make evaluation without modify it
@@ -39,6 +41,7 @@ public:
     void setRulesList(RuleLoaderInterface& loader,
                   simdjson::ondemand::parser& parser);
 
+    void checkRuleResult();
     void resetCache();
 
     // The entry point for the Consumer Thread
@@ -64,6 +67,8 @@ private:
     
     // map in which we store the cache result for the evaluated rules
     std::unordered_map<std::string, std::optional<bool>> rules_cache;
+
+    OutputDispatcherInterface* m_outputDispatcher = nullptr;
 
     // make it private since it is an helper internal to the class.
     RulePriority parsePriority(std::string_view);

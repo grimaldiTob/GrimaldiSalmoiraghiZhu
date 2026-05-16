@@ -2,12 +2,12 @@
 
 #include <fstream>
 
-void OutputDispatcher::appendValidData(const TelemetryBatch& batch) {
+void OutputDispatcher::appendValidData(const MeasDatabaseInterface& db) {
     // logic to implement yet
 }
 
-void OutputDispatcher::appendAlarms(const TelemetryBatch& batch, 
-                     const std::unordered_map<std::string, std::optional<bool>>& results) {
+void OutputDispatcher::appendAlarms(const MeasDatabaseInterface& db, 
+                     const std::vector<std::shared_ptr<BaseRule>>& failed_rules) {
     // logic to implement yet
 }
 

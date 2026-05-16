@@ -2,6 +2,7 @@
 #include <string>
 #include <unordered_map>
 #include <optional>
+#include <cstdint>
 #include "../interfaces/RuleEngineInterface.h"
 #include "../interfaces/BatchProviderInterface.h"
 #include "../../external/simdjson.h"
@@ -20,10 +21,12 @@ class RuleEngine : public RuleEngineInterface {
 
 public:
 
-    explicit RuleEngine(ThreadSafeBuffer<TelemetryBatch>& broker,
-                        MeasDatabaseInterface& db)
-        : m_broker(broker),
-          db(db) {}
+        explicit RuleEngine(ThreadSafeBuffer<TelemetryBatch>& broker,
+                                                MeasDatabaseInterface& db,
+                                                std::optional<int64_t> initialTimestamp)
+                : m_evaluationTimestamp(initialTimestamp),
+                    m_broker(broker),
+                    db(db) {}
 
     // use const obj& in order to avoid reallocating on each call
     const std::vector<std::shared_ptr<BaseRule>>& getRulesList() const { return rules_list; };
@@ -42,6 +45,9 @@ public:
                   simdjson::ondemand::parser& parser);
 
     void checkRuleResult();
+
+    void storeBatchMeasurements(const TelemetryBatch &batch);
+
     void resetCache();
 
     // The entry point for the Consumer Thread
@@ -49,6 +55,7 @@ public:
     
 private:
     const std::string RULES_FILENAME = "rules.json";
+    std::optional<int64_t> m_evaluationTimestamp;
 
     // The queue which the class will retrieve the batch from 
     ThreadSafeBuffer<TelemetryBatch>& m_broker;

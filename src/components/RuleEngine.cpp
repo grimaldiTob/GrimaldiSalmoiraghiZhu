@@ -59,6 +59,12 @@ void RuleEngine::checkRuleResult() {
     m_outputDispatcher->appendAlarms(db, failed_rules);
 }
 
+void RuleEngine::storeBatchMeasurements(const TelemetryBatch& batch) {
+    for (size_t i = 0; i < batch.values.size();++i) {
+        db.storeResult(batch.sensors_name[i], batch.values[i]);
+    }
+}
+
 /** @brief Method which evaluates all the rules stored in the rules_list
  * For each rule checks if there is a match between the measurement in the
  * batch and evaluates the rule
@@ -68,9 +74,6 @@ void RuleEngine::evaluateRules(const TelemetryBatch& batch) {
         const std::string& rule_id = rule->getRuleId();
         auto result = rule->evaluate(batch, rules_cache);
         rules_cache[rule_id] = result;
-
-        // hypothetically we could think of storing result in cache here 
-        // instead of the evaluate rule
         
         // also thinking about parallelization of rule evaluation
         // we cannot really parallelize the whole rules_list for two reasons:
@@ -79,10 +82,7 @@ void RuleEngine::evaluateRules(const TelemetryBatch& batch) {
         
         // so we can think of like parallelizing over 'HIGH', 'MEDIUM', 'LOW' priorities but not all of them.
     }
-    checkRuleResult();
-
-    // accumulator.storeResultHistory(); // store the values of the accumulator in the history map
-    resetCache(); // reset rules cache 
+    storeBatchMeasurements(batch);
 }
 
 /** @brief this method runs the whole loop of our application.
@@ -95,7 +95,37 @@ void RuleEngine::run() {
 
     // This loop should handle all the complex multithreading logic.
     while(m_broker.pop(currentBatch)) {
-        // Once successfully pulls data into batch, the thread starts the evaluation logic
-        evaluateRules(currentBatch);
+        TelemetryBatch subBatch(currentBatch.getSize());
+        int64_t activeTimestamp = m_evaluationTimestamp.value_or(0);
+
+        for (size_t i = 0; i < currentBatch.getSize(); ++i) {
+            // if the timestamp changes we need to change the active timestamp
+            if (currentBatch.timestamps[i] != activeTimestamp) {
+                /*
+                    If the timestamp changes we evaluate the measurements collected so far,
+                    check the cache content and print values in output dispatcher and in the end 
+                    reset the cache values. THIS METHOD CAN HAVE MANY PROBLEMS, but for now it works
+                    fine in my head.
+                */
+                m_evaluationTimestamp = activeTimestamp;
+                evaluateRules(subBatch);
+                checkRuleResult();
+                resetCache();
+                subBatch.clear();
+                activeTimestamp = currentBatch.timestamps[i];
+            }
+            // collect the measurement in the currentBatch
+            subBatch.emplaceBack(
+                currentBatch.sensors_name[i],
+                currentBatch.timestamps[i],
+                currentBatch.values[i],
+                currentBatch.priorities[i]
+            );
+        }
+        // in the end we evaluate the remaining measurements in the batch
+        if (subBatch.getSize() > 0) {
+            m_evaluationTimestamp = activeTimestamp;
+            evaluateRules(subBatch);
+        }
     }
 }

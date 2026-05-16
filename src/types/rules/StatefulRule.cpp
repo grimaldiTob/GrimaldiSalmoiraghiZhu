@@ -103,6 +103,6 @@ std::optional<bool> StatefulRule::evaluate(const TelemetryBatch& batch,
         return std::nullopt; // Sensor wasn't in this batch at all
     }
 
-    cache[this->rule_id] = rule;
+    // cache[this->rule_id] = rule;
     return rule;
 }

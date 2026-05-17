@@ -6,22 +6,6 @@
 #include "../interfaces/ProducerBuffer.h"
 #include "../interfaces/ConsumerBuffer.h"
 
-/*====================== INTERFACES OFFERED BY THE QUEUE =======================*/
-template<typename T>
-class ProducerBuffer {
-public:
-    virtual void push(T item) = 0;
-    virtual void finish_production() = 0;
-};
-
-template<typename T>
-class ConsumerBuffer {
-public:
-    virtual bool pop(T& item) = 0;
-};
-
-/*==============================================================================*/
-
 /**
  * This template class entirely hides(encaplusaltion) the synchronization logic (mutexes, locks, CVs) 
  * from the outside world.

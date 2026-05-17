@@ -1,3 +1,4 @@
+#pragma once
 /** 
  * @brief Interface used to send an item to an object  
  */

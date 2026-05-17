@@ -1,3 +1,5 @@
+#pragma once
+
 /** 
  * @brief Interface used to request an item from an object  
  */

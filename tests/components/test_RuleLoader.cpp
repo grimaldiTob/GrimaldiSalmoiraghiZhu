@@ -93,37 +93,47 @@ TEST_CASE("RuleLoader loads rules correctly", "[RuleLoader]") {
     }
 
     // Assert
-    REQUIRE(rules_list.size() == 4);
+    SECTION("All rules are loaded") {
+        REQUIRE(rules_list.size() == 4);
+    }
 
-    REQUIRE(simple_rule != nullptr);
-    REQUIRE(simple_rule->getRuleId() == "R1");
-    REQUIRE(simple_rule->getPriority() == RulePriority::MEDIUM);
-    REQUIRE(simple_rule->getSensorId() == "TEMP-01");
-    REQUIRE(simple_rule->getOperator() == ">");
-    REQUIRE(simple_rule->getValue() == 50.0);
+    SECTION("SimpleRule is loaded with correct attributes") {
+        REQUIRE(simple_rule != nullptr);
+        REQUIRE(simple_rule->getRuleId() == "R1");
+        REQUIRE(simple_rule->getPriority() == RulePriority::MEDIUM);
+        REQUIRE(simple_rule->getSensorId() == "TEMP-01");
+        REQUIRE(simple_rule->getOperator() == ">");
+        REQUIRE(simple_rule->getValue() == 50.0);
+    }
 
-    REQUIRE(step_diff_rule != nullptr);
-    REQUIRE(step_diff_rule->getRuleId() == "R2");
-    REQUIRE(step_diff_rule->getPriority() == RulePriority::LOW);
-    REQUIRE(step_diff_rule->getSensorId() == "PRES-01");
-    REQUIRE(step_diff_rule->getOperator() == "<");
-    REQUIRE(step_diff_rule->getValue() == -2.0);
+    SECTION("StepDifferenceRule is loaded with correct attributes") {
+        REQUIRE(step_diff_rule != nullptr);
+        REQUIRE(step_diff_rule->getRuleId() == "R2");
+        REQUIRE(step_diff_rule->getPriority() == RulePriority::LOW);
+        REQUIRE(step_diff_rule->getSensorId() == "PRES-01");
+        REQUIRE(step_diff_rule->getOperator() == "<");
+        REQUIRE(step_diff_rule->getValue() == -2.0);
+    }
 
-    REQUIRE(stateful_rule != nullptr);
-    REQUIRE(stateful_rule->getRuleId() == "R3");
-    REQUIRE(stateful_rule->getPriority() == RulePriority::HIGH);
-    REQUIRE(stateful_rule->getSensorId() == "VOLT-MAIN");
-    REQUIRE(stateful_rule->getOperator() == "<");
-    REQUIRE(stateful_rule->getValue() == 20.0);
-    REQUIRE(stateful_rule->getConsecutiveMeas() == 5);
+    SECTION("StatefulRule is loaded with correct attributes") {
+        REQUIRE(stateful_rule != nullptr);
+        REQUIRE(stateful_rule->getRuleId() == "R3");
+        REQUIRE(stateful_rule->getPriority() == RulePriority::HIGH);
+        REQUIRE(stateful_rule->getSensorId() == "VOLT-MAIN");
+        REQUIRE(stateful_rule->getOperator() == "<");
+        REQUIRE(stateful_rule->getValue() == 20.0);
+        REQUIRE(stateful_rule->getConsecutiveMeas() == 5);
+    }
 
-    REQUIRE(correlation_rule != nullptr);
-    REQUIRE(correlation_rule->getRuleId() == "R4");
-    REQUIRE(correlation_rule->getPriority() == RulePriority::HIGH);
-    REQUIRE(correlation_rule->getLogic() == "AND");
-    REQUIRE(correlation_rule->getConditionRuleIds().size() == 2);
-    REQUIRE(correlation_rule->getConditionRuleIds()[0]->getRuleId() == "R1");
-    REQUIRE(correlation_rule->getConditionRuleIds()[1]->getRuleId() == "R2");
+    SECTION("LogicalCorrelationRule is loaded with correct attributes") {
+        REQUIRE(correlation_rule != nullptr);
+        REQUIRE(correlation_rule->getRuleId() == "R4");
+        REQUIRE(correlation_rule->getPriority() == RulePriority::HIGH);
+        REQUIRE(correlation_rule->getLogic() == "AND");
+        REQUIRE(correlation_rule->getConditionRuleIds().size() == 2);
+        REQUIRE(correlation_rule->getConditionRuleIds()[0]->getRuleId() == "R1");
+        REQUIRE(correlation_rule->getConditionRuleIds()[1]->getRuleId() == "R2");
+    }
 
     // Cleanup
     std::remove(test_file.c_str());

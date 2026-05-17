@@ -4,17 +4,18 @@
 #include <optional>
 #include <cstdint>
 #include "../../external/simdjson.h"
-#include "../rules/BaseRule.h"
-#include "../rules/SimpleRule.h"
-#include "../rules/StepDifferenceRule.h"
-#include "../rules/StatefulRule.h"
-#include "../rules/LogicalCorrelationRule.h"
+#include "../types/rules/BaseRule.h"
+#include "../types/rules/SimpleRule.h"
+#include "../types/rules/StepDifferenceRule.h"
+#include "../types/rules/StatefulRule.h"
+#include "../types/rules/LogicalCorrelationRule.h"
 #include "BatchAccumulator.h"
 #include "ThreadSafeBuffer.h"
 
 /* I don't think including just the header file of the interfaces is enough, 
  since their methods are virtual and we need to call them in the RuleEngine class. 
- What I have dpne, I have forward-declared the interfaces in the header file and included their headers in the cpp file.
+ What I have dpne, I have forward-declared the interfaces in the header file 
+ and included their headers in the cpp file.
 */
 #include "../interfaces/RuleEngineInterface.h"
 
@@ -44,7 +45,7 @@ public:
 
     
     // Protect the batch as read-only since the RuleEngine has to read and make evaluation without modify it
-    void evaluateRules(const TelemetryBatch& batch);
+    void evaluateRules(const TelemetryBatch& batch)  override;
 
     // ideally we can also think of having the rule loader as a class attribute but 
     // this has just a one shot usage. (after loading is just wasted memory)

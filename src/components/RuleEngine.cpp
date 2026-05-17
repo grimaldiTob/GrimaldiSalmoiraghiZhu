@@ -11,8 +11,13 @@
 */
 void RuleEngine::resetCache() {
     // ho trovato questa funzione ed è troppo in stile Formaggia
+    // Luca: e ovviamente come tutte le funzioni incomprensibili in 
+    // stile Formaggia c'era un bel problema di binging una non-const
+    // reference a un elemento della mappa, che è stato risolto con 
+    // value_or(), che invece restituisce una copia del valore 
+    // (e quindi std::optional<bool> invece che una reference).
     std::for_each(rules_cache.begin(), rules_cache.end(),
-                  [](std::pair<std::string, std::optional<bool>>& p){
+                  [](auto &p){
                       p.second = std::nullopt;
                   });
 }

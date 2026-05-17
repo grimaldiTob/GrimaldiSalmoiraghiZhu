@@ -1,10 +1,12 @@
+#pragma once
+
+#include "../types/TelemetryBatch.h"
 
 class RuleEngineInterface {
-
 public:
-    virtual ~RuleEngineInterface() = 0;
+    virtual ~RuleEngineInterface() = default;
 
-    virtual void evaluateRules() = 0;
+    virtual void evaluateRules(const TelemetryBatch& batch) = 0;
 
     virtual void resetCache() = 0;
 };

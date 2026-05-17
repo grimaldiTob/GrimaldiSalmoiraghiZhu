@@ -21,7 +21,7 @@ class RuleEngine : public RuleEngineInterface {
 
 public:
 
-        explicit RuleEngine(ThreadSafeBuffer<TelemetryBatch>& broker,
+        explicit RuleEngine(ConsumerBuffer<TelemetryBatch>& broker,
                                                 MeasDatabaseInterface& db,
                                                 std::optional<int64_t> initialTimestamp)
                 : m_evaluationTimestamp(initialTimestamp),
@@ -58,7 +58,7 @@ private:
     std::optional<int64_t> m_evaluationTimestamp;
 
     // The queue which the class will retrieve the batch from 
-    ThreadSafeBuffer<TelemetryBatch>& m_broker;
+    ConsumerBuffer<TelemetryBatch>& m_broker;
 
     MeasDatabaseInterface& db;
 

@@ -3,6 +3,24 @@
 #include <condition_variable>
 #include <chrono>
 #include "../types/TelemetryBatch.h"
+#include "../interfaces/ProducerBuffer.h"
+#include "../interfaces/ConsumerBuffer.h"
+
+/*====================== INTERFACES OFFERED BY THE QUEUE =======================*/
+template<typename T>
+class ProducerBuffer {
+public:
+    virtual void push(T item) = 0;
+    virtual void finish_production() = 0;
+};
+
+template<typename T>
+class ConsumerBuffer {
+public:
+    virtual bool pop(T& item) = 0;
+};
+
+/*==============================================================================*/
 
 /**
  * This template class entirely hides(encaplusaltion) the synchronization logic (mutexes, locks, CVs) 
@@ -12,14 +30,14 @@
  * It encapsulates the synchronization logic required to safely access the shared batch queue.
  */
 template <typename T>
-class ThreadSafeBuffer {
+class ThreadSafeBuffer: public ProducerBuffer<T>, public ConsumerBuffer<T> {
 
 public:
     explicit ThreadSafeBuffer(size_t max_size) 
         : m_maxSize(max_size), m_isFinished(false) {}
 
     // Safely push an item into the buffer
-    void push(T item) {
+    void push(T item) override {
         std::unique_lock<std::mutex> lock(m_mtx); // only one thread at a time can hold this lock
         
         // Wait until there is room in the buffer
@@ -36,7 +54,7 @@ public:
     // to enable multithreaded programming, in particular in the RuleEngine.run() there is a loop
     // that continue try to fetch a batche from the queue as long as it reads true. 
     // For also safety reason, is better to keep this signature whenever exceptions occur] 
-    bool pop(T& item) {
+    bool pop(T& item) override {
         std::unique_lock<std::mutex> lock(m_mtx);
         
         // Wait until there is an item OR production is finished
@@ -60,7 +78,7 @@ public:
 
     /** @brief Signal that no more items will be produced
     */
-    void finish_production() {
+    void finish_production() override {
         std::unique_lock<std::mutex> lock(m_mtx); 
         m_isFinished = true; // safetly set the flag 
         lock.unlock();

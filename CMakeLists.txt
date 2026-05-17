@@ -172,3 +172,14 @@ add_executable(test_batch_accumulator
 target_include_directories(test_batch_accumulator PRIVATE src)
 target_link_libraries(test_batch_accumulator PRIVATE Catch2::Catch2WithMain)
 catch_discover_tests(test_batch_accumulator)
+
+###################### Test executable for Integration ####################
+add_executable(test_integration
+    tests/integrations/test_integration.cpp
+    src/components/BatchAccumulator.cpp
+    src/components/DataIngestor.cpp
+    external/simdjson.cpp
+)
+target_include_directories(test_integration PRIVATE src)
+target_link_libraries(test_integration PRIVATE Catch2::Catch2WithMain)
+catch_discover_tests(test_integration)

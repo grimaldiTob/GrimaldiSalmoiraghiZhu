@@ -69,6 +69,10 @@ public:
         m_cvConsumer.notify_all(); // Wake up all waiting consumers so they can exit
     }
 
+    const std::queue<T>& getQueue() const{
+        return m_queue;
+    }
+
 private:
 
     std::queue<T>           m_queue;         // Underlying container holding buffered items; access guarded by `m_mtx`.

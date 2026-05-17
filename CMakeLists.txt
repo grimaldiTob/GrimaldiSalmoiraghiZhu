@@ -77,7 +77,7 @@ catch_discover_tests(test_data_ingestor)
 
 ##################### Test executable for SimpleRule #####################
 add_executable(test_simple_rule
-    tests/test_simple_rule.cpp
+    tests/types/test_simple_rule.cpp
     src/types/rules/SimpleRule.cpp
 )
 
@@ -92,7 +92,7 @@ catch_discover_tests(test_simple_rule)
 
 ################# Test executable for StepDifferenceRule ##################
 add_executable(test_step_difference_rule
-    tests/test_step_difference_rule.cpp
+    tests/types/test_step_difference_rule.cpp
     src/types/rules/StepDifferenceRule.cpp
 )
 
@@ -107,7 +107,7 @@ catch_discover_tests(test_step_difference_rule)
 
 ####################### Test executable for StatefulRule ####################
 add_executable(test_stateful_rule
-    tests/test_stateful_rule.cpp
+    tests/types/test_stateful_rule.cpp
     src/types/rules/StatefulRule.cpp
 )
 
@@ -122,7 +122,7 @@ catch_discover_tests(test_stateful_rule)
 
 ################# Test executable for LogicalCorrelationRule #################
 add_executable(test_logical_correlation_rule
-    tests/test_logical_correlation_rule.cpp
+    tests/types/test_logical_correlation_rule.cpp
     src/types/rules/LogicalCorrelationRule.cpp
     src/types/rules/SimpleRule.cpp
 )
@@ -138,7 +138,7 @@ catch_discover_tests(test_logical_correlation_rule)
 
 ##################### Test executable for RuleLoader #########################
 add_executable(test_rule_loader
-    tests/test_RuleLoader.cpp
+    tests/components/test_RuleLoader.cpp
     src/components/RuleLoader.cpp
     src/types/rules/SimpleRule.cpp
     src/types/rules/StepDifferenceRule.cpp

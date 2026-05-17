@@ -3,8 +3,6 @@
 #include <unordered_map>
 #include <optional>
 #include <cstdint>
-#include "../interfaces/RuleEngineInterface.h"
-#include "../interfaces/BatchProviderInterface.h"
 #include "../../external/simdjson.h"
 #include "../rules/BaseRule.h"
 #include "../rules/SimpleRule.h"
@@ -13,9 +11,18 @@
 #include "../rules/LogicalCorrelationRule.h"
 #include "BatchAccumulator.h"
 #include "ThreadSafeBuffer.h"
-#include "../interfaces/RuleLoaderInterface.h"
-#include "../interfaces/MeasDatabaseInterface.h"
-#include "../interfaces/OutputDispatcherInterface.h"
+
+/* I don't think including just the header file of the interfaces is enough, 
+ since their methods are virtual and we need to call them in the RuleEngine class. 
+ What I have dpne, I have forward-declared the interfaces in the header file and included their headers in the cpp file.
+*/
+#include "../interfaces/RuleEngineInterface.h"
+
+// Forward-declare interfaces here to reduce header coupling.
+class BatchProviderInterface;
+class RuleLoaderInterface;
+class MeasDatabaseInterface;
+class OutputDispatcherInterface;
 
 class RuleEngine : public RuleEngineInterface {
 

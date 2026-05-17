@@ -95,7 +95,7 @@ TEST_CASE("Real File Integration Test", "[Integration][FileIO]") {
         
     // In this particular json file we have a total of 50 measurements, whose 
     // 47 have valid format and 3 invalid format
-    std::string filepath = "../src/collector_output/raw_data_1777721417_0000.txt";
+    std::string filepath = "../collector_output/raw_data_1777721417_0000.txt";
         
     // Convert to an absolute path to prevent simdjson IO_ERRORs
     std::string absolutePath = std::filesystem::absolute(filepath).string();
@@ -119,19 +119,19 @@ TEST_CASE("Real File Integration Test", "[Integration][FileIO]") {
         REQUIRE(mockAccumulator.callCount == 1);
 
         // Verify that only valid data are stored
-        REQUIRE(size == 45);         
+        REQUIRE(size == 47);
         
         // Check if the FIRST element of the file match with the last element of the batch inside the BatchAccumulator
         CHECK(batch.sensors_name[0] == "TEMP-001");
-        CHECK(batch.timestamps[0] == parseISO8601("2026-05-02T11:30:13Z"));
-        CHECK(batch.values[0] == Catch::Approx(85.036)); 
-        CHECK(batch.priorities[0] == 2);
+        CHECK(batch.timestamps[0] == parseISO8601("2026-04-22T16:12:02Z"));
+        CHECK(batch.values[0] == Catch::Approx(80.547));
+        CHECK(batch.priorities[0] == 1);
 
         // Check if the LAST element of the file match with the last element of the batch inside the BatchAccumulator
-        CHECK(batch.sensors_name[size - 1] == "PRES-002");
-        CHECK(batch.timestamps[size - 1] == parseISO8601("2026-05-02T11:30:17Z"));
-        CHECK(batch.values[size - 1] == Catch::Approx(116.661)); 
-        CHECK(batch.priorities[size - 1] == 2);
+        CHECK(batch.sensors_name[size - 1] == "TEMP-011");
+        CHECK(batch.timestamps[size - 1] == parseISO8601("2026-04-22T16:12:09Z"));
+        CHECK(batch.values[size - 1] == Catch::Approx(70.299));
+        CHECK(batch.priorities[size - 1] == 1);
 
     }
 

@@ -77,3 +77,25 @@ TEST_CASE("LogicalCorrelationRule returns nullopt if a condition rule returns nu
     auto result = corr_rule.evaluate(batch, cache);
     REQUIRE(!result.has_value()); // Should return nullopt because rule2 cannot be evaluated
 }
+
+TEST_CASE("LogicalCorrelationRule stores the result of the conditional rules in the cache", "[LogicalCorrelationRule]") {
+    TelemetryBatch batch;
+    batch.sensors_name = {"Sensor1", "Sensor2"};
+    batch.values = {10.0, 20.0};
+
+    auto rule1 = std::make_shared<SimpleRule>("Rule1", RulePriority::HIGH, "Sensor1", ">", 5.0);
+    auto rule2 = std::make_shared<SimpleRule>("Rule2", RulePriority::HIGH, "Sensor2", "<", 25.0);
+    std::vector<std::shared_ptr<BaseRule>> conditions = {rule1, rule2};
+
+    LogicalCorrelationRule corr_rule("CorrRule5", RulePriority::HIGH, "AND", conditions);
+    std::unordered_map<std::string, std::optional<bool>> cache;
+
+    auto result = corr_rule.evaluate(batch, cache);
+    REQUIRE(result.has_value());
+    REQUIRE(result.value() == true);
+    REQUIRE(cache.find("Rule1") != cache.end());
+    REQUIRE(cache.find("Rule2") != cache.end());
+    REQUIRE(cache.at("Rule1").has_value());
+    REQUIRE(cache.at("Rule2").has_value());
+    // I just want to check if the values are there
+}

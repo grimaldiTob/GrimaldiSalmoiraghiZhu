@@ -129,6 +129,60 @@ TEST_CASE("RuleLoader loads rules correctly", "[RuleLoader]") {
     std::remove(test_file.c_str());
 }
 
+TEST_CASE("RuleLoader sorts rules by priority", "[RuleLoader]") {
+    // Arrange
+    RuleLoader ruleLoader;
+    simdjson::ondemand::parser parser;
+    std::vector<std::shared_ptr<BaseRule>> rules_list;
+
+    const std::string json_content = R"([
+        {
+            "rule_id": "R_HIGH",
+            "type": "simple",
+            "sensor_id": "S1",
+            "operator": ">",
+            "value": 1.0,
+            "priority": "HIGH"
+        },
+        {
+            "rule_id": "R_LOW",
+            "type": "simple",
+            "sensor_id": "S2",
+            "operator": ">",
+            "value": 2.0,
+            "priority": "LOW"
+        },
+        {
+            "rule_id": "R_MED",
+            "type": "simple",
+            "sensor_id": "S3",
+            "operator": ">",
+            "value": 3.0,
+            "priority": "MEDIUM"
+        }
+    ])";
+
+    std::string test_file = "priority_order_rules.json";
+    std::ofstream file(test_file);
+    file << json_content;
+    file.close();
+
+    // Act
+    ruleLoader.loadRules(parser, test_file, rules_list);
+
+    // Assert
+    REQUIRE(rules_list.size() == 3);
+    REQUIRE(rules_list[0]->getPriority() == RulePriority::HIGH);
+    REQUIRE(rules_list[0]->getRuleId() == "R_HIGH");
+    REQUIRE(rules_list[1]->getPriority() == RulePriority::MEDIUM);
+    REQUIRE(rules_list[1]->getRuleId() == "R_MED");
+    REQUIRE(rules_list[2]->getPriority() == RulePriority::LOW);
+    REQUIRE(rules_list[2]->getRuleId() == "R_LOW");
+
+    // Cleanup
+    std::remove(test_file.c_str());
+}
+
 TEST_CASE("RuleLoader handles invalid JSON file", "[RuleLoader]") {
     // Arrange
     RuleLoader ruleLoader;

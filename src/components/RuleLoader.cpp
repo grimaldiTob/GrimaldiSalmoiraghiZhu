@@ -21,7 +21,7 @@ RulePriority RuleLoader::parsePriority(std::string_view prio_str) {
 void RuleLoader::sortRules(std::vector<std::shared_ptr<BaseRule>>& rules_list) {
     std::sort(rules_list.begin(), rules_list.end(),
         [](const auto& a, const auto& b) {
-            return a->getPriority() < b->getPriority();
+            return a->getPriority() > b->getPriority();
         });
 }
 
@@ -48,26 +48,26 @@ void RuleLoader::loadRules(simdjson::ondemand::parser& parser, const std::string
         simdjson::ondemand::document doc = parser.iterate(json);
 
         for (simdjson::ondemand::object obj : doc.get_array()) {
-        std::shared_ptr<BaseRule> current_rule;
+            std::shared_ptr<BaseRule> current_rule;
 
-        // Extract only the type, since it is needed to choose the right parsing function. 
-        // All other fields are parsed in the specific parsing function.
-        std::string_view rule_type_sv = obj["type"].get_string();
-        std::string rule_type(rule_type_sv);
+            // Extract only the type, since it is needed to choose the right parsing function. 
+            // All other fields are parsed in the specific parsing function.
+            std::string_view rule_type_sv = obj["type"].get_string();
+            std::string rule_type(rule_type_sv);
 
-        if (rule_type == "simple") {
-            current_rule = parseSimpleRule(obj);
-        } else if (rule_type == "step_difference") {
-            current_rule = parseStepDifferenceRule(obj);
-        } else if (rule_type == "stateful") {
-            current_rule = parseStatefulRule(obj);
-        } else if (rule_type == "correlation") {
-            current_rule = parseLogicalCorrelationRule(obj, rules_list);
-        }
+            if (rule_type == "simple") {
+                current_rule = parseSimpleRule(obj);
+            } else if (rule_type == "step_difference") {
+                current_rule = parseStepDifferenceRule(obj);
+            } else if (rule_type == "stateful") {
+                current_rule = parseStatefulRule(obj);
+            } else if (rule_type == "correlation") {
+                current_rule = parseLogicalCorrelationRule(obj, rules_list);
+            }
 
-        if (current_rule) {
-            rules_list.emplace_back(current_rule);
-        }
+            if (current_rule) {
+                rules_list.emplace_back(current_rule);
+            }
         }
 
         sortRules(rules_list);

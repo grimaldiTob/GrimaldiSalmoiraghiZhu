@@ -159,9 +159,16 @@ catch_discover_tests(test_rule_loader)
 ###################### Test executable for ThreadSafeBuffer ####################
 add_executable(test_thread_safe_buffer 
     tests/components/test_ThreadSafeBuffer.cpp
-    src/types/TelemetryBatch.h
-    src/components/ThreadSafeBuffer.h
 )
 target_include_directories(test_thread_safe_buffer PRIVATE src)
 target_link_libraries(test_thread_safe_buffer PRIVATE Catch2::Catch2WithMain)
 catch_discover_tests(test_thread_safe_buffer)
+
+###################### Test executable for BatchAccumulator ####################
+add_executable(test_batch_accumulator
+    tests/components/test_batch_accumulator.cpp
+    src/components/BatchAccumulator.cpp
+)
+target_include_directories(test_batch_accumulator PRIVATE src)
+target_link_libraries(test_batch_accumulator PRIVATE Catch2::Catch2WithMain)
+catch_discover_tests(test_batch_accumulator)

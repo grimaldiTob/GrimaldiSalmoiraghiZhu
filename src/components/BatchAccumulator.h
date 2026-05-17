@@ -6,13 +6,10 @@
 #include <thread>
 #include <string>
 
-#include "TelemetryBatch.h"
-#include "BatchFile.h"
-#include "ThreadSafeBuffer.h"
-#include "../interfaces/BatchProviderInterface.h"
 #include "../interfaces/BatchAccumulatorInterface.h"
 #include "../interfaces/RuleEngineInterface.h"
-#include "../interfaces/MeasDatabaseInterface.h"
+#include "../interfaces/ProducerBuffer.h"
+#include "../types/TelemetryBatch.h"
 
 /**
  * @brief Accumulates valid packets into a local batch for processing.
@@ -23,7 +20,7 @@ class BatchAccumulator : public BatchAccumulatorInterface {
 public:
 
     /** @brief Constructor */
-    explicit BatchAccumulator(ThreadSafeBuffer<TelemetryBatch>& broker, 
+    explicit BatchAccumulator(ProducerBuffer<TelemetryBatch>& broker, 
                               size_t batchSize = 100) 
         : m_broker(broker),
           m_batchSize(batchSize) {}

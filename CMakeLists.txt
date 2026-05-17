@@ -156,3 +156,12 @@ target_link_libraries(test_rule_loader PRIVATE Catch2::Catch2WithMain)
 # Auto-register tests for test_rule_loader
 catch_discover_tests(test_rule_loader)
 
+###################### Test executable for ThreadSafeBuffer ####################
+add_executable(test_thread_safe_buffer 
+    tests/components/test_ThreadSafeBuffer.cpp
+    src/types/TelemetryBatch.h
+    src/components/ThreadSafeBuffer.h
+)
+target_include_directories(test_thread_safe_buffer PRIVATE src)
+target_link_libraries(test_thread_safe_buffer PRIVATE Catch2::Catch2WithMain)
+catch_discover_tests(test_thread_safe_buffer)

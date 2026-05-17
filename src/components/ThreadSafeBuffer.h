@@ -2,7 +2,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <chrono>
-#include "TelemetryBatch.h"
+#include "../types/TelemetryBatch.h"
 
 /**
  * This template class entirely hides(encaplusaltion) the synchronization logic (mutexes, locks, CVs) 
@@ -58,10 +58,11 @@ public:
         return true;
     }
 
-    // Signal that no more items will be produced
+    /** @brief Signal that no more items will be produced
+    */
     void finish_production() {
-        std::unique_lock<std::mutex> lock(m_mtx);
-        m_isFinished = true;
+        std::unique_lock<std::mutex> lock(m_mtx); 
+        m_isFinished = true; // safetly set the flag 
         lock.unlock();
         m_cvConsumer.notify_all(); // Wake up all waiting consumers so they can exit
     }

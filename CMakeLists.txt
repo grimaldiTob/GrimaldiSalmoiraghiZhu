@@ -183,3 +183,16 @@ add_executable(test_integration
 target_include_directories(test_integration PRIVATE src)
 target_link_libraries(test_integration PRIVATE Catch2::Catch2WithMain)
 catch_discover_tests(test_integration)
+
+###################### Test executable for RuleEngine ####################
+add_executable(test_rule_engine
+    tests/components/test_rule_engine.cpp
+    src/components/RuleEngine.cpp
+    src/types/rules/SimpleRule.cpp
+    src/types/rules/StatefulRule.cpp
+    external/simdjson.cpp
+)
+
+target_include_directories(test_rule_engine PRIVATE src)
+target_link_libraries(test_rule_engine PRIVATE Catch2::Catch2WithMain)
+catch_discover_tests(test_rule_engine)

@@ -3,7 +3,11 @@
 #include <string>
 #include <optional>
 #include <unordered_map>
+#include <vector>
+#include <memory>
 #include "MeasDatabaseInterface.h"
+
+class BaseRule;
 
 class OutputDispatcherInterface {
 public:

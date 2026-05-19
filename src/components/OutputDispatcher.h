@@ -2,9 +2,13 @@
 
 #include <mutex>
 #include <memory>
-#include "../interfaces/MeasDatabaseInterface.h"
-#include "../types/rules/BaseRule.h"
+#include <string>
+#include <vector>
 #include "../interfaces/OutputDispatcherInterface.h"
+
+// Forward declarations to reduce header coupling
+class MeasDatabaseInterface;
+class BaseRule;
 
 class OutputDispatcher : public OutputDispatcherInterface {
 
@@ -17,7 +21,7 @@ public:
     // we can just pass the whole telemetry batch from the RuleEngine here.
     void appendValidData(const MeasDatabaseInterface& db) override;
 
-    // here together with the batch we need to pass the results aswell.
+    // here together with the batch we need to pass the results as well.
     // maybe this is not the most clean and efficient approach but it works fine.
     void appendAlarms(const MeasDatabaseInterface& db, 
                      const std::vector<std::shared_ptr<BaseRule>>& failed_rules) override;

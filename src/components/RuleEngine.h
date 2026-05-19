@@ -16,10 +16,7 @@
 
 // INTERFACES
 #include "../interfaces/ConsumerBuffer.h"
-#include "../interfaces/MeasDatabaseInterface.h"
 #include "../interfaces/RuleEngineInterface.h"
-#include "../interfaces/OutputDispatcherInterface.h"
-#include "../interfaces/RuleLoaderInterface.h"
 
 /* I don't think including just the header file of the interfaces is enough, 
  since their methods are virtual and we need to call them in the RuleEngine class. 
@@ -29,10 +26,9 @@
 #include "../interfaces/RuleEngineInterface.h"
 
 // Forward-declare interfaces here to reduce header coupling.
-// class BatchProviderInterface;
-// class RuleLoaderInterface;
-// class MeasDatabaseInterface;
-// class OutputDispatcherInterface;
+class RuleLoaderInterface;
+class MeasDatabaseInterface;
+class OutputDispatcherInterface;
 
 class RuleEngine : public RuleEngineInterface {
 

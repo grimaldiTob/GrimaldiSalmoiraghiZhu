@@ -37,7 +37,6 @@ public:
     // Constructor that instanciates all necessary interfaces 
     RuleEngine(ConsumerBuffer<TelemetryBatch>& broker,
                        MeasDatabaseInterface& db,
-                       OutputDispatcherInterface& dispatcher,
                        std::optional<int64_t> initialTimestamp)
                        : m_broker(broker),
                          db(db),

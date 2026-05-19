@@ -3,14 +3,23 @@
 #include <unordered_map>
 #include <optional>
 #include <cstdint>
+
+// EXTERNAL 
 #include "../../external/simdjson.h"
+
+// RULES 
 #include "../types/rules/BaseRule.h"
 #include "../types/rules/SimpleRule.h"
 #include "../types/rules/StepDifferenceRule.h"
 #include "../types/rules/StatefulRule.h"
 #include "../types/rules/LogicalCorrelationRule.h"
-#include "BatchAccumulator.h"
-#include "ThreadSafeBuffer.h"
+
+// INTERFACES
+#include "../interfaces/ConsumerBuffer.h"
+#include "../interfaces/MeasDatabaseInterface.h"
+#include "../interfaces/RuleEngineInterface.h"
+#include "../interfaces/OutputDispatcherInterface.h"
+#include "../interfaces/RuleLoaderInterface.h"
 
 /* I don't think including just the header file of the interfaces is enough, 
  since their methods are virtual and we need to call them in the RuleEngine class. 
@@ -20,14 +29,23 @@
 #include "../interfaces/RuleEngineInterface.h"
 
 // Forward-declare interfaces here to reduce header coupling.
-class BatchProviderInterface;
-class RuleLoaderInterface;
-class MeasDatabaseInterface;
-class OutputDispatcherInterface;
+// class BatchProviderInterface;
+// class RuleLoaderInterface;
+// class MeasDatabaseInterface;
+// class OutputDispatcherInterface;
 
 class RuleEngine : public RuleEngineInterface {
 
 public:
+
+    // Constructor that instanciates all necessary interfaces 
+    RuleEngine(ConsumerBuffer<TelemetryBatch>& broker,
+                       MeasDatabaseInterface& db,
+                       OutputDispatcherInterface& dispatcher,
+                       std::optional<int64_t> initialTimestamp)
+                       : m_broker(broker),
+                         db(db),
+                         m_evaluationTimestamp(initialTimestamp){}
 
         explicit RuleEngine(ConsumerBuffer<TelemetryBatch>& broker,
                                                 MeasDatabaseInterface& db,
@@ -40,10 +58,8 @@ public:
     const std::vector<std::shared_ptr<BaseRule>>& getRulesList() const { return rules_list; };
     const std::unordered_map<std::string, std::optional<bool>>& getRulesCache() const { return rules_cache; };
 
-    void setProviderInterface(std::shared_ptr<BatchProviderInterface>);
     void setOutputDispatcher(OutputDispatcherInterface& dispatcher) { m_outputDispatcher = &dispatcher; }
 
-    
     // Protect the batch as read-only since the RuleEngine has to read and make evaluation without modify it
     void evaluateRules(const TelemetryBatch& batch)  override;
 

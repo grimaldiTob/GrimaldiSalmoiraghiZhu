@@ -1,10 +1,11 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <optional>
 #include <memory>
 
 #include "../../src/components/RuleEngine.h"
-#include <catch2/catch_approx.hpp>
+#include "../../src/components/ThreadSafeBuffer.h"
 #include "../../src/types/rules/SimpleRule.h"
 #include "../../src/types/TelemetryBatch.h"
 

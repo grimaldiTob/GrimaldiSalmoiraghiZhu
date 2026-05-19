@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <optional>
 #include <unordered_map>

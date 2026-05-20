@@ -43,8 +43,10 @@ private:
 
 class FakeOutputDispatcher : public OutputDispatcherInterface {
 public:
-    void appendValidData(const MeasDatabaseInterface& /*db*/) override { validCalls++; }
-    void appendAlarms(const MeasDatabaseInterface& /*db*/, const std::vector<std::shared_ptr<BaseRule>>& /*failed*/) override { alarmCalls++; }
+    void appendValidData(const MeasDatabaseInterface& /*db*/, std::optional<int64_t> /*timestamp*/) override { validCalls++; }
+    void appendAlarms(const MeasDatabaseInterface& /*db*/,
+                      const std::vector<std::shared_ptr<BaseRule>>& /*failed*/,
+                      std::optional<int64_t> /*timestamp*/) override { alarmCalls++; }
 
     int validCalls{0};
     int alarmCalls{0};
@@ -84,4 +86,48 @@ TEST_CASE("RuleEngine processes batches correctly", "[RuleEngine]") {
     REQUIRE(hist.at("s1").size() == 2);
     REQUIRE(hist.at("s1")[0] == Catch::Approx(20.0));
     REQUIRE(hist.at("s1")[1] == Catch::Approx(5.0));
+}
+
+TEST_CASE("RuleEngine calls appendValidData when all rules are true", "[RuleEngine]") {
+    ThreadSafeBuffer<TelemetryBatch> buffer(2);
+    FakeMeasDB db;
+    FakeOutputDispatcher dispatcher;
+
+    RuleEngine engine(buffer, db, std::optional<int64_t>(1));
+    engine.setOutputDispatcher(dispatcher);
+
+    FakeRuleLoader loader;
+    simdjson::ondemand::parser parser;
+    engine.setRulesList(loader, parser);
+
+    TelemetryBatch bat(1);
+    bat.emplaceBack("s1", 1, 20.0, 1); // >10, rule should be true
+
+    engine.evaluateRules(bat);
+    engine.checkRuleResult();
+
+    REQUIRE(dispatcher.validCalls == 1);
+    REQUIRE(dispatcher.alarmCalls == 0);
+}
+
+TEST_CASE("RuleEngine calls appendAlarms when any rule is false", "[RuleEngine]") {
+    ThreadSafeBuffer<TelemetryBatch> buffer(2);
+    FakeMeasDB db;
+    FakeOutputDispatcher dispatcher;
+
+    RuleEngine engine(buffer, db, std::optional<int64_t>(1));
+    engine.setOutputDispatcher(dispatcher);
+
+    FakeRuleLoader loader;
+    simdjson::ondemand::parser parser;
+    engine.setRulesList(loader, parser);
+
+    TelemetryBatch bat(1);
+    bat.emplaceBack("s1", 1, 5.0, 1); // <=10, rule should be false
+
+    engine.evaluateRules(bat);
+    engine.checkRuleResult();
+
+    REQUIRE(dispatcher.validCalls == 0);
+    REQUIRE(dispatcher.alarmCalls == 1);
 }

@@ -8,7 +8,16 @@ set(CMAKE_CXX_EXTENSIONS OFF) # Disable compiler-specific extensions (e.g., gnu+
 
 # -O3 optimization level required for simdjson
 # -march=native: Allows the compiler to use AVX/AVX2/AVX-512 instructions (critical for simdjson)
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
+# Luca: Unfortunately, from what I have gathered, this is not portable across different machines
+# and can cause issues in CI pipelines, since compilation and testing may happen on different
+# machines with different CPUs. As a fallback, the following detects if it runs on GITHUB_ACTIONS
+# and uses a more conservative set of flags (stuff from first gen intel i series, 2008)
+if(DEFINED ENV{GITHUB_ACTIONS})
+    # Safe modern baseline for GitHub's x86_64 runners that supports simdjson optimizations
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -msse4.2 -mpclmul -mavx2 -mbmi -mbmi2")
+else()
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
+endif()
 
 #add_executable(astralog 
 #    ./src/main.cpp 
@@ -40,7 +49,7 @@ include(Catch)
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
-# Enable CTest so you can run: cmake --build . && ctest
+# Enable CTest so we can run: cmake --build . && ctest - FUNDAMENTAL for github actions and CI pipelines
 # ---------------------------------------------------------------------------
 enable_testing()
 # ---------------------------------------------------------------------------

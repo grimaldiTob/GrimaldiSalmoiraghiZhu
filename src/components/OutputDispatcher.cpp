@@ -55,13 +55,16 @@ void OutputDispatcher::appendValidData(const MeasDatabaseInterface& db, std::opt
     // save the converted timestamp
     data_line += timestamp_str + ";NOMINAL;";
     const auto& meas_history = db.getMeasHistory();
+
     for (const auto& kv : meas_history) {
-        const std::string& sensor_id = kv.first;
-        const std::vector<double>& values = kv.second;
-        for (const double& value : values) {
-            data_line += sensor_id + ":" + std::to_string(value) + "|"; 
-        }
+        const auto& sensor_id = kv.first;
+        const auto& values = kv.second;
+        if (!values.empty())
+            data_line += sensor_id + ":" + std::to_string(values.back()) + "|";
+        else
+            data_line += sensor_id + ":N/A|";
     }
+    data_line += "\n";
     appendLine(m_validDataPath, data_line);
 }
 
@@ -80,18 +83,16 @@ void OutputDispatcher::appendAlarms(const MeasDatabaseInterface& db,
 
     alarm_line += timestamp_str; // Placeholder for timestamp
     for (const auto& rule : failed_rules) {
-        alarm_line += rule->getRuleId() + ";" + priorityToString(rule->getPriority()) + ";";
-        std::string violated_sensor;
-        std::string current_values;
-        // I have to reason about how to get the violated sensors and their current values
-        // because it is consistent for three rules out of the four, 
-        // but the correlation rule differes. How to handle this without an horrible 
-        // if-else structure? 
-        // Moreover, does it make any sense to have the OutputDispatcher 
-        // know about the structure of the rules?
-
-        // TODO: finish the implementation!
-
+        std::string alarm_line = timestamp_str + ";" + rule->getRuleId() + ";" + priorityToString(rule->getPriority()) + ";";
+        for (const auto& sensor : rule->getInvolvedSensors()) {
+            auto it = meas_history.find(sensor);
+            if (it != meas_history.end() && !it->second.empty())
+                alarm_line += sensor + ":" + std::to_string(it->second.back()) + "|";
+            else
+                alarm_line += sensor + ":N/A|";
+        }
+        alarm_line += "\n";
+        appendLine(m_alarmsPath, alarm_line);
     }
 }
 

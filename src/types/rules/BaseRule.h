@@ -36,7 +36,7 @@ public:
     std::string getRuleId() const { return rule_id; }
     RuleType getType() const { return type; }
     RulePriority getPriority() const { return priority; }
-    std::vector<std::string> getInvolvedSensors() const { return involved_sensors; }
+    virtual std::vector<std::string> getInvolvedSensors() const { return involved_sensors; }
    
 protected: 
     const std::string rule_id;

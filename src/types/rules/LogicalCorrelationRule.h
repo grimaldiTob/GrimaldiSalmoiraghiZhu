@@ -31,7 +31,7 @@ public:
     std::string getLogic() const { return logic; }
     const std::vector<std::shared_ptr<BaseRule>>& getConditionRuleIds() const { return condition_rules; }
 
-    std::vector<std::string> getInvolvedSensors() const;  // List all involved sensor from the condition rules
+    std::vector<std::string> getInvolvedSensors() const override;  // List all involved sensor from the condition rules
 
 private:
     std::string logic; // "AND" or "OR"

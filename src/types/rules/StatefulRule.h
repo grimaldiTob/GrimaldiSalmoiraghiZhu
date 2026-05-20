@@ -41,6 +41,7 @@ public:
     std::string getOperator() const { return oprtor; }
     double getValue() const { return value; }
     double getConsecutiveMeas() const { return consecutive_meas; }
+    std::vector<std::string> getInvolvedSensors() const { return {sensor_id}; }
 
 private:
     const std::string sensor_id;

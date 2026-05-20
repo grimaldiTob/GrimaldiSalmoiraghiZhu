@@ -36,9 +36,11 @@ public:
     std::string getRuleId() const { return rule_id; }
     RuleType getType() const { return type; }
     RulePriority getPriority() const { return priority; }
+    std::vector<std::string> getInvolvedSensors() const { return involved_sensors; }
    
 protected: 
     const std::string rule_id;
     const RuleType type;
-    const RulePriority priority;
+    const RulePriority priority;    
+    const std::vector<std::string> involved_sensors; // Tracks all involved rules, useful for correlation rules, used by OutputDispatcher
 };

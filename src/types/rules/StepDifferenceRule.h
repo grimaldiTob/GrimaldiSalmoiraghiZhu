@@ -30,6 +30,7 @@ public:
     std::string getSensorId() const { return sensor_id; }
     std::string getOperator() const { return op; }
     double getValue() const { return value; }
+    std::vector<std::string> getInvolvedSensors() const { return {sensor_id}; }
 
     // Destructor is just defaulted, as there are no resources to manage
     ~StepDifferenceRule() override = default;

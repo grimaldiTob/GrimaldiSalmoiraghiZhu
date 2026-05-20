@@ -65,3 +65,15 @@ std::optional<bool> LogicalCorrelationRule::evaluate(const TelemetryBatch& batch
     }
     return final_result;
 }
+
+std::vector<std::string> LogicalCorrelationRule::getInvolvedSensors() const {
+    std::vector<std::string> sensors;
+    for (const auto& child : condition_rules) {
+        const auto& child_sensors = child->getInvolvedSensors();
+        sensors.insert(sensors.end(), child_sensors.begin(), child_sensors.end());
+    }
+    // Remove duplicates
+    std::sort(sensors.begin(), sensors.end());
+    sensors.erase(std::unique(sensors.begin(), sensors.end()), sensors.end());
+    return sensors;
+}

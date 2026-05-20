@@ -26,10 +26,10 @@ public:
     std::optional<bool> evaluate(const TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) override;
 
-    // TO BE DISCUSSED (see comment in BaseRule.h)
     std::string getSensorId() const { return sensor_id; }
     std::string getOperator() const { return op; }
     double getValue() const { return value; }
+    std::vector<std::string> getInvolvedSensors() const { return {sensor_id}; } // {} on the fly vector constructor 
 
     // Destructor is just defaulted, as there are no resources to manage
     ~SimpleRule() override = default;

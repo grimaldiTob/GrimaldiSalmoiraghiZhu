@@ -48,3 +48,9 @@ TEST_CASE("StepDifferenceRule handles invalid operator", "[StepDifferenceRule]")
     auto result = rule.evaluate(batch, cache);
     REQUIRE(!result.has_value()); // Invalid operator
 }
+
+TEST_CASE("StepDifferenceRule returns involved sensors correctly", "[StepDifferenceRule]") {
+    StepDifferenceRule rule("Rule1", RulePriority::HIGH, "Sensor1", ">", 5.0);
+    std::vector<std::string> expected_sensors = {"Sensor1"};
+    REQUIRE(rule.getInvolvedSensors() == expected_sensors); // Check that the involved sensors are correct
+}

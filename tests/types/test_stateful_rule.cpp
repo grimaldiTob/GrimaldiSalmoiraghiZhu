@@ -120,3 +120,12 @@ TEST_CASE("StatefulRule handles invalid DB", "[StatefulRule]") {
     // Assertions
     REQUIRE(!result.has_value()); // Check that the result is nullopt due to invalid database pointer
 }
+
+TEST_CASE("StatefulRule returns involved sensors correctly", "[StatefulRule]") {
+    // Create a StatefulRule
+    StatefulRule rule("Rule1", RulePriority::HIGH, "Sensor1", ">", 3, 10.0);
+
+    // Assertions
+    std::vector<std::string> expected_sensors = {"Sensor1"};
+    REQUIRE(rule.getInvolvedSensors() == expected_sensors); // Check that the involved sensors are correct
+}

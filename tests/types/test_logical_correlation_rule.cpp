@@ -99,3 +99,14 @@ TEST_CASE("LogicalCorrelationRule stores the result of the conditional rules in 
     REQUIRE(cache.at("Rule2").has_value());
     // I just want to check if the values are there
 }
+
+TEST_CASE("LogicalCorrelationRule returns involved sensors correctly", "[LogicalCorrelationRule]") {
+    auto rule1 = std::make_shared<SimpleRule>("Rule1", RulePriority::HIGH, "Sensor1", ">", 5.0);
+    auto rule2 = std::make_shared<SimpleRule>("Rule2", RulePriority::HIGH, "Sensor2", "<", 25.0);
+    std::vector<std::shared_ptr<BaseRule>> conditions = {rule1, rule2};
+
+    LogicalCorrelationRule corr_rule("CorrRule6", RulePriority::HIGH, "AND", conditions);
+
+    std::vector<std::string> expected_sensors = {"Sensor1", "Sensor2"};
+    REQUIRE(corr_rule.getInvolvedSensors() == expected_sensors); // Check that the involved sensors are correct
+}

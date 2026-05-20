@@ -70,3 +70,14 @@ TEST_CASE("SimpleRule handles invalid operator", "[SimpleRule]") {
     // Assertions
     REQUIRE(!result.has_value()); // Check that the result is nullopt since the operator is invalid
 }
+
+TEST_CASE("SimpleRule returns involved sensors correctly", "[SimpleRule]") {
+    SimpleRule rule("Rule1", RulePriority::HIGH, "Sensor1", ">", 10.0);
+    
+    // Testing the getInvolvedSensors function of SimpleRule
+    auto involved_sensors = rule.getInvolvedSensors();
+
+    // Assertions
+    REQUIRE(involved_sensors.size() == 1); // Check that there is exactly one involved sensor
+    REQUIRE(involved_sensors[0] == "Sensor1"); // Check that the involved sensor is Sensor1
+}

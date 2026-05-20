@@ -62,7 +62,7 @@ void RuleEngine::checkRuleResult() {
     }
 
     if (all_true) {
-        m_outputDispatcher->appendValidData(db);
+        m_outputDispatcher->appendValidData(db, m_evaluationTimestamp);
         return;
     }
 

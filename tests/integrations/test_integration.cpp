@@ -22,7 +22,7 @@ TEST_CASE("DataIngestor processes all available text files in the target directo
     BatchAccumulator accumulator(broker, BATCH_SIZE);
     DataIngestor ingestor(accumulator);
     
-    const std::string input_path = "../collector_output";
+    const std::string input_path = "../tests/test_collector_output";
     /**
      * python3 ../src/count_invalid_format_data.py ../collector_output/
      * 

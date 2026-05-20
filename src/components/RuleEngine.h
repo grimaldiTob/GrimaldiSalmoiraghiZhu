@@ -35,14 +35,17 @@ class RuleEngine : public RuleEngineInterface {
 public:
 
     // Constructor that instanciates all necessary interfaces 
+    // I dont know why there where two constructors
+    /*
     RuleEngine(ConsumerBuffer<TelemetryBatch>& broker,
                        MeasDatabaseInterface& db,
                        std::optional<int64_t> initialTimestamp)
                        : m_broker(broker),
                          db(db),
                          m_evaluationTimestamp(initialTimestamp){}
+    */
 
-        explicit RuleEngine(ConsumerBuffer<TelemetryBatch>& broker,
+    explicit RuleEngine(ConsumerBuffer<TelemetryBatch>& broker,
                                                 MeasDatabaseInterface& db,
                                                 std::optional<int64_t> initialTimestamp)
                 : m_evaluationTimestamp(initialTimestamp),

@@ -66,7 +66,7 @@ void RuleEngine::checkRuleResult() {
         return;
     }
 
-    m_outputDispatcher->appendAlarms(db, failed_rules);
+    m_outputDispatcher->appendAlarms(db, failed_rules, m_evaluationTimestamp);
 }
 
 void RuleEngine::storeBatchMeasurements(const TelemetryBatch& batch) {

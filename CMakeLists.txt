@@ -196,3 +196,13 @@ add_executable(test_rule_engine
 target_include_directories(test_rule_engine PRIVATE src)
 target_link_libraries(test_rule_engine PRIVATE Catch2::Catch2WithMain)
 catch_discover_tests(test_rule_engine)
+
+###################### Test executable for OutputDispatcher ####################
+add_executable(test_output_dispatcher
+    tests/components/test_OutputDispatcher.cpp
+    src/components/OutputDispatcher.cpp
+)
+
+target_include_directories(test_output_dispatcher PRIVATE src)
+target_link_libraries(test_output_dispatcher PRIVATE Catch2::Catch2WithMain)
+catch_discover_tests(test_output_dispatcher)

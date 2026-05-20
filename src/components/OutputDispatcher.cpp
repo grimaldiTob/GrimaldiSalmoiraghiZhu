@@ -2,7 +2,6 @@
 
 // Headers for forward-declared classes
 #include "../interfaces/MeasDatabaseInterface.h"
-#include "../types/rules/BaseRule.h"
 #include "../interfaces/OutputDispatcherInterface.h"
 
 #include <ctime>
@@ -10,8 +9,8 @@
 #include <iomanip>
 #include <sstream>
 
-// helper function to convert timestamp into a string
-static std::string timeToString(std::optional<int64_t> timestamp) {
+// static class member to convert timestamp into a string
+std::string OutputDispatcher::timeToString(std::optional<int64_t> timestamp) {
     std::string timestamp_str;
 
     // asked Gemini about timestamp convertion and this blob code came out take it as it is.
@@ -30,8 +29,8 @@ static std::string timeToString(std::optional<int64_t> timestamp) {
     return timestamp_str;
 }
 
-// helper function to map priorities to strings
-static std::string priorityToString(RulePriority p) {
+// static class member to map priorities to strings
+std::string OutputDispatcher::priorityToString(RulePriority p) {
     switch (p) {
         case RulePriority::LOW: return "LOW";
         case RulePriority::MEDIUM: return "MEDIUM";

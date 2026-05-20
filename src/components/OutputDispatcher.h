@@ -5,10 +5,10 @@
 #include <string>
 #include <vector>
 #include "../interfaces/OutputDispatcherInterface.h"
+#include "../types/rules/BaseRule.h"
 
 // Forward declarations to reduce header coupling
 class MeasDatabaseInterface;
-class BaseRule;
 
 class OutputDispatcher : public OutputDispatcherInterface {
 

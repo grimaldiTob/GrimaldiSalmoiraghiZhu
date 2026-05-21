@@ -220,3 +220,24 @@ add_executable(test_output_dispatcher
 target_include_directories(test_output_dispatcher PRIVATE src)
 target_link_libraries(test_output_dispatcher PRIVATE Catch2::Catch2WithMain)
 catch_discover_tests(test_output_dispatcher)
+
+###################### Test executable for AstraLog ####################
+add_executable(test_astralog
+    tests/test_astralog.cpp
+    src/AstraLog.cpp
+    src/components/DataIngestor.cpp
+    src/components/BatchAccumulator.cpp
+    src/components/RuleEngine.cpp
+    src/components/RuleLoader.cpp
+    src/types/rules/SimpleRule.cpp
+    src/types/rules/StepDifferenceRule.cpp
+    src/types/rules/StatefulRule.cpp
+    src/types/rules/LogicalCorrelationRule.cpp
+    src/components/MeasDatabase.cpp
+    external/simdjson.cpp
+)
+
+target_include_directories(test_astralog PRIVATE src)
+target_compile_definitions(test_astralog PRIVATE ASTRALOG_NO_MAIN)
+target_link_libraries(test_astralog PRIVATE Catch2::Catch2WithMain OpenMP::OpenMP_CXX)
+catch_discover_tests(test_astralog)

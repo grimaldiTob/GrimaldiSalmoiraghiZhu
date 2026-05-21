@@ -1,5 +1,7 @@
 #include "MeasDatabase.h"
 
+MeasDatabase::MeasDatabase() = default;
+
 /** @brief Searches for sensor id in the measurement database and 
  * stores the corresponding value
  */

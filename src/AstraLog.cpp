@@ -136,6 +136,7 @@ void AstraLog::run(const std::string &inputPath) {
 }
 
 // HYPOTHETICAL ENTRY POINT OF OUR APPLICATION
+#ifndef ASTRALOG_NO_MAIN
 int main(int argc, char** argv) {
     std::string inputPath = "./collector_output";
     size_t batchSize = DEFAULT_BATCH_SIZE;
@@ -162,3 +163,4 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+#endif

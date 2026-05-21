@@ -60,6 +60,7 @@ public:
 
     // Protect the batch as read-only since the RuleEngine has to read and make evaluation without modify it
     void evaluateRules(const TelemetryBatch& batch)  override;
+    void serialEvaluate(const TelemetryBatch& batch);
 
     // ideally we can also think of having the rule loader as a class attribute but 
     // this has just a one shot usage. (after loading is just wasted memory)

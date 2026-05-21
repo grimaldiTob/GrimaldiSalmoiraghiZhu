@@ -8,7 +8,7 @@
 #include "components/RuleLoader.h"
 #include "components/MeasDatabase.h"
 #include "components/ThreadSafeBuffer.h"
-#include "../../external/simdjson.h"
+#include "../external/simdjson.h"
 
 
 class AstraLog {

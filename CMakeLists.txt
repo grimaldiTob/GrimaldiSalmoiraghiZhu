@@ -54,6 +54,9 @@ include(Catch)
 enable_testing()
 # ---------------------------------------------------------------------------
 
+# OpenMP (used by RuleEngine parallel evaluation)
+find_package(OpenMP REQUIRED)
+
 ######################### Test executable for TelemetryBatch #######################
 add_executable(test_telemetry_batch
     tests/types/test_TelemetryBatch.cpp
@@ -202,8 +205,10 @@ add_executable(test_rule_engine
     external/simdjson.cpp
 )
 
+# target links
 target_include_directories(test_rule_engine PRIVATE src)
-target_link_libraries(test_rule_engine PRIVATE Catch2::Catch2WithMain)
+target_link_libraries(test_rule_engine PRIVATE Catch2::Catch2WithMain OpenMP::OpenMP_CXX)
+
 catch_discover_tests(test_rule_engine)
 
 ###################### Test executable for OutputDispatcher ####################

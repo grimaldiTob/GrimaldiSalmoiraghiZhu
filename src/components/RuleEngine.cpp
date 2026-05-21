@@ -80,18 +80,77 @@ void RuleEngine::storeBatchMeasurements(const TelemetryBatch& batch) {
  * batch and evaluates the rule
  */
 void RuleEngine::evaluateRules(const TelemetryBatch& batch) {
-    for(auto& rule : rules_list) {
-        const std::string& rule_id = rule->getRuleId();
-        auto result = rule->evaluate(batch, rules_cache);
-        rules_cache[rule_id] = result;
-        
-        // also thinking about parallelization of rule evaluation
-        // we cannot really parallelize the whole rules_list for two reasons:
-            // 1. the cache becomes useless
-            // 2. (and most important) WE HAVE PRIORITIES
-        
-        // so we can think of like parallelizing over 'HIGH', 'MEDIUM', 'LOW' priorities but not all of them.
-    }
+
+    // define a lambda function which will be called inside the function itself.
+    auto evaluatePriorityGroup = [&](RulePriority priority) {
+        std::vector<std::pair<std::string, std::optional<bool>>> results;
+        results.reserve(rules_list.size());
+
+        // Evaluate non-correlation rules in parallel and merge results after the barrier.
+        #pragma omp parallel
+        {
+            std::vector<std::pair<std::string, std::optional<bool>>> local_results;
+
+            #pragma omp for
+            for (size_t i = 0; i < rules_list.size(); ++i) {
+                auto& rule = rules_list[i];
+                if (rule->getPriority() != priority) {
+                    continue;
+                }
+                const std::string& rule_id = rule->getRuleId();
+                auto result = rule->evaluate(batch, rules_cache);
+                local_results.emplace_back(rule_id, result);
+
+                /*
+                    OK HERE WE HAVE A HUGE PROBLEM, I'LL TRY TO EXPLAIN:
+                        Basically If we evaluate a correlation rule, we are accessing the cache and storing
+                        the results of the intermediate rules. But we cant do it in a parallel environment
+                        since it would mean race condition in the cache.
+
+                        So I tough, ok we do not store the intermediate result, but in that case we have
+                        another big problem:
+                        Some rules modify the state of the Rule Itself (like the step difference rule).
+                        This means that evaluating a rule two times (once for the correlation and one for
+                        the rule itself) generates different result.
+
+                        So basically we cannot permit to evaluate a rule two times which means we are forced
+                        to store its result in the cache.
+
+                        APPROACHES:
+                            - we evaluate the correlation rules sequentially.
+                            - rule evaluation becomes stateles for the rule itself.
+
+                */
+            }
+
+            #pragma omp critical
+            results.insert(results.end(), local_results.begin(), local_results.end());
+            // inserts the local results accumulated from the end.
+        }
+
+        for (auto& entry : results) {
+            rules_cache[entry.first] = entry.second;
+        }
+        /*
+        // Evaluate correlation rules sequentially 
+        for (auto& rule : rules_list) {
+            if (rule->getPriority() != priority) {
+                continue;
+            }
+            if (rule->getType() != RuleType::CORRELATION) {
+                continue;
+            }
+            const std::string& rule_id = rule->getRuleId();
+            auto result = rule->evaluate(batch, rules_cache);
+            rules_cache[rule_id] = result;
+        }
+        */
+    };
+    // evaluate based on Priority order
+    evaluatePriorityGroup(RulePriority::HIGH);
+    evaluatePriorityGroup(RulePriority::MEDIUM);
+    evaluatePriorityGroup(RulePriority::LOW);
+
     storeBatchMeasurements(batch);
 }
 

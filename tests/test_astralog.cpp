@@ -19,15 +19,9 @@ std::string getTestsRoot() {
 }
 
 std::string makeWorkDir(const std::string& prefix) {
-	auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
-	std::filesystem::path path = std::filesystem::path(getTestsRoot()) / (prefix + "_" + std::to_string(stamp));
+	std::filesystem::path path = std::filesystem::path(getTestsRoot()) / (prefix);
 	std::filesystem::create_directories(path);
 	return path.string();
-}
-
-void writeRulesFile(const std::string& dir) {
-	std::ofstream out(std::filesystem::path(dir) / "rules.json");
-	out << "[]";
 }
 
 // we use this to copy the content of the collector_output
@@ -68,7 +62,6 @@ TEST_CASE("AstraLog shuts down after having evaluated all batches in the collect
 	};
 	auto cleanup = std::unique_ptr<void, decltype(cleanupDeleter)>(nullptr, cleanupDeleter);
 
-	writeRulesFile(inputDir);
 	copyCollectorOutput(fixturesDir, inputDir);
 	REQUIRE(countTxtFiles(inputDir) > 0);
 
@@ -94,7 +87,6 @@ TEST_CASE("AstraLog run removes ingested .txt files", "[AstraLog][cleanup]") {
 	};
 	auto cleanup = std::unique_ptr<void, decltype(cleanupDeleter)>(nullptr, cleanupDeleter);
 
-	writeRulesFile(inputDir);
 	copyCollectorOutput(fixturesDir, inputDir);
 	REQUIRE(countTxtFiles(inputDir) > 0); // require that the content of the collector_output has been copied
 

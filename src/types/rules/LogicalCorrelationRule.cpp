@@ -23,7 +23,7 @@ std::optional<bool> LogicalCorrelationRule::evaluate(const TelemetryBatch& batch
             }
             // Call the evaluate function for the child rule
             std::optional<bool> child_result = child->evaluate(batch, cache);
-            // cache[child->getRuleId()] = child_result;
+            cache[child->getRuleId()] = child_result;
             try
             {
                 if (!child_result.value()) {
@@ -50,7 +50,7 @@ std::optional<bool> LogicalCorrelationRule::evaluate(const TelemetryBatch& batch
                     continue;
             }
             std::optional<bool> child_result = child->evaluate(batch, cache);
-            // cache[child->getRuleId()] = child_result; // remember to store the result of these rules
+            cache[child->getRuleId()] = child_result; // remember to store the result of these rules
 
             try {
                 if (child_result.value()) {

@@ -1,0 +1,42 @@
+# This workflows uses GitHub's CodeQL Action to perform a security scan on the codebase. 
+# Fundamentally, this is a static analysis tool (don't ask me why it needs compilation if it is static)
+# that checks secutiry vulnerability based on a database of known patterns.
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '30 4 * * 0' # Runs every Sunday at 4:30 AM just as a hygiene check
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write # Required to post findings to your GitHub Security tab
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    # Initializes the CodeQL tools for both C++ and Python
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v4
+      with:
+        languages: ccpp, python
+
+    # CodeQL needs to monitor the actual compiler to trace C++ data structures
+    - name: Install Build Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential
+
+    - name: Configure and Build
+      run: |
+        cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --config Release -j $(nproc)
+
+    # Perform the deep semantic analysis pass
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v4

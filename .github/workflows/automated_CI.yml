@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Check out code # Step to check out the code from the repository
-      uses: actions/checkout@v4 # Action to check out the code, using version 4 of the checkout action
+      uses: actions/checkout@v6 # Action to check out the code, using version 6 of the checkout action
 
     - name: Install Build Dependencies # Step to install necessary build dependencies
       run: |
@@ -22,7 +22,7 @@ jobs:
     # This is to avoid re-downloading and re-building CMake and Catch2 every time
     # we need to run the workflow, which can save time and resources.
     - name: Cache Build Directory
-      uses: actions/cache@v4 # again, using an already existing action for caching
+      uses: actions/cache@v5 # again, using an already existing action for caching
       with:
         path: |
           build/_deps

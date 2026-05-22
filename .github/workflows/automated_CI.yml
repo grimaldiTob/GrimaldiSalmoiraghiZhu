@@ -1,0 +1,42 @@
+# Title that appears in the GitHub Actions UI for this workflow
+name: C++ CMake Build and Test CI
+
+# When to trigger the workflow. In this case, it runs on every push to the repository.
+on: [push]
+
+# What jobs to run in this workflow. Here we have a single job called "build-and-test".
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest # Type of runner, in this case, the latest version of Ubuntu
+
+    steps:
+    - name: Check out code # Step to check out the code from the repository
+      uses: actions/checkout@v4 # Action to check out the code, using version 4 of the checkout action
+
+    - name: Install Build Dependencies # Step to install necessary build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential
+
+    # Cache the built dependencies and CMake configurations
+    # This is to avoid re-downloading and re-building CMake and Catch2 every time
+    # we need to run the workflow, which can save time and resources.
+    - name: Cache Build Directory
+      uses: actions/cache@v4 # again, using an already existing action for caching
+      with:
+        path: |
+          build/_deps
+          ~/.cache/pip
+        key: ${{ runner.os }}-cmake-${{ hashFiles('**/CMakeLists.txt') }} 
+        restore-keys: |
+          ${{ runner.os }}-cmake-
+
+    - name: Configure CMake
+      run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release # Create a build directory and configure the project using CMake
+
+    - name: Build Project
+      run: cmake --build build --config Release -j $(nproc) # Build the project using CMake, specifying the build directory and configuration, and using all available CPU cores
+
+    - name: Run Tests
+      working-directory: build
+      run: ctest --output-on-failure # Run the tests using CTest (which we have configured in our CMakeLists.txt)

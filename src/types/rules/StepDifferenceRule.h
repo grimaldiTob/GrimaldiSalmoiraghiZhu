@@ -1,11 +1,10 @@
 #pragma once
 
+#include "../../interfaces/MeasDatabaseInterface.h"
 #include "BaseRule.h"
-#include "../../interfaces/MeasDatabaseInterface.h" 
-
 
 class StepDifferenceRule : public BaseRule {
-public:
+  public:
     /**
      * @brief Constructor for StepDifferenceRule.
      * @param rule_id Unique identifier for the rule.
@@ -13,20 +12,18 @@ public:
      * @param sensor_id Identifier of the sensor to which the rule applies.
      * @param op Operator for comparison (e.g., ">", "<", "==").
      * @param value Value to compare the sensor reading against.
-     * @param previous_value optional parameter to store the previous sensor value for step difference calculation.
+     * @param previous_value optional parameter to store the previous sensor
+     * value for step difference calculation.
      */
-    StepDifferenceRule(const std::string& rule_id, 
-               RulePriority priority, 
-               const std::string& sensor_id,
-               const std::string& op,
-               const double& value)
-        : BaseRule(rule_id, RuleType::STEP_DIFFERENCE, priority), 
-          sensor_id(sensor_id), 
-          op(op),
-          value(value) {} 
+    StepDifferenceRule(const std::string &rule_id, RulePriority priority,
+                       const std::string &sensor_id, const std::string &op,
+                       const double &value)
+        : BaseRule(rule_id, RuleType::STEP_DIFFERENCE, priority),
+          sensor_id(sensor_id), op(op), value(value) {}
 
-    std::optional<bool> evaluate(const TelemetryBatch& batch, 
-        std::unordered_map<std::string, std::optional<bool>>& cache) override;
+    std::optional<bool> evaluate(
+        const TelemetryBatch &batch,
+        std::unordered_map<std::string, std::optional<bool>> &cache) override;
 
     void setMeasDatabase(MeasDatabaseInterface &db) { database = &db; }
 
@@ -37,12 +34,13 @@ public:
 
     // Destructor is just defaulted, as there are no resources to manage
     ~StepDifferenceRule() override = default;
-private:
+
+  private:
     const std::string sensor_id;
     const std::string op;
     const double value;
-    MeasDatabaseInterface* database = nullptr; // pointer to the measurement database
+    MeasDatabaseInterface *database =
+        nullptr; // pointer to the measurement database
 
     // std::optional<double> previous_value; // we make it a class parameter
 };
-

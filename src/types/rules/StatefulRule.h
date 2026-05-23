@@ -1,12 +1,12 @@
 #pragma once
 
+#include "../../interfaces/MeasDatabaseInterface.h"
 #include "BaseRule.h"
-#include "../../interfaces/MeasDatabaseInterface.h" 
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 class StatefulRule : public BaseRule {
-public:
+  public:
     /**
      * @brief Constructor for StatefulRule.
      * @param rule_id Unique identifier for the rule.
@@ -16,22 +16,16 @@ public:
      * @param consecutive_meas Number of consecutive measurements required.
      * @param value Value to compare the sensor reading against.
      */
-    StatefulRule(
-        const std::string& rule_id,
-        RulePriority priority,
-        const std::string& sensor_id,
-        const std::string& oprtor, 
-        const double consecutive_meas,
-        const double value
-    ) : BaseRule(rule_id, RuleType::STATEFUL, priority),
-        sensor_id(sensor_id),
-        oprtor(oprtor),
-        consecutive_meas(consecutive_meas),
-        value(value) {}
+    StatefulRule(const std::string &rule_id, RulePriority priority,
+                 const std::string &sensor_id, const std::string &oprtor,
+                 const double consecutive_meas, const double value)
+        : BaseRule(rule_id, RuleType::STATEFUL, priority), sensor_id(sensor_id),
+          oprtor(oprtor), consecutive_meas(consecutive_meas), value(value) {}
 
     // Override required by BaseRule
-    std::optional<bool> evaluate(const TelemetryBatch& batch, 
-        std::unordered_map<std::string, std::optional<bool>>& cache) override;
+    std::optional<bool> evaluate(
+        const TelemetryBatch &batch,
+        std::unordered_map<std::string, std::optional<bool>> &cache) override;
 
     // assigns the database interface to the pointer.
     void setMeasDatabase(MeasDatabaseInterface &db) { database = &db; }
@@ -42,12 +36,13 @@ public:
     double getConsecutiveMeas() const { return consecutive_meas; }
     std::vector<std::string> getInvolvedSensors() const { return {sensor_id}; }
 
-private:
+  private:
     const std::string sensor_id;
     const std::string oprtor;
     const double value;
     const double consecutive_meas;
-    MeasDatabaseInterface* database = nullptr; // pointer to the measurement database
+    MeasDatabaseInterface *database =
+        nullptr; // pointer to the measurement database
     // I am using a traditional, C-style pointer, since
     // BaseRule is not the owner of the database, which likely
     // needs no shared ownership nor automatic memory management,

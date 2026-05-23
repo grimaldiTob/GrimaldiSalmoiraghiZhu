@@ -1,13 +1,13 @@
 #pragma once
 
-#include <vector>
-#include <string>
-#include <memory>
-#include "../types/rules/BaseRule.h"
 #include "../../external/simdjson.h"
+#include "../types/rules/BaseRule.h"
+#include <memory>
+#include <string>
+#include <vector>
 
 class RuleLoaderInterface {
-public:
+  public:
     virtual ~RuleLoaderInterface() = default;
 
     /**
@@ -16,5 +16,7 @@ public:
      * @param filename The name of the JSON file to parse.
      * @param rules_list The list to populate with parsed rules.
      */
-    virtual void loadRules(simdjson::ondemand::parser& parser, const std::string& filename, std::vector<std::shared_ptr<BaseRule>>& rules_list) = 0;
+    virtual void
+    loadRules(simdjson::ondemand::parser &parser, const std::string &filename,
+              std::vector<std::shared_ptr<BaseRule>> &rules_list) = 0;
 };

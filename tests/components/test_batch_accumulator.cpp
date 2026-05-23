@@ -1,15 +1,14 @@
-#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
 #include "../../src/components/BatchAccumulator.h"
 #include "../../src/interfaces/ProducerBuffer.h"
 #include "../../src/types/TelemetryBatch.h"
 
-
 // Mock the queue behavior
 class MockBroker : public ProducerBuffer<TelemetryBatch> {
-public:
+  public:
     std::vector<TelemetryBatch> queue;
     bool finishCalled = false;
 
@@ -17,9 +16,7 @@ public:
         queue.push_back(std::move(item));
     }
 
-    void finish_production() override {
-        finishCalled = true;
-    }
+    void finish_production() override { finishCalled = true; }
 
     size_t pushCount() const { return queue.size(); }
 };
@@ -27,33 +24,37 @@ public:
 /** Build a TelemetryBatch with `count` measurements.
  *  sensor name  = "s<i>", timestamp = i, value = i * 1.0, priority = 1
  */
-static TelemetryBatch makeBatch(size_t count, int64_t baseTimestamp = 0, int priority = 1) {
+static TelemetryBatch makeBatch(size_t count, int64_t baseTimestamp = 0,
+                                int priority = 1) {
     TelemetryBatch b;
     for (size_t i = 0; i < count; ++i) {
         b.emplaceBack("s" + std::to_string(i),
                       baseTimestamp + static_cast<int64_t>(i),
-                      static_cast<double>(i),
-                      priority);
+                      static_cast<double>(i), priority);
     }
     return b;
 }
 
-/** Verify that the n-th pushed batch contains the expected sensor names in order. */
-static void requireSensorNames(const MockBroker& broker, size_t batchIndex, const std::vector<std::string>& expected) {
+/** Verify that the n-th pushed batch contains the expected sensor names in
+ * order. */
+static void requireSensorNames(const MockBroker &broker, size_t batchIndex,
+                               const std::vector<std::string> &expected) {
 
-    // Since our goal is to test if the accumulator correctly feed the queue, 
-    // we ASSUME that we have just ONE PRODUCER (accumulator) and 
-    // the queue can be ONLY populated (no leaving packets) 
-    
-    // If the broker has more items than the accumulator has send it, the test fail
-    REQUIRE(broker.pushCount() > batchIndex); 
-    
+    // Since our goal is to test if the accumulator correctly feed the queue,
+    // we ASSUME that we have just ONE PRODUCER (accumulator) and
+    // the queue can be ONLY populated (no leaving packets)
+
+    // If the broker has more items than the accumulator has send it, the test
+    // fail
+    REQUIRE(broker.pushCount() > batchIndex);
+
     // Compare the ids of a specific batch in the queue
-    const auto& actual = broker.queue[batchIndex].sensors_name;
+    const auto &actual = broker.queue[batchIndex].sensors_name;
     REQUIRE(actual == expected);
 }
 
-/*================================== TEST CASES ====================================*/
+/*================================== TEST CASES
+ * ====================================*/
 
 TEST_CASE("BatchAccumulator construction", "[BatchAccumulator]") {
 
@@ -76,8 +77,8 @@ TEST_CASE("BatchAccumulator construction", "[BatchAccumulator]") {
     }
 }
 
-
-TEST_CASE("storeValidData — accumulation below threshold", "[BatchAccumulator]") {
+TEST_CASE("storeValidData — accumulation below threshold",
+          "[BatchAccumulator]") {
 
     SECTION("No push when validBatch is smaller than batchSize") {
         MockBroker broker;
@@ -101,12 +102,13 @@ TEST_CASE("storeValidData — accumulation below threshold", "[BatchAccumulator]
         acc.storeValidData(batch);
         acc.storeValidData(batch);
 
-        REQUIRE(broker.pushCount() == 0);       // Not send it yet
+        REQUIRE(broker.pushCount() == 0); // Not send it yet
         REQUIRE(acc.getBatchFile().getSize() == 9);
     }
 }
 
-TEST_CASE("storeValidData — exact threshold triggers a single flush", "[BatchAccumulator]") {
+TEST_CASE("storeValidData — exact threshold triggers a single flush",
+          "[BatchAccumulator]") {
 
     MockBroker broker;
     constexpr size_t BATCH_SIZE = 5;
@@ -135,8 +137,8 @@ TEST_CASE("storeValidData — exact threshold triggers a single flush", "[BatchA
     }
 }
 
-
-TEST_CASE("storeValidData — overflow triggers multiple flushes in one call", "[BatchAccumulator]") {
+TEST_CASE("storeValidData — overflow triggers multiple flushes in one call",
+          "[BatchAccumulator]") {
 
     MockBroker broker;
     constexpr size_t BATCH_SIZE = 3;
@@ -157,7 +159,8 @@ TEST_CASE("storeValidData — overflow triggers multiple flushes in one call", "
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-TEST_CASE("storeValidData — carry-over semantics across multiple calls", "[BatchAccumulator]") {
+TEST_CASE("storeValidData — carry-over semantics across multiple calls",
+          "[BatchAccumulator]") {
 
     MockBroker broker;
     constexpr size_t BATCH_SIZE = 4;
@@ -170,7 +173,8 @@ TEST_CASE("storeValidData — carry-over semantics across multiple calls", "[Bat
     REQUIRE(broker.pushCount() == 0);
     REQUIRE(acc.getBatchFile().getSize() == 3);
 
-    // Second call: 2 elements — total becomes 5, one flush at element 4, one leftover
+    // Second call: 2 elements — total becomes 5, one flush at element 4, one
+    // leftover
     acc.storeValidData(batchWith2);
     REQUIRE(broker.pushCount() == 1);
     REQUIRE(acc.getBatchFile().getSize() == 1);
@@ -183,18 +187,19 @@ TEST_CASE("storeValidData — carry-over semantics across multiple calls", "[Bat
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-TEST_CASE("storeValidData — measurement fields are forwarded correctly", "[BatchAccumulator]") {
+TEST_CASE("storeValidData — measurement fields are forwarded correctly",
+          "[BatchAccumulator]") {
 
     MockBroker broker;
     BatchAccumulator acc(broker, 2);
 
     TelemetryBatch incomingBatch;
     incomingBatch.emplaceBack("temperature", 1000, 36.6, 2);
-    incomingBatch.emplaceBack("pressure",    1001, 1013.25, 1);
+    incomingBatch.emplaceBack("pressure", 1001, 1013.25, 1);
     acc.storeValidData(incomingBatch);
 
     REQUIRE(broker.pushCount() == 1);
-    const auto& pushed = broker.queue[0];
+    const auto &pushed = broker.queue[0];
 
     SECTION("Sensor names are preserved") {
         REQUIRE(pushed.sensors_name[0] == "temperature");
@@ -224,12 +229,13 @@ TEST_CASE("storeValidData — flush order is FIFO", "[BatchAccumulator]") {
     MockBroker broker;
     BatchAccumulator acc(broker, 3);
 
-    // Push two separate waves; the first three sensors must appear in the first flush.
+    // Push two separate waves; the first three sensors must appear in the first
+    // flush.
     TelemetryBatch wave1;
-    wave1.emplaceBack("alpha",   0, 1.0, 1);
-    wave1.emplaceBack("beta",    1, 2.0, 1);
-    wave1.emplaceBack("gamma",   2, 3.0, 1);  // triggers flush
-    wave1.emplaceBack("delta",   3, 4.0, 1);  // stays in buffer
+    wave1.emplaceBack("alpha", 0, 1.0, 1);
+    wave1.emplaceBack("beta", 1, 2.0, 1);
+    wave1.emplaceBack("gamma", 2, 3.0, 1); // triggers flush
+    wave1.emplaceBack("delta", 3, 4.0, 1); // stays in buffer
     acc.storeValidData(wave1);
 
     REQUIRE(broker.pushCount() == 1);
@@ -240,7 +246,7 @@ TEST_CASE("storeValidData — flush order is FIFO", "[BatchAccumulator]") {
     // delta + two more should form the second flush
     TelemetryBatch wave2;
     wave2.emplaceBack("epsilon", 4, 5.0, 1);
-    wave2.emplaceBack("zeta",    5, 6.0, 1);
+    wave2.emplaceBack("zeta", 5, 6.0, 1);
     acc.storeValidData(wave2);
 
     REQUIRE(broker.pushCount() == 2);
@@ -251,7 +257,8 @@ TEST_CASE("storeValidData — flush order is FIFO", "[BatchAccumulator]") {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-TEST_CASE("storeValidData — batch size of 1 flushes on every element", "[BatchAccumulator]") {
+TEST_CASE("storeValidData — batch size of 1 flushes on every element",
+          "[BatchAccumulator]") {
 
     MockBroker broker;
     BatchAccumulator acc(broker, 1);
@@ -271,7 +278,8 @@ TEST_CASE("storeValidData — batch size of 1 flushes on every element", "[Batch
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-TEST_CASE("storeValidData — broker is NOT called when batch never fills", "[BatchAccumulator]") {
+TEST_CASE("storeValidData — broker is NOT called when batch never fills",
+          "[BatchAccumulator]") {
 
     MockBroker broker;
     BatchAccumulator acc(broker, 1000);

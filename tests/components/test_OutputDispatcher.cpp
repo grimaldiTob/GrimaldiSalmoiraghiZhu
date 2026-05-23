@@ -4,34 +4,38 @@
 #include "../../src/interfaces/MeasDatabaseInterface.h"
 #include "../../src/types/rules/BaseRule.h"
 
-#include <fstream>
 #include <filesystem>
+#include <fstream>
 #include <sstream>
 
 // Minimal stub for MeasDatabaseInterface used by OutputDispatcher tests
 class MockMeasDatabase : public MeasDatabaseInterface {
-public:
+  public:
     MockMeasDatabase(std::unordered_map<std::string, std::vector<double>> data)
         : data_(std::move(data)) {}
 
-    const std::unordered_map<std::string, std::vector<double>>& getMeasHistory() const override {
+    const std::unordered_map<std::string, std::vector<double>> &
+    getMeasHistory() const override {
         return data_;
     }
 
     void storeResult(std::string, double) override {}
     void clearMeasurements(int) override {}
 
-private:
+  private:
     std::unordered_map<std::string, std::vector<double>> data_;
 };
 
 // Minimal stub rule deriving from BaseRule
 class StubRule : public BaseRule {
-public:
-    StubRule(const std::string& id, RulePriority p, std::vector<std::string> sensors)
+  public:
+    StubRule(const std::string &id, RulePriority p,
+             std::vector<std::string> sensors)
         : BaseRule(id, RuleType::SIMPLE, p), sensors_(std::move(sensors)) {}
 
-    std::optional<bool> evaluate(const TelemetryBatch&, std::unordered_map<std::string, std::optional<bool>>&) override {
+    std::optional<bool>
+    evaluate(const TelemetryBatch &,
+             std::unordered_map<std::string, std::optional<bool>> &) override {
         return std::optional<bool>{false};
     }
 
@@ -39,28 +43,32 @@ public:
         return sensors_;
     }
 
-private:
+  private:
     std::vector<std::string> sensors_;
 };
 
-// Minimal stab rule deriving from LogicalCorrelationRule for testing alarms with multiple sensors
+// Minimal stab rule deriving from LogicalCorrelationRule for testing alarms
+// with multiple sensors
 class StubCorrelationRule : public BaseRule {
-public:
-    StubCorrelationRule(const std::string& id, RulePriority p, std::vector<std::string> sensors)
-        : BaseRule(id, RuleType::CORRELATION, p), sensors_(std::move(sensors)) {}
-    std::optional<bool> evaluate(const TelemetryBatch&, std::unordered_map<std::string, std::optional<bool>>&) override {
+  public:
+    StubCorrelationRule(const std::string &id, RulePriority p,
+                        std::vector<std::string> sensors)
+        : BaseRule(id, RuleType::CORRELATION, p), sensors_(std::move(sensors)) {
+    }
+    std::optional<bool>
+    evaluate(const TelemetryBatch &,
+             std::unordered_map<std::string, std::optional<bool>> &) override {
         return std::optional<bool>{false};
     }
     std::vector<std::string> getInvolvedSensors() const override {
         return sensors_;
     }
 
-private:
+  private:
     std::vector<std::string> sensors_;
-
 };
 
-static std::string readFile(const std::string& path) {
+static std::string readFile(const std::string &path) {
     std::ifstream in(path);
     REQUIRE(in.is_open());
     std::ostringstream ss;
@@ -68,7 +76,8 @@ static std::string readFile(const std::string& path) {
     return ss.str();
 }
 
-TEST_CASE("appendValidData writes latest values and newline", "[OutputDispatcher]") {
+TEST_CASE("appendValidData writes latest values and newline",
+          "[OutputDispatcher]") {
     const std::string validPath = "valid_data_test.csv";
     const std::string alarmsPath = "alarms_test.log";
 
@@ -78,10 +87,7 @@ TEST_CASE("appendValidData writes latest values and newline", "[OutputDispatcher
 
     OutputDispatcher dispatcher(validPath, alarmsPath);
 
-    MockMeasDatabase db({
-        {"S1", {1.0, 2.5}},
-        {"S2", {3.14}}
-    });
+    MockMeasDatabase db({{"S1", {1.0, 2.5}}, {"S2", {3.14}}});
 
     dispatcher.appendValidData(db, std::nullopt);
 
@@ -98,7 +104,9 @@ TEST_CASE("appendValidData writes latest values and newline", "[OutputDispatcher
     std::filesystem::remove(alarmsPath);
 }
 
-TEST_CASE("appendAlarms writes one alarm per rule with separators and sensor values", "[OutputDispatcher]") {
+TEST_CASE(
+    "appendAlarms writes one alarm per rule with separators and sensor values",
+    "[OutputDispatcher]") {
     const std::string validPath = "valid_data_test.csv";
     const std::string alarmsPath = "alarms_test.log";
 
@@ -108,15 +116,13 @@ TEST_CASE("appendAlarms writes one alarm per rule with separators and sensor val
 
     OutputDispatcher dispatcher(validPath, alarmsPath);
 
-    MockMeasDatabase db({
-        {"S1", {1.0, 2.5}},
-        {"S2", {3.14}},
-        {"S3", {}}
-    });
+    MockMeasDatabase db({{"S1", {1.0, 2.5}}, {"S2", {3.14}}, {"S3", {}}});
 
     std::vector<std::shared_ptr<BaseRule>> failed_rules;
-    failed_rules.push_back(std::make_shared<StubRule>("R1", RulePriority::HIGH, std::vector<std::string>{"S1"}));
-    failed_rules.push_back(std::make_shared<StubRule>("R2", RulePriority::LOW, std::vector<std::string>{"S2", "S3"}));
+    failed_rules.push_back(std::make_shared<StubRule>(
+        "R1", RulePriority::HIGH, std::vector<std::string>{"S1"}));
+    failed_rules.push_back(std::make_shared<StubRule>(
+        "R2", RulePriority::LOW, std::vector<std::string>{"S2", "S3"}));
 
     dispatcher.appendAlarms(db, failed_rules, std::nullopt);
 
@@ -128,7 +134,8 @@ TEST_CASE("appendAlarms writes one alarm per rule with separators and sensor val
     std::istringstream iss(content);
     std::string line;
     while (std::getline(iss, line)) {
-        if (!line.empty()) lines.push_back(line);
+        if (!line.empty())
+            lines.push_back(line);
     }
 
     // Expect two alarm lines (one per failed rule)
@@ -148,7 +155,8 @@ TEST_CASE("appendAlarms writes one alarm per rule with separators and sensor val
     std::filesystem::remove(validPath);
 }
 
-TEST_CASE("appendAlarms with correlation rule includes all involved sensors", "[OutputDispatcher]") {
+TEST_CASE("appendAlarms with correlation rule includes all involved sensors",
+          "[OutputDispatcher]") {
     const std::string validPath = "valid_data_test.csv";
     const std::string alarmsPath = "alarms_test.log";
 
@@ -158,14 +166,12 @@ TEST_CASE("appendAlarms with correlation rule includes all involved sensors", "[
 
     OutputDispatcher dispatcher(validPath, alarmsPath);
 
-    MockMeasDatabase db({
-        {"S1", {1.0}},
-        {"S2", {3.14}},
-        {"S3", {2.71}}
-    });
+    MockMeasDatabase db({{"S1", {1.0}}, {"S2", {3.14}}, {"S3", {2.71}}});
 
     std::vector<std::shared_ptr<BaseRule>> failed_rules;
-    failed_rules.push_back(std::make_shared<StubCorrelationRule>("R_CORR", RulePriority::MEDIUM, std::vector<std::string>{"S1", "S2", "S3"}));
+    failed_rules.push_back(std::make_shared<StubCorrelationRule>(
+        "R_CORR", RulePriority::MEDIUM,
+        std::vector<std::string>{"S1", "S2", "S3"}));
 
     dispatcher.appendAlarms(db, failed_rules, std::nullopt);
 
@@ -177,7 +183,8 @@ TEST_CASE("appendAlarms with correlation rule includes all involved sensors", "[
     std::istringstream iss(content);
     std::string line;
     while (std::getline(iss, line)) {
-        if (!line.empty()) lines.push_back(line);
+        if (!line.empty())
+            lines.push_back(line);
     }
 
     // Expect one alarm line for the correlation rule

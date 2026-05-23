@@ -1,14 +1,15 @@
 #define CATCH_CONFIG_MAIN
-#include <catch2/catch_test_macros.hpp>
-#include "../src/types/rules/StepDifferenceRule.h"
 #include "../src/types/TelemetryBatch.h"
-#include <unordered_map>
+#include "../src/types/rules/StepDifferenceRule.h"
+#include <catch2/catch_test_macros.hpp>
 #include <optional>
+#include <unordered_map>
 
 // Mock implementation of MeasDatabaseInterface
 class MockMeasDatabase : public MeasDatabaseInterface {
-public:
-    const std::unordered_map<std::string, std::vector<double>>& getMeasHistory() const override {
+  public:
+    const std::unordered_map<std::string, std::vector<double>> &
+    getMeasHistory() const override {
         return mockMeasurementsHistory;
     }
 
@@ -17,8 +18,8 @@ public:
     }
 
     void clearMeasurements(int n = 32) override {
-        for (auto& kv : mockMeasurementsHistory) {
-            auto& vec = kv.second;
+        for (auto &kv : mockMeasurementsHistory) {
+            auto &vec = kv.second;
             if (vec.size() > n) {
                 vec.erase(vec.begin(), vec.begin() + n);
             } else {
@@ -27,11 +28,13 @@ public:
         }
     }
 
-private:
-    std::unordered_map<std::string, std::vector<double>> mockMeasurementsHistory;
+  private:
+    std::unordered_map<std::string, std::vector<double>>
+        mockMeasurementsHistory;
 };
 
-TEST_CASE("StepDifferenceRule evaluates correctly with valid input", "[StepDifferenceRule]") {
+TEST_CASE("StepDifferenceRule evaluates correctly with valid input",
+          "[StepDifferenceRule]") {
     // Create a mock database
     MockMeasDatabase mockDb;
 
@@ -58,7 +61,8 @@ TEST_CASE("StepDifferenceRule evaluates correctly with valid input", "[StepDiffe
     REQUIRE(result.value() == true); // Step difference is 10.0 > 5.0
 }
 
-TEST_CASE("StepDifferenceRule returns nullopt for missing sensor", "[StepDifferenceRule]") {
+TEST_CASE("StepDifferenceRule returns nullopt for missing sensor",
+          "[StepDifferenceRule]") {
     // Create a mock database
     MockMeasDatabase mockDb;
 
@@ -74,7 +78,8 @@ TEST_CASE("StepDifferenceRule returns nullopt for missing sensor", "[StepDiffere
     REQUIRE(!result.has_value()); // Sensor1 is missing
 }
 
-TEST_CASE("StepDifferenceRule handles invalid operator", "[StepDifferenceRule]") {
+TEST_CASE("StepDifferenceRule handles invalid operator",
+          "[StepDifferenceRule]") {
     // Create a mock database
     MockMeasDatabase mockDb;
 
@@ -82,7 +87,8 @@ TEST_CASE("StepDifferenceRule handles invalid operator", "[StepDifferenceRule]")
     batch.sensors_name = {"Sensor1"};
     batch.values = {10.0};
 
-    StepDifferenceRule rule("Rule1", RulePriority::HIGH, "Sensor1", "INVALID_OP", 5.0);
+    StepDifferenceRule rule("Rule1", RulePriority::HIGH, "Sensor1",
+                            "INVALID_OP", 5.0);
     rule.setMeasDatabase(mockDb);
     std::unordered_map<std::string, std::optional<bool>> cache;
 
@@ -90,8 +96,10 @@ TEST_CASE("StepDifferenceRule handles invalid operator", "[StepDifferenceRule]")
     REQUIRE(!result.has_value()); // Invalid operator
 }
 
-TEST_CASE("StepDifferenceRule returns involved sensors correctly", "[StepDifferenceRule]") {
+TEST_CASE("StepDifferenceRule returns involved sensors correctly",
+          "[StepDifferenceRule]") {
     StepDifferenceRule rule("Rule1", RulePriority::HIGH, "Sensor1", ">", 5.0);
     std::vector<std::string> expected_sensors = {"Sensor1"};
-    REQUIRE(rule.getInvolvedSensors() == expected_sensors); // Check that the involved sensors are correct
+    REQUIRE(rule.getInvolvedSensors() ==
+            expected_sensors); // Check that the involved sensors are correct
 }

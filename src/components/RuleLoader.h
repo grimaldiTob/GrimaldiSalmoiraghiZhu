@@ -1,29 +1,35 @@
 #pragma once
 
-#include <vector>
-#include <string>
-#include <memory>
 #include "../interfaces/RuleLoaderInterface.h"
+#include <memory>
+#include <string>
+#include <vector>
 
 class RuleLoader : public RuleLoaderInterface {
-public:
+  public:
     RuleLoader() = default;
     ~RuleLoader() override = default;
 
-    void loadRules(simdjson::ondemand::parser& parser, const std::string& filename, std::vector<std::shared_ptr<BaseRule>>& rules_list) override;
+    void loadRules(simdjson::ondemand::parser &parser,
+                   const std::string &filename,
+                   std::vector<std::shared_ptr<BaseRule>> &rules_list) override;
 
-private:
+  private:
     RulePriority parsePriority(std::string_view prio_str);
 
-    // ok now I defined it this way but thing about having the rules_list as a 
-    // RuleLoader attribute. I'm not sure if it is right or not since the RuleLoader
-    // is just loading rules (and not storing) but might be usefull to consider this.
-    void sortRules(std::vector<std::shared_ptr<BaseRule>>& rules_list);
+    // ok now I defined it this way but thing about having the rules_list as a
+    // RuleLoader attribute. I'm not sure if it is right or not since the
+    // RuleLoader is just loading rules (and not storing) but might be usefull
+    // to consider this.
+    void sortRules(std::vector<std::shared_ptr<BaseRule>> &rules_list);
 
     // Subroutinf for each ruel type
-    std::shared_ptr<BaseRule> parseSimpleRule(simdjson::ondemand::object& obj);
-    std::shared_ptr<BaseRule> parseStepDifferenceRule(simdjson::ondemand::object& obj);
-    std::shared_ptr<BaseRule> parseStatefulRule(simdjson::ondemand::object& obj);
-    std::shared_ptr<BaseRule> parseLogicalCorrelationRule(simdjson::ondemand::object& obj, const std::vector<std::shared_ptr<BaseRule>>& rules_list);
+    std::shared_ptr<BaseRule> parseSimpleRule(simdjson::ondemand::object &obj);
+    std::shared_ptr<BaseRule>
+    parseStepDifferenceRule(simdjson::ondemand::object &obj);
+    std::shared_ptr<BaseRule>
+    parseStatefulRule(simdjson::ondemand::object &obj);
+    std::shared_ptr<BaseRule> parseLogicalCorrelationRule(
+        simdjson::ondemand::object &obj,
+        const std::vector<std::shared_ptr<BaseRule>> &rules_list);
 };
-

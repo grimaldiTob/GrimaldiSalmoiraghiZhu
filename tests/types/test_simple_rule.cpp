@@ -1,9 +1,9 @@
 #define CATCH_CONFIG_MAIN
-#include <catch2/catch_test_macros.hpp>
-#include "../src/types/rules/SimpleRule.h"
 #include "../src/types/TelemetryBatch.h"
-#include <unordered_map>
+#include "../src/types/rules/SimpleRule.h"
+#include <catch2/catch_test_macros.hpp>
 #include <optional>
+#include <unordered_map>
 
 TEST_CASE("SimpleRule evaluates correctly with valid input", "[SimpleRule]") {
     // Create a telemetry batch with some sensor data
@@ -19,7 +19,8 @@ TEST_CASE("SimpleRule evaluates correctly with valid input", "[SimpleRule]") {
 
     // Assertions
     REQUIRE(result.has_value()); // Check that the result is valid (not nullopt)
-    REQUIRE(result.value() == true); // Check that the evaluation result is true (15.0 > 10.0)
+    REQUIRE(result.value() ==
+            true); // Check that the evaluation result is true (15.0 > 10.0)
 }
 
 TEST_CASE("SimpleRule evaluates false with valid input", "[SimpleRule]") {
@@ -33,10 +34,11 @@ TEST_CASE("SimpleRule evaluates false with valid input", "[SimpleRule]") {
 
     // Testing the evaluate function of SimpleRule
     auto result = rule.evaluate(batch, cache);
-    
+
     // Assertions
     REQUIRE(result.has_value()); // Check that the result is valid (not nullopt)
-    REQUIRE(result.value() == false); // Check that the evaluation result is false (5.0 > 10.0 is false)
+    REQUIRE(result.value() == false); // Check that the evaluation result is
+                                      // false (5.0 > 10.0 is false)
 }
 
 TEST_CASE("SimpleRule returns nullopt for missing sensor", "[SimpleRule]") {
@@ -52,7 +54,8 @@ TEST_CASE("SimpleRule returns nullopt for missing sensor", "[SimpleRule]") {
     auto result = rule.evaluate(batch, cache);
 
     // Assertions
-    REQUIRE(!result.has_value()); // Check that the result is nullopt since Sensor1 is missing from the batch
+    REQUIRE(!result.has_value()); // Check that the result is nullopt since
+                                  // Sensor1 is missing from the batch
 }
 
 TEST_CASE("SimpleRule handles invalid operator", "[SimpleRule]") {
@@ -68,16 +71,19 @@ TEST_CASE("SimpleRule handles invalid operator", "[SimpleRule]") {
     auto result = rule.evaluate(batch, cache);
 
     // Assertions
-    REQUIRE(!result.has_value()); // Check that the result is nullopt since the operator is invalid
+    REQUIRE(!result.has_value()); // Check that the result is nullopt since the
+                                  // operator is invalid
 }
 
 TEST_CASE("SimpleRule returns involved sensors correctly", "[SimpleRule]") {
     SimpleRule rule("Rule1", RulePriority::HIGH, "Sensor1", ">", 10.0);
-    
+
     // Testing the getInvolvedSensors function of SimpleRule
     auto involved_sensors = rule.getInvolvedSensors();
 
     // Assertions
-    REQUIRE(involved_sensors.size() == 1); // Check that there is exactly one involved sensor
-    REQUIRE(involved_sensors[0] == "Sensor1"); // Check that the involved sensor is Sensor1
+    REQUIRE(involved_sensors.size() ==
+            1); // Check that there is exactly one involved sensor
+    REQUIRE(involved_sensors[0] ==
+            "Sensor1"); // Check that the involved sensor is Sensor1
 }

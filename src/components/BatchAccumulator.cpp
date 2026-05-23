@@ -1,29 +1,29 @@
 #include "BatchAccumulator.h"
 
-size_t BatchAccumulator::getBatchSize() const {
-    return m_batchSize;
-}
+size_t BatchAccumulator::getBatchSize() const { return m_batchSize; }
 
-const TelemetryBatch& BatchAccumulator::getBatchFile() const {
+const TelemetryBatch &BatchAccumulator::getBatchFile() const {
     return m_batchFile;
 }
 
 // bool BatchAccumulator::checkBatchSize() const {
-//     return m_batchFile.getSize() >= m_batchSize; 
+//     return m_batchFile.getSize() >= m_batchSize;
 // }
 
-// size_t BatchAccumulator::getOverflowSize(size_t addedSize) const {    
-//     size_t totalSize = m_batchFile.getSize() + addedSize; // total number of objects I have 
-//     return (totalSize == m_batchSize) ? 0 : (totalSize - m_batchSize); 
+// size_t BatchAccumulator::getOverflowSize(size_t addedSize) const {
+//     size_t totalSize = m_batchFile.getSize() + addedSize; // total number of
+//     objects I have return (totalSize == m_batchSize) ? 0 : (totalSize -
+//     m_batchSize);
 // }
 
-// /** @brief take m_batchSize elements from the temporal Batch and store it in the 
+// /** @brief take m_batchSize elements from the temporal Batch and store it in
+// the
 //  * m_batchFile.
 //  */
 // void BatchAccumulator::accumulate(int start) {
 //     // it can be parallelized
 //     for(int i = 0; i < m_batchSize; i++) {
-//         int idx = i + start; // consider the starting index of the  
+//         int idx = i + start; // consider the starting index of the
 //         std::string sensors_name = m_batchTmp.sensors_name[idx];
 //         int64_t        timestamp = m_batchTmp.timestamps[idx];
 //         double             value = m_batchTmp.values[idx];
@@ -31,51 +31,50 @@ const TelemetryBatch& BatchAccumulator::getBatchFile() const {
 //         // accumulate the single meausurement
 //         m_batchFile.emplaceBack(sensors_name, timestamp, value, priority);
 //         // send the single measuruement to the database
-//         // m_database.storeResult(sensors_name, value); 
+//         // m_database.storeResult(sensors_name, value);
 //     }
 // }
-
 
 /**
  *
  */
-void BatchAccumulator::storeValidData(TelemetryBatch& validBatch) {
-    
+void BatchAccumulator::storeValidData(TelemetryBatch &validBatch) {
+
     size_t validSize = validBatch.getSize();
 
-    for(int i = 0; i < validSize; i++) {
+    for (int i = 0; i < validSize; i++) {
 
         // Prepare the paramters
         std::string sensors_name = validBatch.sensors_name[i];
-        int64_t        timestamp = validBatch.timestamps[i];
-        double             value = validBatch.values[i];
-        int             priority = validBatch.priorities[i];
+        int64_t timestamp = validBatch.timestamps[i];
+        double value = validBatch.values[i];
+        int priority = validBatch.priorities[i];
 
         // Accumulate the single measure to the batch file
         m_batchFile.emplaceBack(sensors_name, timestamp, value, priority);
 
-        // Compare the new size of the batch file with the threshold value for the rule process triggeration 
-        if(m_batchFile.getSize() >= m_batchSize) {
-            // Send a copy to the full batch file to the queue and once finished clear safely the batch
+        // Compare the new size of the batch file with the threshold value for
+        // the rule process triggeration
+        if (m_batchFile.getSize() >= m_batchSize) {
+            // Send a copy to the full batch file to the queue and once finished
+            // clear safely the batch
             m_broker.push(m_batchFile);
-            m_batchFile.clear();   
+            m_batchFile.clear();
         }
     }
-
 }
-
 
 // /** @brief Receives data from the Ingestor and stores in the Tmp batch.
 //  * Later it checks if the dimension of the temporal batch is enough and
-//  * eventually calls 'accumulate' to populate the m_batchFile which is 
+//  * eventually calls 'accumulate' to populate the m_batchFile which is
 //  * sent to the ThreadSafeBuffer queue.
 //  */
 // void BatchAccumulator::storeValidData(TelemetryBatch &validBatch) {
-        
+
 //     size_t validSize = validBatch.getSize();
 
-//     // Instead of appending new data directly to the batchFile we first store it in the m_batcTmp
-//     for (size_t i = 0; i < validSize; ++i) {
+//     // Instead of appending new data directly to the batchFile we first store
+//     it in the m_batcTmp for (size_t i = 0; i < validSize; ++i) {
 //         const std::string& sensors_name = validBatch.sensors_name[i];
 //         int64_t timestamp = validBatch.timestamps[i];
 //         double value = validBatch.values[i];
@@ -93,7 +92,8 @@ void BatchAccumulator::storeValidData(TelemetryBatch& validBatch) {
 //     size_t offset = 0;
 //     while (tmpSize - offset >= m_batchSize) {
 //         m_batchFile.clear();
-//         accumulate(offset); // start from the offset as long as we know there is at least offset elements in the batchTmp
+//         accumulate(offset); // start from the offset as long as we know there
+//         is at least offset elements in the batchTmp
 
 //         m_broker.push(m_batchFile);
 //         offset += m_batchSize;
@@ -106,9 +106,9 @@ void BatchAccumulator::storeValidData(TelemetryBatch& validBatch) {
 //         return;
 //     }
 
-//     // move the remaining objects in a dummy object and then move it to the start of m_batchTmp
-//     TelemetryBatch remaining(tmpSize - offset);
-//     for (size_t i = offset; i < tmpSize; ++i) {
+//     // move the remaining objects in a dummy object and then move it to the
+//     start of m_batchTmp TelemetryBatch remaining(tmpSize - offset); for
+//     (size_t i = offset; i < tmpSize; ++i) {
 //         remaining.emplaceBack(
 //             m_batchTmp.sensors_name[i],
 //             m_batchTmp.timestamps[i],
@@ -118,13 +118,14 @@ void BatchAccumulator::storeValidData(TelemetryBatch& validBatch) {
 //     }
 //     m_batchTmp = std::move(remaining);
 
-//     //reload the values in the cache into the m_batchFile before starting to store new data
+//     //reload the values in the cache into the m_batchFile before starting to
+//     store new data
 //     // accumulate(m_batchTmp);
 // }
 
-
-// logic of this method need to be rewritten, since we need a database just for the stateful rules
-// there is no need to store all the results but just the one associated to the rules that require it.
+// logic of this method need to be rewritten, since we need a database just for
+// the stateful rules there is no need to store all the results but just the one
+// associated to the rules that require it.
 /*
 void BatchAccumulator::storeResult(std::string id, double value) const {
     m_database.storeResult(id, value);

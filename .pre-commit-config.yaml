@@ -1,0 +1,26 @@
+# This is a pre-commit configuration file. 
+# Pre-commits are a nice way to automate code formatting and basic checks
+# before actually committing the code to the repo.
+
+# Global exclusion 
+exclude: '^(build/|dist/|third_party/)'
+
+repos:
+  # 1. General Repository Hygiene 
+  #(Strictly limited to C++ source/header files), so no Reale stuff 
+  # gets touched nor tex or SVD files
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace      # Trims trailing spaces
+        types_or: [c, c++]           # Only touches C++ files
+      - id: end-of-file-fixer        # Ensures files end with a newline
+        types_or: [c, c++]           # Only touches C++ files
+      - id: check-added-large-files  # Keeps huge binaries (>500KB) out of git (applies globally)
+
+  # 2. C++ Formatting Engine
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v18.1.8
+    hooks:
+      - id: clang-format            # Using default LLVM style, we can discuss this if you prefer any other standard
+        types_or: [c, c++]          # Strictly targets C and C++ files

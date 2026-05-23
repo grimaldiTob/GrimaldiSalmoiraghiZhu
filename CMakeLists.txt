@@ -1,6 +1,20 @@
 cmake_minimum_required(VERSION 3.15)
 project(astralog-hpc LANGUAGES CXX)
 
+# Automatically install pre-commit hooks if the tool is available
+find_program(PRE_COMMIT_EXE pre-commit)
+if(PRE_COMMIT_EXE)
+    message(STATUS "Found pre-commit, setting up git hooks...")
+    execute_process(
+        COMMAND ${PRE_COMMIT_EXE} install
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_QUIET
+        ERROR_QUIET
+    )
+else()
+    message(WARNING "pre-commit not found! Please install it (e.g., sudo apt install pre-commit), as well as clang-format.")
+endif()
+
 # strict C++17 Standard (Required for std::filesystem and string_view)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

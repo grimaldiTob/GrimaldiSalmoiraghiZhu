@@ -142,5 +142,13 @@ python3 -m pytest tests/
 
 ---
 
+CI/CD PIPELINE
+Just a sketch, but I have to write something otherwise I end up forgetting what I have already configured.
+Multistep pipeline, both on the dev local machine and on GitHub servers:
 
+1. At every commit, `pre-commit` automatically checks code against the LLVM style guidelines; if it doesn't comply, the commit is blocked and `clang-format` is applied automatically.
+2. GitHub Actions workflows, which:
+    - Check compliance with the LLVM style guidelines
+    - Perform static analysis with CodeQL
+    - Compile and run unit tests
 

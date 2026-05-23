@@ -1,8 +1,11 @@
-#include <cstdint>
-#include <memory>
-#include <optional>
+#pragma once
+
 #include <string>
 #include <unordered_map>
+#include <optional>
+#include <cstdint>
+#include <memory>
+#include <mpi.h>
 
 // EXTERNAL
 #include "../../external/simdjson.h"
@@ -16,13 +19,6 @@
 
 // INTERFACES
 #include "../interfaces/ConsumerBuffer.h"
-#include "../interfaces/RuleEngineInterface.h"
-
-/* I don't think including just the header file of the interfaces is enough,
- since their methods are virtual and we need to call them in the RuleEngine
- class. What I have dpne, I have forward-declared the interfaces in the header
- file and included their headers in the cpp file.
-*/
 #include "../interfaces/RuleEngineInterface.h"
 
 // Forward-declare interfaces here to reduce header coupling.
@@ -62,9 +58,9 @@ class RuleEngine : public RuleEngineInterface {
         m_outputDispatcher = &dispatcher;
     }
 
-    // Protect the batch as read-only since the RuleEngine has to read and make
-    // evaluation without modify it
-    void evaluateRules(const TelemetryBatch &batch) override;
+    // Protect the batch as read-only since the RuleEngine has to read and make evaluation without modify it
+    void evaluateRules(const TelemetryBatch& batch)  override;
+    void evaluateRulesMPI(TelemetryBatch &batch, MPI_Comm comm);
     void serialEvaluate(const TelemetryBatch &batch);
 
     // ideally we can also think of having the rule loader as a class attribute

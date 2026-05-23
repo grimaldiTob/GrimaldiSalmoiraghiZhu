@@ -4,7 +4,8 @@
       "name": "linux-gcc-x64",
       "includePath": [
         "${workspaceFolder}/**",
-        "${workspaceFolder}/build/_deps/catch2-build/generated-includes"
+        "${workspaceFolder}/build/_deps/catch2-build/generated-includes",
+        "/usr/lib/x86_64-linux-gnu/openmpi/include"
       ],
       "compilerPath": "/usr/bin/gcc",
       "cStandard": "${default}",

@@ -70,6 +70,7 @@ enable_testing()
 
 # OpenMP (used by RuleEngine parallel evaluation)
 find_package(OpenMP REQUIRED)
+find_package(MPI REQUIRED)
 
 ######################### Test executable for TelemetryBatch #######################
 add_executable(test_telemetry_batch
@@ -223,6 +224,7 @@ add_executable(test_rule_engine
 # target links
 target_include_directories(test_rule_engine PRIVATE src)
 target_link_libraries(test_rule_engine PRIVATE Catch2::Catch2WithMain OpenMP::OpenMP_CXX)
+target_link_libraries(test_rule_engine PRIVATE MPI::MPI_CXX)
 
 catch_discover_tests(test_rule_engine)
 
@@ -255,4 +257,5 @@ add_executable(test_astralog
 target_include_directories(test_astralog PRIVATE src)
 target_compile_definitions(test_astralog PRIVATE ASTRALOG_NO_MAIN)
 target_link_libraries(test_astralog PRIVATE Catch2::Catch2WithMain OpenMP::OpenMP_CXX)
+target_link_libraries(test_astralog PRIVATE MPI::MPI_CXX)
 catch_discover_tests(test_astralog)

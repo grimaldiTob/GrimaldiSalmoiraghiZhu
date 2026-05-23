@@ -34,7 +34,6 @@ public:
         std::unordered_map<std::string, std::optional<bool>>& cache) override;
 
     // assigns the database interface to the pointer.
-    // TODO: We hypothetically need to think at a method in RuleLoader which calls this method for all Rules at initialization
     void setMeasDatabase(MeasDatabaseInterface &db) { database = &db; }
 
     std::string getSensorId() const { return sensor_id; }

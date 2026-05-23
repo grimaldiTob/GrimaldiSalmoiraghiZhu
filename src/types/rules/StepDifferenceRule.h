@@ -1,6 +1,8 @@
 #pragma once
 
 #include "BaseRule.h"
+#include "../../interfaces/MeasDatabaseInterface.h" 
+
 
 class StepDifferenceRule : public BaseRule {
 public:
@@ -21,11 +23,12 @@ public:
         : BaseRule(rule_id, RuleType::STEP_DIFFERENCE, priority), 
           sensor_id(sensor_id), 
           op(op),
-          value(value),
-          previous_value(std::nullopt) {} 
+          value(value) {} 
 
     std::optional<bool> evaluate(const TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) override;
+
+    void setMeasDatabase(MeasDatabaseInterface &db) { database = &db; }
 
     std::string getSensorId() const { return sensor_id; }
     std::string getOperator() const { return op; }
@@ -38,7 +41,8 @@ private:
     const std::string sensor_id;
     const std::string op;
     const double value;
+    MeasDatabaseInterface* database = nullptr; // pointer to the measurement database
 
-    std::optional<double> previous_value; // we make it a class parameter
+    // std::optional<double> previous_value; // we make it a class parameter
 };
 

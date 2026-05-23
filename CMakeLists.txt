@@ -201,6 +201,7 @@ add_executable(test_rule_engine
     tests/components/test_rule_engine.cpp
     src/components/RuleEngine.cpp
     src/types/rules/SimpleRule.cpp
+    src/types/rules/StepDifferenceRule.cpp
     src/types/rules/StatefulRule.cpp
     external/simdjson.cpp
 )

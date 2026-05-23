@@ -3,6 +3,11 @@
 std::optional<bool> StepDifferenceRule::evaluate(const TelemetryBatch& batch, 
         std::unordered_map<std::string, std::optional<bool>>& cache) {
     
+    // Check if the database pointer is valid
+    if (!database) {
+        return std::nullopt;
+    }
+
     if(cache.count(this->rule_id)){
         return cache[this->rule_id]; // return the result stored in the cache
     }
@@ -19,14 +24,16 @@ std::optional<bool> StepDifferenceRule::evaluate(const TelemetryBatch& batch,
             sensor_found = true;
             double current_value = batch.values[i];
 
-            // case in which there is no previous value
-            if (!previous_value.has_value()) {
-                // This is the very first reading so we cannot calculate a difference yet.
-                previous_value = current_value;
-                return true; // I guess we just return true ??? 
+            // Access the measurement history from the database
+            const auto& history = database->getMeasHistory();
+
+            if(history.find(sensor_id) == history.end()) {
+                return true; // no previous value loaded in the meas history yet
             }
-            double step_diff = std::abs(current_value - previous_value.value());
-            previous_value = current_value; // update the previous value
+            // retrieve the previous value
+            const double previous_value = history.at(sensor_id).back();
+
+            double step_diff = std::abs(current_value - previous_value);
 
             if (op == "==") return step_diff == value;
             else if (op == "!=") return step_diff != value;

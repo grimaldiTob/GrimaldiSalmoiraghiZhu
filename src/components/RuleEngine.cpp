@@ -36,6 +36,10 @@ void RuleEngine::setRulesList(RuleLoaderInterface& loader,
             auto* stateful_rule = dynamic_cast<StatefulRule *>(rule.get());
             stateful_rule->setMeasDatabase(db);
         }
+        if (rule->getType() == RuleType::STEP_DIFFERENCE) {
+            auto* step_diff_rule = dynamic_cast<StepDifferenceRule *>(rule.get());
+            step_diff_rule->setMeasDatabase(db);
+        }
     }
 }
 
@@ -100,7 +104,8 @@ void RuleEngine::evaluateRules(const TelemetryBatch& batch) {
         {
             std::vector<std::pair<std::string, std::optional<bool>>> local_results;
 
-            #pragma omp for
+            // RONZANI FIERO DEL MIO DYNAMIC SCHEDULING
+            #pragma omp for schedule(dynamic)
             for (size_t i = 0; i < rules_list.size(); ++i) {
                 auto& rule = rules_list[i];
                 if (rule->getPriority() != priority) {
@@ -122,12 +127,12 @@ void RuleEngine::evaluateRules(const TelemetryBatch& batch) {
                         This means that evaluating a rule two times (once for the correlation and one for
                         the rule itself) generates different result.
 
-                        So basically we cannot permit to evaluate a rule two times which means we are forced
-                        to store its result in the cache.
-
-                        APPROACHES:
-                            - we evaluate the correlation rules sequentially.
-                            - rule evaluation becomes stateles for the rule itself.
+                        SOLVED:
+                            now rules are completely stateless, which makes it possible for us to
+                            evaluate all the rules in parallel. Since we cannot store results in the cache
+                            after each evaluation, if a correlation rule and one simple rule associated to it
+                            have both the same priority, the simple rule will be evaluated twice, but this 
+                            is a logical limitation of our program that we cannot overcome.
 
                 */
             }
@@ -140,20 +145,6 @@ void RuleEngine::evaluateRules(const TelemetryBatch& batch) {
         for (auto& entry : results) {
             rules_cache[entry.first] = entry.second;
         }
-        /*
-        // Evaluate correlation rules sequentially 
-        for (auto& rule : rules_list) {
-            if (rule->getPriority() != priority) {
-                continue;
-            }
-            if (rule->getType() != RuleType::CORRELATION) {
-                continue;
-            }
-            const std::string& rule_id = rule->getRuleId();
-            auto result = rule->evaluate(batch, rules_cache);
-            rules_cache[rule_id] = result;
-        }
-        */
     };
     // evaluate based on Priority order
     evaluatePriorityGroup(RulePriority::HIGH);
@@ -186,8 +177,8 @@ void RuleEngine::run() {
                     fine in my head.
                 */
                 m_evaluationTimestamp = activeTimestamp;
-                // evaluateRules(subBatch);
-                serialEvaluate(subBatch);
+                evaluateRules(subBatch);
+                // serialEvaluate(subBatch);
                 checkRuleResult();
                 resetCache();
                 subBatch.clear();

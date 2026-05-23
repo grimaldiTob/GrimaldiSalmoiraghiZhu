@@ -5,18 +5,51 @@
 #include <unordered_map>
 #include <optional>
 
+// Mock implementation of MeasDatabaseInterface
+class MockMeasDatabase : public MeasDatabaseInterface {
+public:
+    const std::unordered_map<std::string, std::vector<double>>& getMeasHistory() const override {
+        return mockMeasurementsHistory;
+    }
+
+    void storeResult(std::string sensor_id, double value) override {
+        mockMeasurementsHistory[sensor_id].emplace_back(value);
+    }
+
+    void clearMeasurements(int n = 32) override {
+        for (auto& kv : mockMeasurementsHistory) {
+            auto& vec = kv.second;
+            if (vec.size() > n) {
+                vec.erase(vec.begin(), vec.begin() + n);
+            } else {
+                vec.clear();
+            }
+        }
+    }
+
+private:
+    std::unordered_map<std::string, std::vector<double>> mockMeasurementsHistory;
+};
+
 TEST_CASE("StepDifferenceRule evaluates correctly with valid input", "[StepDifferenceRule]") {
+    // Create a mock database
+    MockMeasDatabase mockDb;
+
     TelemetryBatch batch;
     batch.sensors_name = {"Sensor1"};
     batch.values = {10.0};
 
     StepDifferenceRule rule("Rule1", RulePriority::HIGH, "Sensor1", ">", 5.0);
+    rule.setMeasDatabase(mockDb);
     std::unordered_map<std::string, std::optional<bool>> cache;
 
     // First evaluation should return true as there's no previous value
     auto result = rule.evaluate(batch, cache);
     REQUIRE(result.has_value());
     REQUIRE(result.value() == true);
+
+    // Store the previous value to simulate RuleEngine behavior
+    mockDb.storeResult("Sensor1", 10.0);
 
     // Update the batch with a new value
     batch.values = {20.0};
@@ -26,11 +59,15 @@ TEST_CASE("StepDifferenceRule evaluates correctly with valid input", "[StepDiffe
 }
 
 TEST_CASE("StepDifferenceRule returns nullopt for missing sensor", "[StepDifferenceRule]") {
+    // Create a mock database
+    MockMeasDatabase mockDb;
+
     TelemetryBatch batch;
     batch.sensors_name = {"Sensor2"};
     batch.values = {20.0};
 
     StepDifferenceRule rule("Rule1", RulePriority::HIGH, "Sensor1", ">", 5.0);
+    rule.setMeasDatabase(mockDb);
     std::unordered_map<std::string, std::optional<bool>> cache;
 
     auto result = rule.evaluate(batch, cache);
@@ -38,11 +75,15 @@ TEST_CASE("StepDifferenceRule returns nullopt for missing sensor", "[StepDiffere
 }
 
 TEST_CASE("StepDifferenceRule handles invalid operator", "[StepDifferenceRule]") {
+    // Create a mock database
+    MockMeasDatabase mockDb;
+
     TelemetryBatch batch;
     batch.sensors_name = {"Sensor1"};
     batch.values = {10.0};
 
     StepDifferenceRule rule("Rule1", RulePriority::HIGH, "Sensor1", "INVALID_OP", 5.0);
+    rule.setMeasDatabase(mockDb);
     std::unordered_map<std::string, std::optional<bool>> cache;
 
     auto result = rule.evaluate(batch, cache);

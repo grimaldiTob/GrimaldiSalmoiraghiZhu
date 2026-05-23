@@ -4,9 +4,62 @@ name: C++ CMake Build and Test CI
 # When to trigger the workflow. In this case, it runs on every push to the repository.
 on: [push]
 
-# What jobs to run in this workflow. Here we have a single job called "build-and-test".
+# What jobs to run in this workflow.
 jobs:
+  # ==========================================
+  # GATE 1: CODE LINTING & LAYOUT CHECK
+  # ==========================================
+  lint-and-format:
+    runs-on: ubuntu-latest # Type of runner, in this case, the latest version of Ubuntu
+    steps:
+      - name: Check out code # Step to check out the code from the repository
+        uses: actions/checkout@v6 # Action to check out the code, using version 6 of the checkout action
+
+      - name: Run Clang-Format Check # Step to run clang-format to check code formatting (uses user-defined .clang-format file in the repository)
+        run: |
+          sudo apt-get update && sudo apt-get install -y clang-format
+          find src/ tests/ -name "*.cpp" -o -name "*.h" | xargs clang-format --dry-run --Werror
+
+  # ==========================================
+  # GATE 2: DEEP CODEQL SEMANTIC ANALYSIS
+  # ==========================================
+  # Using Github CodeQL for static code analysis. 
+  # In practice, it compares our code patterns against a vast database of known vulnerabilities
+  # and coding issues, providing insights into potential security risks and code quality problems.
+  # It needs compilation even though it's a static analysis tool. from what I have gathered (Luca)
+  # this is because compiling helps CodeQL understand the code structure.
+  codeql-analysis:
+    needs: lint-and-format # Skip deep scans if code isn't even formatted correctly
+    runs-on: ubuntu-latest 
+    permissions:
+      security-events: write
+    steps:
+      - name: Check out code 
+        uses: actions/checkout@v6 
+
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ccpp, python
+
+      - name: Install Build Dependencies # Step to install necessary build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+
+      - name: Compile Code Base for Tracking
+        run: |
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release # Create a build directory and configure the project using CMake
+          cmake --build build --config Release -j $(nproc) # Build the project using CMake, specifying the build directory and configuration, and using all available CPU cores
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+
+  # ==========================================
+  # GATE 3: COMPILATION AND TEST RUNNER
+  # ==========================================
   build-and-test:
+    # This job requires BOTH previous gates to completely pass before executing!
+    needs: [lint-and-format, codeql-analysis]
     runs-on: ubuntu-latest # Type of runner, in this case, the latest version of Ubuntu
 
     steps:

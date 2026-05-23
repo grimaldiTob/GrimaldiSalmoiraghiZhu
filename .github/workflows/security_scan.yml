@@ -1,6 +1,7 @@
 # This workflows uses GitHub's CodeQL Action to perform a security scan on the codebase.
 # Fundamentally, this is a static analysis tool (don't ask me why it needs compilation if it is static)
 # that checks secutiry vulnerability based on a database of known patterns.
+name: CodeQL Static Security Analysis
 
 on:
   push:

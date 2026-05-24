@@ -45,6 +45,7 @@ jobs:
       - name: Install Build Dependencies # Step to install necessary build dependencies
         run: |
           sudo apt-get update
+          sudo apt-get install -y libopenmpi-dev openmpi-bin
           sudo apt-get install -y cmake build-essential
 
       - name: Compile Code Base for Tracking
@@ -70,7 +71,7 @@ jobs:
     - name: Install Build Dependencies # Step to install necessary build dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake build-essential
+         sudo apt-get install -y cmake build-essential libopenmpi-dev openmpi-bin
 
     # Cache the built dependencies and CMake configurations
     # This is to avoid re-downloading and re-building CMake and Catch2 every time

@@ -54,7 +54,7 @@ jobs:
           cmake --build build --config Release -j $(nproc) # Build the project using CMake, specifying the build directory and configuration, and using all available CPU cores
 
       - name: Upload Release build artifacts # In this way we can reuse the build artifatcs for the next step
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-artifacts
           path: build
@@ -93,7 +93,7 @@ jobs:
           ${{ runner.os }}-cmake-
 
     - name: Download Release build artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         name: release-artifacts
         path: build

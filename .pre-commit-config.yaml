@@ -2,8 +2,8 @@
 # Pre-commits are a nice way to automate code formatting and basic checks
 # before actually committing the code to the repo.
 
-# Global exclusion 
-exclude: '^(build/|dist/|third_party/)'
+# Only consider source and test trees.
+files: '^(src/|tests/)'
 
 repos:
   # 1. General Repository Hygiene 

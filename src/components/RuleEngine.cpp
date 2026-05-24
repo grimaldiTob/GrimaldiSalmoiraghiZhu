@@ -1,5 +1,5 @@
-#include <fstream>
 #include "RuleEngine.h"
+#include <fstream>
 // Include concrete interface headers here so header can forward-declare them.
 #include "../interfaces/BatchProviderInterface.h"
 #include "../interfaces/MeasDatabaseInterface.h"
@@ -11,41 +11,45 @@
 #endif
 
 /**
- * Couple of helper functions defined here in order to handle 
+ * Couple of helper functions defined here in order to handle
  * MPI massage passing correctly.
- * 
+ *
  * Since MPI does not support passing std::optional<bool>
  * we encode it in an integer.
  */
 static inline int8_t encode(std::optional<bool> v) {
-    if (!v.has_value()) return -1;
+    if (!v.has_value())
+        return -1;
     return *v ? 1 : 0;
 }
 static inline std::optional<bool> decode(int8_t v) {
-    if (v < 0) return std::nullopt;
+    if (v < 0)
+        return std::nullopt;
     return v == 1;
 }
 
 struct RuleEvalMsg {
     int32_t idx;
-    int8_t  value;
+    int8_t value;
 };
 
 /** Broadcast of Telemetry Batch Data across processors using MPI.
  * It is important to notice that since MPI does not support the string object,
- * but just the char we had to create a custom string with all the sensors name 
+ * but just the char we had to create a custom string with all the sensors name
  * concatenated.
- * 
+ *
  */
-static void broadcastTelemetryBatch(TelemetryBatch& batch, int root, MPI_Comm comm) {
+static void broadcastTelemetryBatch(TelemetryBatch &batch, int root,
+                                    MPI_Comm comm) {
     int rank;
     MPI_Comm_rank(comm, &rank);
-    
+
     // broadcast the batch size first of all
     int32_t n = static_cast<int32_t>(batch.getSize());
     MPI_Bcast(&n, 1, MPI_INT32_T, root, comm);
 
-    if (n == 0) return; // if batch is emptu
+    if (n == 0)
+        return; // if batch is emptu
 
     // Resize on non-root rank
     if (batch.getSize() != static_cast<size_t>(n)) {
@@ -79,7 +83,8 @@ static void broadcastTelemetryBatch(TelemetryBatch& batch, int root, MPI_Comm co
     MPI_Bcast(lengths.data(), n, MPI_INT, root, comm);
 
     int32_t total_len = 0;
-    for (int i = 0; i < n; ++i) total_len += lengths[i];
+    for (int i = 0; i < n; ++i)
+        total_len += lengths[i];
     packed.resize(total_len);
     MPI_Bcast(packed.data(), total_len, MPI_CHAR, root, comm);
 
@@ -93,7 +98,7 @@ static void broadcastTelemetryBatch(TelemetryBatch& batch, int root, MPI_Comm co
     }
 }
 
-/** @brief 
+/** @brief
  * Reset the content of the cache erasing just the values not the key.
  */
 void RuleEngine::resetCache() {
@@ -261,11 +266,11 @@ void RuleEngine::evaluateRules(const TelemetryBatch &batch) {
  *     - Compute evaluation indexes with remainder
  *     - each processor evaluates different rules (with OpenMP)
  *     - Each processor Gathers local results together in the cache
- * 
- * In the end just the root processor check the rule results, while all processors 
- * clean their cache content.
+ *
+ * In the end just the root processor check the rule results, while all
+ * processors clean their cache content.
  */
-void RuleEngine::evaluateRulesMPI(TelemetryBatch& batch, MPI_Comm comm) {
+void RuleEngine::evaluateRulesMPI(TelemetryBatch &batch, MPI_Comm comm) {
     int rank = 0, size = 1;
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
@@ -279,36 +284,45 @@ void RuleEngine::evaluateRulesMPI(TelemetryBatch& batch, MPI_Comm comm) {
         int total_rules = rules_list.size();
         int chunk_size = total_rules / size;
         int remainder = total_rules % size;
-        
+
         // compute the number of rules to assign to each rank
         int start_idx = rank * chunk_size + std::min(rank, remainder);
-        int end_idx = start_idx + chunk_size + (rank < remainder ? 1 : 0); // chunk size + 1 for the first remainder processes
+        int end_idx =
+            start_idx + chunk_size +
+            (rank < remainder
+                 ? 1
+                 : 0); // chunk size + 1 for the first remainder processes
 
-        #pragma omp parallel
+#pragma omp parallel
         {
             std::vector<RuleEvalMsg> thread_results;
-            #pragma omp for schedule(dynamic) // again ronzzani fiero di me
+#pragma omp for schedule(dynamic) // again ronzzani fiero di me
             for (size_t k = start_idx; k < end_idx; ++k) {
-                auto& rule = rules_list[k];
-                if (rule->getPriority() != priority) continue;
+                auto &rule = rules_list[k];
+                if (rule->getPriority() != priority)
+                    continue;
 
-                auto result = rule->evaluate(batch, rules_cache); // read-only cache
+                auto result =
+                    rule->evaluate(batch, rules_cache); // read-only cache
 
-                // here we need to use integer values to address results 
+                // here we need to use integer values to address results
                 // encode() map the boolean result to an integer
-                thread_results.push_back({static_cast<int32_t>(k), encode(result)});
+                thread_results.push_back(
+                    {static_cast<int32_t>(k), encode(result)});
             }
-            #pragma omp critical
-            local_results.insert(local_results.end(),
-                                 thread_results.begin(), thread_results.end());
+#pragma omp critical
+            local_results.insert(local_results.end(), thread_results.begin(),
+                                 thread_results.end());
         }
 
         // Gather sizes and data from all ranks
         int local_count = static_cast<int>(local_results.size());
         std::vector<int> counts(size), displacements(size);
 
-        // places the local count inside the counts at the right index given the rank        
-        MPI_Allgather(&local_count, 1, MPI_INT, counts.data(), 1, MPI_INT, comm);
+        // places the local count inside the counts at the right index given the
+        // rank
+        MPI_Allgather(&local_count, 1, MPI_INT, counts.data(), 1, MPI_INT,
+                      comm);
 
         int total = 0;
         for (int i = 0; i < size; ++i) {
@@ -320,24 +334,26 @@ void RuleEngine::evaluateRulesMPI(TelemetryBatch& batch, MPI_Comm comm) {
         const int elem_size = static_cast<int>(sizeof(RuleEvalMsg));
         std::vector<int> byte_counts(size), byte_displs(size);
         for (int i = 0; i < size; ++i) {
-            // compute the number of bytes which will be 
+            // compute the number of bytes which will be
             byte_counts[i] = counts[i] * elem_size;
             byte_displs[i] = displacements[i] * elem_size;
         }
 
-        // vector of all the aggregated evaluated rules 
+        // vector of all the aggregated evaluated rules
         std::vector<RuleEvalMsg> all_results(total);
 
-        /* Here in the AllGatherv we are sending bytes (defining a new MPI struct was a mess)
-        So instead of passing counts and displacement in the form of integers (elements) we 
-        pass the corresponding number of bytes we want to transfers 
+        /* Here in the AllGatherv we are sending bytes (defining a new MPI
+        struct was a mess) So instead of passing counts and displacement in the
+        form of integers (elements) we pass the corresponding number of bytes we
+        want to transfers
         */
         MPI_Allgatherv(local_results.data(), local_count * elem_size, MPI_BYTE,
-                       all_results.data(), byte_counts.data(), byte_displs.data(), MPI_BYTE, comm);
+                       all_results.data(), byte_counts.data(),
+                       byte_displs.data(), MPI_BYTE, comm);
 
         // Update cache consistently on every rank
-        for (const auto& msg : all_results) {
-            const std::string& id = rules_list[msg.idx]->getRuleId();
+        for (const auto &msg : all_results) {
+            const std::string &id = rules_list[msg.idx]->getRuleId();
             rules_cache[id] = decode(msg.value);
         }
     };

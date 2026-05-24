@@ -1,14 +1,15 @@
 #define CATCH_CONFIG_MAIN
-#include <catch2/catch_test_macros.hpp>
-#include "../src/types/rules/StatefulRule.h"
 #include "../src/types/TelemetryBatch.h"
-#include <unordered_map>
+#include "../src/types/rules/StatefulRule.h"
+#include <catch2/catch_test_macros.hpp>
 #include <optional>
+#include <unordered_map>
 
 // Mock implementation of MeasDatabaseInterface
 class MockMeasDatabase : public MeasDatabaseInterface {
-public:
-    const std::unordered_map<std::string, std::vector<double>>& getMeasHistory() const override {
+  public:
+    const std::unordered_map<std::string, std::vector<double>> &
+    getMeasHistory() const override {
         return mockMeasurementsHistory;
     }
 
@@ -17,8 +18,8 @@ public:
     }
 
     void clearMeasurements(int n = 32) override {
-        for (auto& kv : mockMeasurementsHistory) {
-            auto& vec = kv.second;
+        for (auto &kv : mockMeasurementsHistory) {
+            auto &vec = kv.second;
             if (vec.size() > n) {
                 vec.erase(vec.begin(), vec.begin() + n);
             } else {
@@ -27,11 +28,13 @@ public:
         }
     }
 
-private:
-    std::unordered_map<std::string, std::vector<double>> mockMeasurementsHistory;
+  private:
+    std::unordered_map<std::string, std::vector<double>>
+        mockMeasurementsHistory;
 };
 
-TEST_CASE("StatefulRule evaluates correctly with valid input", "[StatefulRule]") {
+TEST_CASE("StatefulRule evaluates correctly with valid input",
+          "[StatefulRule]") {
     // Create a mock database
     MockMeasDatabase mockDb;
 
@@ -56,7 +59,8 @@ TEST_CASE("StatefulRule evaluates correctly with valid input", "[StatefulRule]")
 
     // Assertions
     REQUIRE(result.has_value()); // Check that the result is valid (not nullopt)
-    REQUIRE(result.value() == true); // Check that the evaluation result is true (12.0, 14.0, 16.0 > 10.0)
+    REQUIRE(result.value() == true); // Check that the evaluation result is true
+                                     // (12.0, 14.0, 16.0 > 10.0)
 }
 
 TEST_CASE("StatefulRule returns nullopt for missing sensor", "[StatefulRule]") {
@@ -78,7 +82,8 @@ TEST_CASE("StatefulRule returns nullopt for missing sensor", "[StatefulRule]") {
     auto result = rule.evaluate(batch, cache);
 
     // Assertions
-    REQUIRE(!result.has_value()); // Check that the result is nullopt since Sensor1 is missing from the batch
+    REQUIRE(!result.has_value()); // Check that the result is nullopt since
+                                  // Sensor1 is missing from the batch
 }
 
 TEST_CASE("StatefulRule handles invalid operator", "[StatefulRule]") {
@@ -91,7 +96,8 @@ TEST_CASE("StatefulRule handles invalid operator", "[StatefulRule]") {
     batch.values = {15.0};
 
     // Create a StatefulRule with an invalid operator
-    StatefulRule rule("Rule1", RulePriority::HIGH, "Sensor1", "INVALID_OP", 3, 10.0);
+    StatefulRule rule("Rule1", RulePriority::HIGH, "Sensor1", "INVALID_OP", 3,
+                      10.0);
     rule.setMeasDatabase(mockDb);
 
     std::unordered_map<std::string, std::optional<bool>> cache;
@@ -100,7 +106,8 @@ TEST_CASE("StatefulRule handles invalid operator", "[StatefulRule]") {
     auto result = rule.evaluate(batch, cache);
 
     // Assertions
-    REQUIRE(!result.has_value()); // Check that the result is nullopt due to invalid operator
+    REQUIRE(!result.has_value()); // Check that the result is nullopt due to
+                                  // invalid operator
 }
 
 TEST_CASE("StatefulRule handles invalid DB", "[StatefulRule]") {
@@ -118,7 +125,8 @@ TEST_CASE("StatefulRule handles invalid DB", "[StatefulRule]") {
     auto result = rule.evaluate(batch, cache);
 
     // Assertions
-    REQUIRE(!result.has_value()); // Check that the result is nullopt due to invalid database pointer
+    REQUIRE(!result.has_value()); // Check that the result is nullopt due to
+                                  // invalid database pointer
 }
 
 TEST_CASE("StatefulRule returns involved sensors correctly", "[StatefulRule]") {
@@ -127,5 +135,6 @@ TEST_CASE("StatefulRule returns involved sensors correctly", "[StatefulRule]") {
 
     // Assertions
     std::vector<std::string> expected_sensors = {"Sensor1"};
-    REQUIRE(rule.getInvolvedSensors() == expected_sensors); // Check that the involved sensors are correct
+    REQUIRE(rule.getInvolvedSensors() ==
+            expected_sensors); // Check that the involved sensors are correct
 }

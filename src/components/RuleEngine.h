@@ -1,11 +1,11 @@
 #pragma once
 
-#include <string>
-#include <unordered_map>
-#include <optional>
 #include <cstdint>
 #include <memory>
 #include <mpi.h>
+#include <optional>
+#include <string>
+#include <unordered_map>
 
 // EXTERNAL
 #include "../../external/simdjson.h"
@@ -58,8 +58,9 @@ class RuleEngine : public RuleEngineInterface {
         m_outputDispatcher = &dispatcher;
     }
 
-    // Protect the batch as read-only since the RuleEngine has to read and make evaluation without modify it
-    void evaluateRules(const TelemetryBatch& batch)  override;
+    // Protect the batch as read-only since the RuleEngine has to read and make
+    // evaluation without modify it
+    void evaluateRules(const TelemetryBatch &batch) override;
     void evaluateRulesMPI(TelemetryBatch &batch, MPI_Comm comm);
     void serialEvaluate(const TelemetryBatch &batch);
 

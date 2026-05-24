@@ -98,6 +98,9 @@ jobs:
         name: release-artifacts
         path: build
 
+    - name: Restore execute permissions on test binaries
+      run: find build -type f -name 'test_*' -exec chmod +x {} +
+
     - name: Run Tests
       working-directory: build
       run: ctest --output-on-failure # Run the tests using CTest (which we have configured in our CMakeLists.txt)

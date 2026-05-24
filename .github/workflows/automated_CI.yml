@@ -53,6 +53,12 @@ jobs:
           cmake -B build -S . -DCMAKE_BUILD_TYPE=Release # Create a build directory and configure the project using CMake
           cmake --build build --config Release -j $(nproc) # Build the project using CMake, specifying the build directory and configuration, and using all available CPU cores
 
+      - name: Upload Release build artifacts # In this way we can reuse the build artifatcs for the next step
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-artifacts
+          path: build
+
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
 
@@ -71,7 +77,7 @@ jobs:
     - name: Install Build Dependencies # Step to install necessary build dependencies
       run: |
         sudo apt-get update
-         sudo apt-get install -y cmake build-essential libopenmpi-dev openmpi-bin
+        sudo apt-get install -y cmake build-essential libopenmpi-dev openmpi-bin valgrind
 
     # Cache the built dependencies and CMake configurations
     # This is to avoid re-downloading and re-building CMake and Catch2 every time
@@ -86,12 +92,43 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cmake-
 
-    - name: Configure CMake
-      run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release # Create a build directory and configure the project using CMake
+    - name: Download Release build artifacts
+      uses: actions/download-artifact@v7
+      with:
+        name: release-artifacts
+        path: build
 
-    - name: Build Project
-      run: cmake --build build --config Release -j $(nproc) # Build the project using CMake, specifying the build directory and configuration, and using all available CPU cores
+    - name: Restore execute permissions on test binaries
+      run: find build -type f -name 'test_*' -exec chmod +x {} +
 
     - name: Run Tests
       working-directory: build
       run: ctest --output-on-failure # Run the tests using CTest (which we have configured in our CMakeLists.txt)
+
+  # ==========================================
+  # GATE 4: MEMCHECK WITH VALGRIND
+  # ==========================================
+  memcheck:
+    needs: [lint-and-format, codeql-analysis, build-and-test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Install Build Dependencies + Valgrind
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential valgrind
+
+      - name: Configure CMake for Valgrind (RelWithDebInfo)
+        run: cmake -B build-valgrind -S . -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+      - name: Build for Valgrind # We need to build again since Valgrind needs debug symbols, which we don't have in the Release build. 
+        run: cmake --build build-valgrind --config RelWithDebInfo -j $(nproc)
+
+      - name: Run MemCheck (Valgrind)
+        working-directory: build-valgrind
+        env:
+          CTEST_MEMORYCHECK_COMMAND: valgrind
+          CTEST_MEMORYCHECK_COMMAND_OPTIONS: --leak-check=full --show-leak-kinds=all --error-exitcode=1
+        run: ctest -D ExperimentalMemCheck --output-on-failure

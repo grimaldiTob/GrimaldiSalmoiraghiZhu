@@ -112,6 +112,9 @@ jobs:
     needs: [lint-and-format, codeql-analysis, build-and-test]
     runs-on: ubuntu-latest
     steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
       - name: Install Build Dependencies + Valgrind
         run: |
           sudo apt-get update

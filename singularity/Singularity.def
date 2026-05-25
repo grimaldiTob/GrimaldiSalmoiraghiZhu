@@ -1,32 +1,29 @@
 Bootstrap: docker
 From: ubuntu:22.04
 
-"
-To run in the cluster (Galileo should already have it):
-
-module load singularity
-singularity build astralog.sif singularity/Singularity.def
-
-Running considering SLURM scheduling:
-srun -N 1 -n 4 singularity exec - mpi astralog.sif <executable>
-
-create a job with: 
-- N nodes
-- n tasks
-
-Find the commands in the 'build.sh' and 'script.sh'
-"
-
+# To run in the cluster (Galileo should already have it):
+# 
+# module load singularity
+# singularity build astralog.sif singularity/Singularity.def
+# 
+# Running considering SLURM scheduling:
+# srun -N 1 -n 4 singularity exec - mpi astralog.sif <executable>
+# 
+# create a job with: 
+# - N nodes
+# - n tasks
+# 
+# Find the commands in the 'build.sh' and 'script.sh'
 
 %labels
     Project astralog-hpc
 
 %environment
-    # export LC_ALL=C.UTF-8
-    # export LANG=C.UTF-8
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
 
 %files
-
+    # copy the whole project inside the /opt/astralog directory
     . /opt/astralog
 
 %post
@@ -40,14 +37,18 @@ Find the commands in the 'build.sh' and 'script.sh'
         python3 \
         python3-pip \
         python3-setuptools \
+        python3.10-venv \
         && rm -rf /var/lib/apt/lists/*
 
     # If you need Python deps
-    pip3 install -r /opt/astralog/requirements.txt
+    python3 -m venv /opt/astralog/.venv
+    /opt/astralog/.venv/bin/pip install -r /opt/astralog/requirements.txt
 
-    cd /opt/astralog && mkdir build && cd build && cmake .. && make
+    rm -rf /opt/astralog/build
+    cd /opt/astralog && mkdir -p build && cd build && cmake .. && make
 
 
 %runscript
     cd /opt/astralog
+    exec echo "Arguments: *@"
     exec "$@"

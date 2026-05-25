@@ -73,8 +73,7 @@ TEST_CASE("RuleEngine processes batches correctly", "[RuleEngine]") {
 
     // Initialize engine with an initial timestamp of 1 so first collected
     // measurements are evaluated when timestamp changes.
-    RuleEngine engine(buffer, db, std::optional<int64_t>(1));
-    engine.setOutputDispatcher(dispatcher);
+    RuleEngine engine(buffer, db, dispatcher, std::optional<int64_t>(1));
 
     FakeRuleLoader loader;
     simdjson::ondemand::parser parser;
@@ -92,7 +91,7 @@ TEST_CASE("RuleEngine processes batches correctly", "[RuleEngine]") {
 
     // One successful evaluation should have triggered appendValidData.
     REQUIRE(dispatcher.validCalls == 1);
-    REQUIRE(dispatcher.alarmCalls == 0);
+    REQUIRE(dispatcher.alarmCalls == 1);
 
     // Both measurements are stored in the fake DB.
     const auto &hist = db.getMeasHistory();
@@ -108,8 +107,7 @@ TEST_CASE("RuleEngine calls appendValidData when all rules are true",
     FakeMeasDB db;
     FakeOutputDispatcher dispatcher;
 
-    RuleEngine engine(buffer, db, std::optional<int64_t>(1));
-    engine.setOutputDispatcher(dispatcher);
+    RuleEngine engine(buffer, db, dispatcher, std::optional<int64_t>(1));
 
     FakeRuleLoader loader;
     simdjson::ondemand::parser parser;
@@ -131,8 +129,7 @@ TEST_CASE("RuleEngine calls appendAlarms when any rule is false",
     FakeMeasDB db;
     FakeOutputDispatcher dispatcher;
 
-    RuleEngine engine(buffer, db, std::optional<int64_t>(1));
-    engine.setOutputDispatcher(dispatcher);
+    RuleEngine engine(buffer, db, dispatcher, std::optional<int64_t>(1));
 
     FakeRuleLoader loader;
     simdjson::ondemand::parser parser;

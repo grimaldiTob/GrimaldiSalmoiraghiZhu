@@ -159,16 +159,12 @@ void RuleEngine::checkRuleResult() {
         }
     }
 
-    if (!m_outputDispatcher) {
-        return;
-    }
-
     if (all_true) {
-        m_outputDispatcher->appendValidData(db, m_evaluationTimestamp);
+        m_outputDispatcher.appendValidData(db, m_evaluationTimestamp);
         return;
     }
 
-    m_outputDispatcher->appendAlarms(db, failed_rules, m_evaluationTimestamp);
+    m_outputDispatcher.appendAlarms(db, failed_rules, m_evaluationTimestamp);
 }
 
 void RuleEngine::storeBatchMeasurements(const TelemetryBatch &batch) {
@@ -421,6 +417,8 @@ void RuleEngine::run() {
             evaluateRulesMPI(subBatch, MPI_COMM_WORLD);
 #else
             evaluateRules(subBatch);
+            checkRuleResult();
+            resetCache();
 #endif
         }
     }

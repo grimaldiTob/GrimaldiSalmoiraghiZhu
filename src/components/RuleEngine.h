@@ -31,8 +31,10 @@ class RuleEngine : public RuleEngineInterface {
   public:
     explicit RuleEngine(ConsumerBuffer<TelemetryBatch> &broker,
                         MeasDatabaseInterface &db,
+                        OutputDispatcherInterface &outputDispatcher,
                         std::optional<int64_t> initialTimestamp)
-        : m_evaluationTimestamp(initialTimestamp), m_broker(broker), db(db) {}
+        : m_evaluationTimestamp(initialTimestamp), m_broker(broker), db(db),
+          m_outputDispatcher(outputDispatcher) {}
 
     virtual ~RuleEngine() = default;
 
@@ -45,10 +47,6 @@ class RuleEngine : public RuleEngineInterface {
     getRulesCache() const {
         return rules_cache;
     };
-
-    void setOutputDispatcher(OutputDispatcherInterface &dispatcher) {
-        m_outputDispatcher = &dispatcher;
-    }
 
     // Protect the batch as read-only since the RuleEngine has to read and make
     // evaluation without modify it
@@ -75,12 +73,12 @@ class RuleEngine : public RuleEngineInterface {
 
     MeasDatabaseInterface &db;
 
-    OutputDispatcherInterface *m_outputDispatcher = nullptr;
+    OutputDispatcherInterface &m_outputDispatcher;
 
     /**
      * By setting the below attribus with protected flag we
-     * are enabling those to be accesible by derived classes like
-     * MpiRuleEngine
+     * are enabling those to be accesible by  the derived classes
+     * like MpiRuleEngine
      *  */
   protected:
     std::optional<int64_t> m_evaluationTimestamp;

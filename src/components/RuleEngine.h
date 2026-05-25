@@ -29,26 +29,18 @@ class OutputDispatcherInterface;
 class RuleEngine : public RuleEngineInterface {
 
   public:
-    // Constructor that instanciates all necessary interfaces
-    // I dont know why there where two constructors
-    /*
-    RuleEngine(ConsumerBuffer<TelemetryBatch>& broker,
-                       MeasDatabaseInterface& db,
-                       std::optional<int64_t> initialTimestamp)
-                       : m_broker(broker),
-                         db(db),
-                         m_evaluationTimestamp(initialTimestamp){}
-    */
-
     explicit RuleEngine(ConsumerBuffer<TelemetryBatch> &broker,
                         MeasDatabaseInterface &db,
                         std::optional<int64_t> initialTimestamp)
         : m_evaluationTimestamp(initialTimestamp), m_broker(broker), db(db) {}
 
+    virtual ~RuleEngine() = default;
+
     // use const obj& in order to avoid reallocating on each call
     const std::vector<std::shared_ptr<BaseRule>> &getRulesList() const {
         return rules_list;
     };
+
     const std::unordered_map<std::string, std::optional<bool>> &
     getRulesCache() const {
         return rules_cache;
@@ -60,7 +52,7 @@ class RuleEngine : public RuleEngineInterface {
 
     // Protect the batch as read-only since the RuleEngine has to read and make
     // evaluation without modify it
-    void evaluateRules(const TelemetryBatch &batch) override;
+    virtual void evaluateRules(const TelemetryBatch &batch) override;
     void evaluateRulesMPI(TelemetryBatch &batch, MPI_Comm comm);
     void serialEvaluate(const TelemetryBatch &batch);
 
@@ -76,31 +68,29 @@ class RuleEngine : public RuleEngineInterface {
     void resetCache();
 
     // The entry point for the Consumer Thread
-    void run();
+    virtual void run();
 
   private:
     const std::string RULES_FILENAME = "rules.json";
+
+    MeasDatabaseInterface &db;
+
+    OutputDispatcherInterface *m_outputDispatcher = nullptr;
+
+    /**
+     * By setting the below attribus with protected flag we
+     * are enabling those to be accesible by derived classes like
+     * MpiRuleEngine
+     *  */
+  protected:
     std::optional<int64_t> m_evaluationTimestamp;
 
     // The queue which the class will retrieve the batch from
     ConsumerBuffer<TelemetryBatch> &m_broker;
 
-    MeasDatabaseInterface &db;
-
     // vector in which we store all rules
     std::vector<std::shared_ptr<BaseRule>> rules_list;
 
-    // if we have exactly one consumer thread, keeping it as an attribute might
-    // work, but can introduce hidden bugs into a multithreaded system (for
-    // parallelization) I think is better to move it to a local variable in
-    // RuleEnginerun() and evaluateRules takes as parameter the local batch
-    // TelemetryBatch batch;
-
     // map in which we store the cache result for the evaluated rules
     std::unordered_map<std::string, std::optional<bool>> rules_cache;
-
-    OutputDispatcherInterface *m_outputDispatcher = nullptr;
-
-    // make it private since it is an helper internal to the class.
-    RulePriority parsePriority(std::string_view);
 };

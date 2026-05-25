@@ -115,10 +115,10 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v6
 
-      - name: Install Build Dependencies + Valgrind
+      - name: Install Build Dependencies + MPI + Valgrind
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake build-essential valgrind
+          sudo apt-get install -y cmake build-essential libopenmpi-dev openmpi-bin valgrind
 
       - name: Configure CMake for Valgrind (RelWithDebInfo)
         run: cmake -B build-valgrind -S . -DCMAKE_BUILD_TYPE=RelWithDebInfo

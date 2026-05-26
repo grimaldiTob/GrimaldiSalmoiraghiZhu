@@ -15,6 +15,6 @@ class MeasDatabaseInterface {
     virtual const std::unordered_map<std::string, std::vector<double>> &
     getMeasHistory() const = 0;
 
-    virtual void storeResult(std::string, double) = 0;
-    virtual void clearMeasurements(int n = 32) = 0;
+    virtual void storeResult(const std::string &, double) = 0;
+    virtual void clearMeasurements(const std::string &, int) = 0;
 };

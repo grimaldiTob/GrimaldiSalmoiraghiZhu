@@ -41,10 +41,27 @@ class FakeMeasDB : public MeasDatabaseInterface {
     getMeasHistory() const override {
         return history;
     }
-    void storeResult(std::string sensor, double value) override {
+    void storeResult(const std::string &sensor, double value) override {
         history[sensor].push_back(value);
     }
-    void clearMeasurements(int /*n*/ = 32) override { history.clear(); }
+    void clearMeasurements(const std::string &sensor_id, int n = 32) override {
+        if (n <= 0) {
+            return;
+        }
+
+        auto it = history.find(sensor_id);
+        if (it == history.end()) {
+            return;
+        }
+
+        auto &vec = it->second;
+        if (static_cast<size_t>(n) >= vec.size()) {
+            vec.clear();
+            return;
+        }
+
+        vec.erase(vec.begin(), vec.begin() + n);
+    }
 
   private:
     std::unordered_map<std::string, std::vector<double>> history;

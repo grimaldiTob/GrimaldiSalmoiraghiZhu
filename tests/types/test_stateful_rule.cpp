@@ -13,19 +13,27 @@ class MockMeasDatabase : public MeasDatabaseInterface {
         return mockMeasurementsHistory;
     }
 
-    void storeResult(std::string sensor_id, double value) override {
+    void storeResult(const std::string &sensor_id, double value) override {
         mockMeasurementsHistory[sensor_id].emplace_back(value);
     }
 
-    void clearMeasurements(int n = 32) override {
-        for (auto &kv : mockMeasurementsHistory) {
-            auto &vec = kv.second;
-            if (vec.size() > n) {
-                vec.erase(vec.begin(), vec.begin() + n);
-            } else {
-                vec.clear();
-            }
+    void clearMeasurements(const std::string &sensor_id, int n = 32) override {
+        if (n <= 0) {
+            return;
         }
+
+        auto it = mockMeasurementsHistory.find(sensor_id);
+        if (it == mockMeasurementsHistory.end()) {
+            return;
+        }
+
+        auto &vec = it->second;
+        if (static_cast<size_t>(n) >= vec.size()) {
+            vec.clear();
+            return;
+        }
+
+        vec.erase(vec.begin(), vec.begin() + n);
     }
 
   private:

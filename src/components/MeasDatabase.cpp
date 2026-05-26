@@ -5,8 +5,11 @@ MeasDatabase::MeasDatabase() = default;
 /** @brief Searches for sensor id in the measurement database and
  * stores the corresponding value
  */
-void MeasDatabase::storeResult(std::string sensor_id, double value) {
+void MeasDatabase::storeResult(const std::string &sensor_id, double value) {
     // Store value for existing sensor or create a new entry.
+    if (m_measurementsHistory[sensor_id].size() >= MAXIMUM_SIZE) {
+        clearMeasurements(sensor_id, MAXIMUM_SIZE / 2);
+    }
     m_measurementsHistory[sensor_id].emplace_back(value);
 }
 
@@ -21,7 +24,7 @@ void MeasDatabase::storeResult(std::string sensor_id, double value) {
  * measurements from the database,starting from the sensors which have more
  * measurements?
  */
-void MeasDatabase::clearMeasurements(int n) {
+void MeasDatabase::clearMeasurements(const std::string &sensor_id, int n) {
     /*
         ok actually I tought about using the deque structure. But this is not
         ideal since we usually will access more than 1 element to check a
@@ -31,8 +34,26 @@ void MeasDatabase::clearMeasurements(int n) {
 
         OUTCOME: we stick with the vector.
     */
+    auto it = m_measurementsHistory.find(sensor_id);
+    if (it == m_measurementsHistory.end()) {
+        return;
+    }
+
+    std::vector<double> &vec = it->second;
+    if (vec.empty()) {
+        return;
+    }
+
+    if (static_cast<size_t>(n) >= vec.size()) {
+        vec.clear();
+        return;
+    }
+    vec.erase(vec.begin(), vec.begin() + n);
+
+    /*
     for (auto &kv : m_measurementsHistory) {
         std::vector<double> &vec = kv.second; // need a reference to the object
         vec.erase(vec.begin(), vec.begin() + n); // erase the first n elements
     }
+    */
 }

@@ -19,8 +19,8 @@ class MockMeasDatabase : public MeasDatabaseInterface {
         return data_;
     }
 
-    void storeResult(std::string, double) override {}
-    void clearMeasurements(int) override {}
+    void storeResult(const std::string &, double) override {}
+    void clearMeasurements(const std::string &, int) override {}
 
   private:
     std::unordered_map<std::string, std::vector<double>> data_;

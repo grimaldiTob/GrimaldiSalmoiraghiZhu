@@ -60,6 +60,10 @@ TEST_CASE("AstraLog shuts down after having evaluated all batches in the "
     const std::string testsRoot = getTestsRoot();
     const std::string fixturesDir =
         (std::filesystem::path(testsRoot) / "test_collector_output").string();
+    const std::string rulesFile =
+        (std::filesystem::path(testsRoot).parent_path() / "input" /
+         "rules.json")
+            .string();
     const std::string inputDir =
         makeWorkDir("test_fake_run"); // fake directory just for this test
     const auto oldCwd = std::filesystem::current_path();
@@ -75,10 +79,11 @@ TEST_CASE("AstraLog shuts down after having evaluated all batches in the "
 
     copyCollectorOutput(fixturesDir, inputDir);
     REQUIRE(countTxtFiles(inputDir) > 0);
+    REQUIRE(std::filesystem::is_regular_file(rulesFile));
 
     AstraLog app(16, 32);
     auto start = std::chrono::steady_clock::now();
-    app.run(inputDir);
+    app.run(inputDir, rulesFile);
     auto elapsed = std::chrono::steady_clock::now() - start;
 
     REQUIRE(elapsed >= 5s);
@@ -89,6 +94,10 @@ TEST_CASE("AstraLog run removes ingested .txt files", "[AstraLog][cleanup]") {
     const std::string testsRoot = getTestsRoot();
     const std::string fixturesDir =
         (std::filesystem::path(testsRoot) / "test_collector_output").string();
+    const std::string rulesFile =
+        (std::filesystem::path(testsRoot).parent_path() / "input" /
+         "rules.json")
+            .string();
     const std::string inputDir = makeWorkDir("test_fake_cleanup");
     const auto oldCwd = std::filesystem::current_path();
     std::filesystem::current_path(inputDir);
@@ -104,9 +113,10 @@ TEST_CASE("AstraLog run removes ingested .txt files", "[AstraLog][cleanup]") {
     REQUIRE(
         countTxtFiles(inputDir) >
         0); // require that the content of the collector_output has been copied
+    REQUIRE(std::filesystem::is_regular_file(rulesFile));
 
     AstraLog app(16, 32);
-    app.run(inputDir);
+    app.run(inputDir, rulesFile);
 
     REQUIRE(countTxtFiles(inputDir) ==
             0); // require that the number of files in the dir is 0

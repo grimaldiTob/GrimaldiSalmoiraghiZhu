@@ -96,10 +96,13 @@ TEST_CASE("Real File Integration Test", "[Integration][FileIO]") {
 
     // In this particular json file we have a total of 50 measurements, whose
     // 47 have valid format and 3 invalid format
-    std::string filepath = "../collector_output/raw_data_1777721417_0000.txt";
-
-    // Convert to an absolute path to prevent simdjson IO_ERRORs
-    std::string absolutePath = std::filesystem::absolute(filepath).string();
+    const auto fixturePath =
+        std::filesystem::path(__FILE__).parent_path().parent_path() /
+        "test_collector_output" / "raw_data_1777721417_0000.txt";
+    // Normalize to an absolute path to prevent simdjson IO_ERRORs.
+    std::string absolutePath = std::filesystem::weakly_canonical(
+                                   std::filesystem::absolute(fixturePath))
+                                   .string();
 
     // Pre-check: Give a clear Catch2 error if the file is missing from the disk
     std::ifstream checkFile(absolutePath);

@@ -172,6 +172,8 @@ Multistep pipeline, both on the dev local machine and on GitHub servers:
    - Check compliance with the LLVM style guidelines
    - Perform static analysis with CodeQL
    - Compile and run unit tests
+   - Check for memory leaks with Valgrind
+   - run complete integrate testing
 
 ---
 

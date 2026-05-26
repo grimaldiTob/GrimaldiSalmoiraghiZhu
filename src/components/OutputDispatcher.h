@@ -13,8 +13,8 @@ class MeasDatabaseInterface;
 class OutputDispatcher : public OutputDispatcherInterface {
 
   public:
-    OutputDispatcher(std::string validDataPath = "valid_data.csv",
-                     std::string alarmsPath = "alarms.log")
+    OutputDispatcher(std::string validDataPath = "./output/valid_data.csv",
+                     std::string alarmsPath = "./output/alarms.log")
         : m_validDataPath(std::move(validDataPath)),
           m_alarmsPath(std::move(alarmsPath)) {};
 

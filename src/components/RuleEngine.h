@@ -48,14 +48,19 @@ class RuleEngine : public RuleEngineInterface {
         return rules_cache;
     };
 
-    // Protect the batch as read-only since the RuleEngine has to read and make
-    // evaluation without modify it
+    void setRulesFilename(const std::string &filename) {
+        rules_filename = filename;
+    }
+
+    // Protect the batch as read-only since the RuleEngine has to read and
+    // make evaluation without modify it
     virtual void evaluateRules(const TelemetryBatch &batch) override;
     void evaluateRulesMPI(TelemetryBatch &batch, MPI_Comm comm);
     void serialEvaluate(const TelemetryBatch &batch);
 
-    // ideally we can also think of having the rule loader as a class attribute
-    // but this has just a one shot usage. (after loading is just wasted memory)
+    // ideally we can also think of having the rule loader as a class
+    // attribute but this has just a one shot usage. (after loading is just
+    // wasted memory)
     void setRulesList(RuleLoaderInterface &loader,
                       simdjson::ondemand::parser &parser);
 
@@ -69,7 +74,7 @@ class RuleEngine : public RuleEngineInterface {
     virtual void run();
 
   private:
-    const std::string RULES_FILENAME = "rules.json";
+    std::string rules_filename;
 
     MeasDatabaseInterface &db;
 

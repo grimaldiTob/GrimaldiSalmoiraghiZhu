@@ -2,6 +2,7 @@
 #include "components/BatchAccumulator.h"
 #include "components/DataIngestor.h"
 #include "components/MeasDatabase.h"
+#include "components/OutputDispatcher.h"
 #include "components/RuleEngine.h"
 #include "components/RuleLoader.h"
 #include "components/ThreadSafeBuffer.h"
@@ -25,8 +26,9 @@ class AstraLog {
         m_accumulator =
             std::make_unique<BatchAccumulator>(*m_broker, batchSize);
         m_ingestor = std::make_unique<DataIngestor>(*m_accumulator);
-        m_evaluator =
-            std::make_unique<RuleEngine>(*m_broker, *m_database, std::nullopt);
+        m_outputDispatcher = std::make_unique<OutputDispatcher>();
+        m_evaluator = std::make_unique<RuleEngine>(
+            *m_broker, *m_database, *m_outputDispatcher, std::nullopt);
         m_loader = std::make_unique<RuleLoader>();
     }
 
@@ -39,7 +41,8 @@ class AstraLog {
     void readInput(const std::string &filename);
 
     /** @brief run the full pipeline on a path (file or directory) */
-    void run(const std::string &inputPath = "collector_output");
+    void run(const std::string &inputPath = "collector_output",
+             const std::string &rulesPath = "./rules.json");
 
   private:
     std::unique_ptr<DataIngestor> m_ingestor;
@@ -47,5 +50,6 @@ class AstraLog {
     std::unique_ptr<RuleEngine> m_evaluator;
     std::unique_ptr<RuleLoader> m_loader;
     std::unique_ptr<MeasDatabase> m_database;
+    std::unique_ptr<OutputDispatcher> m_outputDispatcher;
     std::shared_ptr<ThreadSafeBuffer<TelemetryBatch>> m_broker;
 };

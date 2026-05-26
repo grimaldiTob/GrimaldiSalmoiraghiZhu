@@ -63,15 +63,23 @@ void AstraLog::readInput(const std::string &filename) {
  * are empty. If they are for a certain interval it stops the execution of loops
  * and joins threads.
  */
-void AstraLog::run(const std::string &inputPath) {
-    simdjson::ondemand::parser parser;
-    m_evaluator->setRulesList(
-        *m_loader, parser); // first of all load rules inside the RuleEngine
+void AstraLog::run(const std::string &inputPath, const std::string &rulesPath) {
 
+    // check if file exist here since I use try-catch block in the main method.
     std::filesystem::path inputDir(inputPath);
     if (!std::filesystem::is_directory(inputDir)) {
         throw std::runtime_error("Input path is not a directory: " + inputPath);
     }
+
+    std::filesystem::path rulesFile(rulesPath);
+    if (!std::filesystem::exists(rulesFile)) {
+        throw std::runtime_error("Rules path is not a file: " + rulesPath);
+    }
+
+    simdjson::ondemand::parser parser;
+    m_evaluator->setRulesFilename(rulesPath);
+    m_evaluator->setRulesList(
+        *m_loader, parser); // first of all load rules inside the RuleEngine
 
     std::atomic<bool> stopRequested{
         false}; // concurrent operations on std::atomic are "well-defined"
@@ -150,6 +158,7 @@ void AstraLog::run(const std::string &inputPath) {
 #ifndef ASTRALOG_NO_MAIN
 int main(int argc, char **argv) {
     std::string inputPath = "./collector_output";
+    std::string rulesPath = "./input/rules.json";
     size_t batchSize = DEFAULT_BATCH_SIZE;
     size_t queueSize = DEFAULT_QUEUE_SIZE;
 
@@ -159,15 +168,18 @@ int main(int argc, char **argv) {
         inputPath = argv[1];
     }
     if (argc > 2) {
-        batchSize = static_cast<size_t>(std::stoul(argv[2]));
+        rulesPath = argv[2];
     }
     if (argc > 3) {
-        queueSize = static_cast<size_t>(std::stoul(argv[3]));
+        batchSize = static_cast<size_t>(std::stoul(argv[3]));
+    }
+    if (argc > 4) {
+        queueSize = static_cast<size_t>(std::stoul(argv[4]));
     }
 
     try {
         AstraLog astralog(batchSize, queueSize);
-        astralog.run(inputPath);
+        astralog.run(inputPath, rulesPath);
     } catch (const std::exception &ex) {
         std::cerr << "AstraLog error: " << ex.what() << '\n';
         return 1;

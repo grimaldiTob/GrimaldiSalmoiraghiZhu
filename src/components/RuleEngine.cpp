@@ -119,7 +119,7 @@ void RuleEngine::setRulesList(RuleLoaderInterface &loader,
                               simdjson::ondemand::parser &parser) {
     rules_list.clear();
     rules_cache.clear(); // avoid stale cache entries
-    loader.loadRules(parser, RULES_FILENAME, rules_list);
+    loader.loadRules(parser, rules_filename, rules_list);
 
     for (auto &rule : rules_list) {
         if (rule->getType() == RuleType::STATEFUL) {

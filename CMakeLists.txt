@@ -246,6 +246,7 @@ add_executable(test_astralog
     src/components/BatchAccumulator.cpp
     src/components/RuleEngine.cpp
     src/components/RuleLoader.cpp
+    src/components/OutputDispatcher.cpp
     src/types/rules/SimpleRule.cpp
     src/types/rules/StepDifferenceRule.cpp
     src/types/rules/StatefulRule.cpp
@@ -259,3 +260,22 @@ target_compile_definitions(test_astralog PRIVATE ASTRALOG_NO_MAIN)
 target_link_libraries(test_astralog PRIVATE Catch2::Catch2WithMain OpenMP::OpenMP_CXX)
 target_link_libraries(test_astralog PRIVATE MPI::MPI_CXX)
 catch_discover_tests(test_astralog)
+
+##################### Astralog Executable ###############################
+add_executable(astralog
+    src/AstraLog.cpp
+    src/components/DataIngestor.cpp
+    src/components/BatchAccumulator.cpp
+    src/components/RuleEngine.cpp
+    src/components/RuleLoader.cpp
+    src/components/OutputDispatcher.cpp
+    src/types/rules/SimpleRule.cpp
+    src/types/rules/StepDifferenceRule.cpp
+    src/types/rules/StatefulRule.cpp
+    src/types/rules/LogicalCorrelationRule.cpp
+    src/components/MeasDatabase.cpp
+    external/simdjson.cpp
+)
+
+target_include_directories(astralog PRIVATE src)
+target_link_libraries(astralog PRIVATE OpenMP::OpenMP_CXX MPI::MPI_CXX)

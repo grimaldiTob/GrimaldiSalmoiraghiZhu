@@ -63,9 +63,10 @@ include(Catch)
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
-# Enable CTest so we can run: cmake --build . && ctest - FUNDAMENTAL for github actions and CI pipelines
+# Load CTest module so dashboard-style commands (e.g., ExperimentalMemCheck)
+# have DartConfiguration.tcl generated in the build tree.
 # ---------------------------------------------------------------------------
-enable_testing()
+include(CTest)
 # ---------------------------------------------------------------------------
 
 # OpenMP (used by RuleEngine parallel evaluation)

@@ -121,14 +121,14 @@ jobs:
           sudo apt-get install -y cmake build-essential libopenmpi-dev openmpi-bin valgrind
 
       - name: Configure CMake for Valgrind (RelWithDebInfo)
-        run: cmake -B build-valgrind -S . -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        run: |
+          cmake -B build-valgrind -S . -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DMEMORYCHECK_COMMAND=valgrind \
+            -DMEMORYCHECK_COMMAND_OPTIONS="--leak-check=full --show-leak-kinds=all --error-exitcode=1"
 
       - name: Build for Valgrind # We need to build again since Valgrind needs debug symbols, which we don't have in the Release build. 
         run: cmake --build build-valgrind --config RelWithDebInfo -j $(nproc)
 
       - name: Run MemCheck (Valgrind)
         working-directory: build-valgrind
-        env:
-          CTEST_MEMORYCHECK_COMMAND: valgrind
-          CTEST_MEMORYCHECK_COMMAND_OPTIONS: --leak-check=full --show-leak-kinds=all --error-exitcode=1
         run: ctest -D ExperimentalMemCheck --output-on-failure

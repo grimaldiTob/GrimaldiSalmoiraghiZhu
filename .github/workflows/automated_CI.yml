@@ -103,7 +103,7 @@ jobs:
 
     - name: Run Tests
       working-directory: build
-      run: ctest --output-on-failure # Run the tests using CTest (which we have configured in our CMakeLists.txt)
+      run: ctest -E "AstraLog shuts down after having evaluated all batches in the collector directory" --output-on-failure # Run the tests using CTest (which we have configured in our CMakeLists.txt)
 
   # ==========================================
   # GATE 4: MEMCHECK WITH VALGRIND
@@ -123,7 +123,7 @@ jobs:
       - name: Configure CMake for Valgrind (RelWithDebInfo)
         run: |
           cmake -B build-valgrind -S . -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DMEMORYCHECK_COMMAND=valgrind \
+            -DMEMORYCHECK_COMMAND=$(command -v valgrind) \
             -DMEMORYCHECK_COMMAND_OPTIONS="--leak-check=full --show-leak-kinds=all --error-exitcode=1"
 
       - name: Build for Valgrind # We need to build again since Valgrind needs debug symbols, which we don't have in the Release build. 
@@ -131,4 +131,35 @@ jobs:
 
       - name: Run MemCheck (Valgrind)
         working-directory: build-valgrind
-        run: ctest -D ExperimentalMemCheck --output-on-failure
+        run: ctest -D ExperimentalMemCheck -E "AstraLog shuts down after having evaluated all batches in the collector directory" --output-on-failure
+
+  # ==========================================
+  # GATE 5: FULL END-TO-END ASTRALOG TEST
+  # ==========================================
+  # This is the final gate, where we run the full end-to-end test for AstraLog.
+  # I have removed this test from Valgrind for two reasons: 
+  #   1) we have already tested all the units and their memory managament, so have already excluded memory leaks
+  #   2) this test has timeout features, which don't play well with Valgrind, which keeps
+  #      saying that the test has timed out and failed.
+  astralog-integration-test:
+    needs: [memcheck]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential libopenmpi-dev openmpi-bin
+
+      - name: Configure CMake (Release)
+        run: |
+          cmake -B build-integration -S . -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build AstraLog integration target
+        run: cmake --build build-integration --config Release --target test_astralog -j $(nproc)
+
+      - name: Run AstraLog shutdown test
+        working-directory: build-integration
+        run: ctest -R "AstraLog shuts down after having evaluated all batches in the collector directory" --output-on-failure

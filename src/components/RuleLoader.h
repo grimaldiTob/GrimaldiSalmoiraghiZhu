@@ -10,8 +10,7 @@ class RuleLoader : public RuleLoaderInterface {
     RuleLoader() = default;
     ~RuleLoader() override = default;
 
-    void loadRules(simdjson::ondemand::parser &parser,
-                   const std::string &filename,
+    void loadRules(const std::string &filename,
                    std::vector<std::shared_ptr<BaseRule>> &rules_list) override;
 
   private:
@@ -32,4 +31,6 @@ class RuleLoader : public RuleLoaderInterface {
     std::shared_ptr<BaseRule> parseLogicalCorrelationRule(
         simdjson::ondemand::object &obj,
         const std::vector<std::shared_ptr<BaseRule>> &rules_list);
+
+    simdjson::ondemand::parser m_parser;
 };

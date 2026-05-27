@@ -33,8 +33,7 @@ void RuleLoader::sortRules(std::vector<std::shared_ptr<BaseRule>> &rules_list) {
  * @param filename The name of the JSON file to parse.
  * @param rules_list The list to populate with parsed rules.
  */
-void RuleLoader::loadRules(simdjson::ondemand::parser &parser,
-                           const std::string &filename,
+void RuleLoader::loadRules(const std::string &filename,
                            std::vector<std::shared_ptr<BaseRule>> &rules_list) {
     // Read file contents into a string first to avoid relying on
     // simdjson::padded_string::load API
@@ -50,7 +49,7 @@ void RuleLoader::loadRules(simdjson::ondemand::parser &parser,
     simdjson::padded_string json(content);
 
     try {
-        simdjson::ondemand::document doc = parser.iterate(json);
+        simdjson::ondemand::document doc = m_parser.iterate(json);
 
         for (simdjson::ondemand::object obj : doc.get_array()) {
             std::shared_ptr<BaseRule> current_rule;

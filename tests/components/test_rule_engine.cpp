@@ -15,6 +15,8 @@
 
 #include "../../external/simdjson.h"
 
+simdjson::ondemand::parser parser;
+
 // Mocks for all the interfaces needed bu the RuleEngine
 // I still have a question: do we need to mock even the rules?
 // For now I have been using the the real Rule (which we have tested and know
@@ -25,8 +27,7 @@
 class FakeRuleLoader : public RuleLoaderInterface {
   public:
     void
-    loadRules(simdjson::ondemand::parser & /*parser*/,
-              const std::string & /*filename*/,
+    loadRules(const std::string & /*filename*/,
               std::vector<std::shared_ptr<BaseRule>> &rules_list) override {
         rules_list.emplace_back(std::make_shared<SimpleRule>(
             "r1", RulePriority::HIGH, "s1", ">", 10.0));
@@ -94,7 +95,7 @@ TEST_CASE("RuleEngine processes batches correctly", "[RuleEngine]") {
 
     FakeRuleLoader loader;
     simdjson::ondemand::parser parser;
-    engine.setRulesList(loader, parser);
+    engine.setRulesList(loader);
 
     // Build a batch containing two measurements with different timestamps.
     TelemetryBatch bat(2);
@@ -127,8 +128,7 @@ TEST_CASE("RuleEngine calls appendValidData when all rules are true",
     RuleEngine engine(buffer, db, dispatcher, std::optional<int64_t>(1));
 
     FakeRuleLoader loader;
-    simdjson::ondemand::parser parser;
-    engine.setRulesList(loader, parser);
+    engine.setRulesList(loader);
 
     TelemetryBatch bat(1);
     bat.emplaceBack("s1", 1, 20.0, 1); // >10, rule should be true
@@ -149,8 +149,7 @@ TEST_CASE("RuleEngine calls appendAlarms when any rule is false",
     RuleEngine engine(buffer, db, dispatcher, std::optional<int64_t>(1));
 
     FakeRuleLoader loader;
-    simdjson::ondemand::parser parser;
-    engine.setRulesList(loader, parser);
+    engine.setRulesList(loader);
 
     TelemetryBatch bat(1);
     bat.emplaceBack("s1", 1, 5.0, 1); // <=10, rule should be false

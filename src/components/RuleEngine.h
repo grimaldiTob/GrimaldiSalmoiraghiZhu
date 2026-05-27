@@ -58,11 +58,8 @@ class RuleEngine : public RuleEngineInterface {
     void evaluateRulesMPI(TelemetryBatch &batch, MPI_Comm comm);
     void serialEvaluate(const TelemetryBatch &batch);
 
-    // ideally we can also think of having the rule loader as a class
-    // attribute but this has just a one shot usage. (after loading is just
-    // wasted memory)
-    void setRulesList(RuleLoaderInterface &loader,
-                      simdjson::ondemand::parser &parser);
+    // Send a request to load rules from RuleLoader
+    void setRulesList(RuleLoaderInterface &loader);
 
     void checkRuleResult();
 

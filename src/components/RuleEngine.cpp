@@ -6,10 +6,6 @@
 #include "../interfaces/OutputDispatcherInterface.h"
 #include "../interfaces/RuleLoaderInterface.h"
 
-#ifndef USE_MPI_RULE_ENGINE
-#define USE_MPI_RULE_ENGINE 0
-#endif
-
 /** @brief
  * Reset the content of the cache erasing just the values not the key.
  */
@@ -27,11 +23,10 @@ void RuleEngine::resetCache() {
 /** @brief method that populates the rules_list calling the loadRules()
  * method through the loader interface object.
  */
-void RuleEngine::setRulesList(RuleLoaderInterface &loader,
-                              simdjson::ondemand::parser &parser) {
+void RuleEngine::setRulesList(RuleLoaderInterface &loader) {
     rules_list.clear();
     rules_cache.clear(); // avoid stale cache entries
-    loader.loadRules(parser, rules_filename, rules_list);
+    loader.loadRules(rules_filename, rules_list);
 
     for (auto &rule : rules_list) {
         if (rule->getType() == RuleType::STATEFUL) {
@@ -191,12 +186,8 @@ void RuleEngine::run() {
                    my head.
                 */
                 m_evaluationTimestamp = activeTimestamp;
-#if USE_MPI_RULE_ENGINE
-                evaluateRulesMPI(subBatch, MPI_COMM_WORLD);
-#else
-                evaluateRules(subBatch);
 
-#endif
+                evaluateRules(subBatch);
                 checkRuleResult();
                 resetCache();
                 // serialEvaluate(subBatch);
@@ -211,11 +202,7 @@ void RuleEngine::run() {
         // in the end we evaluate the remaining measurements in the batch
         if (subBatch.getSize() > 0) {
             m_evaluationTimestamp = activeTimestamp;
-#if USE_MPI_RULE_ENGINE
-            evaluateRulesMPI(subBatch, MPI_COMM_WORLD);
-#else
             evaluateRules(subBatch);
-#endif
         }
     }
     checkRuleResult();

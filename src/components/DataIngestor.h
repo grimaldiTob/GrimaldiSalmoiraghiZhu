@@ -28,8 +28,7 @@ class DataIngestor {
      * Parses the file that contains a batch of JSON packets received from the
      * spacecraft. Stores the valid data in a `m_validBatch` structure and
      * filters out invalid packets.*/
-    void parseTelemetry(simdjson::ondemand::parser &parser,
-                        const std::string &filename);
+    void parseTelemetry(const std::string &filename);
 
   private:
     /** @brief Converstion string_view -> int64_7
@@ -43,4 +42,5 @@ class DataIngestor {
     BatchAccumulatorInterface &m_accumulator;
     TelemetryBatch m_validBatch; // this batch contains valid data and will be
                                  // send it to the accumulator
+    simdjson::ondemand::parser m_parser;
 };

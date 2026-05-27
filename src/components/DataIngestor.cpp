@@ -37,8 +37,7 @@ int64_t DataIngestor::parseISO8601(std::string_view time_str) {
     return 0; // Return 0 if parsing fails
 }
 
-void DataIngestor::parseTelemetry(simdjson::ondemand::parser &parser,
-                                  const std::string &filename) {
+void DataIngestor::parseTelemetry(const std::string &filename) {
 
     // remove the content from the previous file
     m_validBatch.clear();
@@ -72,7 +71,7 @@ void DataIngestor::parseTelemetry(simdjson::ondemand::parser &parser,
         simdjson::padded_string padded_line(line); // create a new padded line
         simdjson::ondemand::document doc;
 
-        auto error = parser.iterate(padded_line)
+        auto error = m_parser.iterate(padded_line)
                          .get(doc); // .get() method assigns the value to the
                                     // argument passed to the function
         if (error) {

@@ -40,7 +40,6 @@ TEST_CASE(
     constexpr size_t EXPECTED_QUEUE_SIZE = 2;
     constexpr size_t EXPECTED_ACC_BATCH_SIZE = 40;
 
-    simdjson::ondemand::parser parser;
     size_t fileCount = 0;
 
     // Quick safety check
@@ -56,7 +55,7 @@ TEST_CASE(
         if (entry.path().extension() == ".txt") {
             fileCount++;
             std::cout << "Parsing: " << entry.path().filename() << "\n";
-            ingestor.parseTelemetry(parser, entry.path().string());
+            ingestor.parseTelemetry(entry.path().string());
         }
     }
 

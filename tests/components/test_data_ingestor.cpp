@@ -56,19 +56,17 @@ TEST_CASE("DataIngestor File Loading and Error Handling",
 
     MockBatchAccumulator mockAccumulator;
     DataIngestor ingestor(mockAccumulator);
-    simdjson::ondemand::parser parser;
 
     SECTION("Throws an exception when the file does not exist") {
         std::string badPath = "SimoneRealeTheGOAT.txt";
-        REQUIRE_THROWS_AS(ingestor.parseTelemetry(parser, badPath),
-                          std::runtime_error);
+        REQUIRE_THROWS_AS(ingestor.parseTelemetry(badPath), std::runtime_error);
     }
 
     SECTION(
         "Throws an exception when the file exists but is completely empty") {
         // Create a temporary file with zero content
         TempFile emptyFile("empty_test_file.txt", "");
-        REQUIRE_THROWS_AS(ingestor.parseTelemetry(parser, emptyFile.filename),
+        REQUIRE_THROWS_AS(ingestor.parseTelemetry(emptyFile.filename),
                           std::runtime_error);
     }
 
@@ -80,7 +78,7 @@ TEST_CASE("DataIngestor File Loading and Error Handling",
 
         // We require that the function executes entirely without throwing ANY
         // exceptions
-        REQUIRE_NOTHROW(ingestor.parseTelemetry(parser, goodFile.filename));
+        REQUIRE_NOTHROW(ingestor.parseTelemetry(goodFile.filename));
 
         // Verify that the file was not only loaded, but the data was actually
         // parsed
@@ -92,7 +90,6 @@ TEST_CASE("Real File Integration Test", "[Integration][FileIO]") {
 
     MockBatchAccumulator mockAccumulator;
     DataIngestor ingestor(mockAccumulator);
-    simdjson::ondemand::parser parser;
 
     // In this particular json file we have a total of 50 measurements, whose
     // 47 have valid format and 3 invalid format
@@ -112,7 +109,7 @@ TEST_CASE("Real File Integration Test", "[Integration][FileIO]") {
 
     // Require that the ingestor processes the real file without throwing any
     // exceptions
-    REQUIRE_NOTHROW(ingestor.parseTelemetry(parser, absolutePath));
+    REQUIRE_NOTHROW(ingestor.parseTelemetry(absolutePath));
 
     SECTION("Verify that data is correctly stored") {
 

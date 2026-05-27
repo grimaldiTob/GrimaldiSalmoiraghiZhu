@@ -17,6 +17,6 @@ class RuleLoaderInterface {
      * @param rules_list The list to populate with parsed rules.
      */
     virtual void
-    loadRules(simdjson::ondemand::parser &parser, const std::string &filename,
+    loadRules(const std::string &filename,
               std::vector<std::shared_ptr<BaseRule>> &rules_list) = 0;
 };

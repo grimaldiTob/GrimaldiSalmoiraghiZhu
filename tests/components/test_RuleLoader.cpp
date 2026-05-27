@@ -12,10 +12,11 @@
 #include <string>
 #include <vector>
 
+simdjson::ondemand::parser parser;
+
 TEST_CASE("RuleLoader loads rules correctly", "[RuleLoader]") {
     // Arrange
     RuleLoader ruleLoader;
-    simdjson::ondemand::parser parser;
     std::vector<std::shared_ptr<BaseRule>> rules_list;
 
     // Create a mock JSON file content
@@ -68,7 +69,7 @@ TEST_CASE("RuleLoader loads rules correctly", "[RuleLoader]") {
     file.close();
 
     // Act
-    ruleLoader.loadRules(parser, test_file, rules_list);
+    ruleLoader.loadRules(test_file, rules_list);
 
     // Search rules (since they are ordered by priority)
     std::shared_ptr<SimpleRule> simple_rule;
@@ -140,7 +141,6 @@ TEST_CASE("RuleLoader loads rules correctly", "[RuleLoader]") {
 TEST_CASE("RuleLoader sorts rules by priority", "[RuleLoader]") {
     // Arrange
     RuleLoader ruleLoader;
-    simdjson::ondemand::parser parser;
     std::vector<std::shared_ptr<BaseRule>> rules_list;
 
     const std::string json_content = R"([
@@ -176,7 +176,7 @@ TEST_CASE("RuleLoader sorts rules by priority", "[RuleLoader]") {
     file.close();
 
     // Act
-    ruleLoader.loadRules(parser, test_file, rules_list);
+    ruleLoader.loadRules(test_file, rules_list);
 
     // Assert
     REQUIRE(rules_list.size() == 3);
@@ -198,7 +198,7 @@ TEST_CASE("RuleLoader handles invalid JSON file", "[RuleLoader]") {
     std::vector<std::shared_ptr<BaseRule>> rules_list;
 
     // Act
-    ruleLoader.loadRules(parser, "non_existent_file.json", rules_list);
+    ruleLoader.loadRules("non_existent_file.json", rules_list);
 
     // Assert
     REQUIRE(rules_list.empty());
@@ -207,7 +207,6 @@ TEST_CASE("RuleLoader handles invalid JSON file", "[RuleLoader]") {
 TEST_CASE("RuleLoader handles empty JSON file", "[RuleLoader]") {
     // Arrange
     RuleLoader ruleLoader;
-    simdjson::ondemand::parser parser;
     std::vector<std::shared_ptr<BaseRule>> rules_list;
 
     // Create an empty JSON file
@@ -217,7 +216,7 @@ TEST_CASE("RuleLoader handles empty JSON file", "[RuleLoader]") {
     file.close();
 
     // Act
-    ruleLoader.loadRules(parser, test_file, rules_list);
+    ruleLoader.loadRules(test_file, rules_list);
 
     // Assert
     REQUIRE(rules_list.empty());
@@ -229,7 +228,6 @@ TEST_CASE("RuleLoader handles empty JSON file", "[RuleLoader]") {
 TEST_CASE("RuleLoader handles invalid JSON content", "[RuleLoader]") {
     // Arrange
     RuleLoader ruleLoader;
-    simdjson::ondemand::parser parser;
     std::vector<std::shared_ptr<BaseRule>> rules_list;
 
     // Create a JSON file with invalid content
@@ -239,7 +237,7 @@ TEST_CASE("RuleLoader handles invalid JSON content", "[RuleLoader]") {
     file.close();
 
     // Act
-    ruleLoader.loadRules(parser, test_file, rules_list);
+    ruleLoader.loadRules(test_file, rules_list);
 
     // Assert
     REQUIRE(rules_list.empty());
@@ -252,7 +250,6 @@ TEST_CASE("RuleLoader handles missing mandatory fields in JSON",
           "[RuleLoader]") {
     // Arrange
     RuleLoader ruleLoader;
-    simdjson::ondemand::parser parser;
     std::vector<std::shared_ptr<BaseRule>> rules_list;
 
     // Create a JSON file with missing fields
@@ -270,7 +267,7 @@ TEST_CASE("RuleLoader handles missing mandatory fields in JSON",
     file.close();
 
     // Act
-    ruleLoader.loadRules(parser, test_file, rules_list);
+    ruleLoader.loadRules(test_file, rules_list);
 
     // Assert
     REQUIRE(
@@ -284,7 +281,6 @@ TEST_CASE("RuleLoader handles missing mandatory fields in JSON",
 TEST_CASE("RuleLoader handles invalid priority value in JSON", "[RuleLoader]") {
     // Arrange
     RuleLoader ruleLoader;
-    simdjson::ondemand::parser parser;
     std::vector<std::shared_ptr<BaseRule>> rules_list;
 
     // Create a JSON file with an invalid priority value
@@ -303,7 +299,7 @@ TEST_CASE("RuleLoader handles invalid priority value in JSON", "[RuleLoader]") {
     file.close();
 
     // Act
-    ruleLoader.loadRules(parser, test_file, rules_list);
+    ruleLoader.loadRules(test_file, rules_list);
 
     // Assert
     REQUIRE(rules_list.size() ==
@@ -320,7 +316,6 @@ TEST_CASE("RuleLoader handles rules with missing optional fields (priority "
           "[RuleLoader]") {
     // Arrange
     RuleLoader ruleLoader;
-    simdjson::ondemand::parser parser;
     std::vector<std::shared_ptr<BaseRule>> rules_list;
 
     // Create a JSON file with the only missing optional fields (priority)
@@ -360,7 +355,7 @@ TEST_CASE("RuleLoader handles rules with missing optional fields (priority "
     file.close();
 
     // Act
-    ruleLoader.loadRules(parser, test_file, rules_list);
+    ruleLoader.loadRules(test_file, rules_list);
 
     // Assert
     REQUIRE(rules_list.size() == 4); // The rule should be loaded

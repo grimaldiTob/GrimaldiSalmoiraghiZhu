@@ -22,7 +22,6 @@ constexpr auto kIdleTimeout =
  * the parsing procedure.
  */
 void AstraLog::readInput(const std::string &filename) {
-    simdjson::ondemand::parser parser;
     std::filesystem::path inputPath(filename);
 
     // check in order to be fault tolerant.
@@ -43,12 +42,12 @@ void AstraLog::readInput(const std::string &filename) {
         }
 
         for (const auto &file : files) {
-            m_ingestor->parseTelemetry(parser, file.string());
+            m_ingestor->parseTelemetry(file.string());
         }
         return;
     }
     // if filename is a file it calles ParseTelemetry as it is
-    m_ingestor->parseTelemetry(parser, inputPath.string());
+    m_ingestor->parseTelemetry(inputPath.string());
 }
 
 /** @brief Main orchestrator of the program:
@@ -76,10 +75,9 @@ void AstraLog::run(const std::string &inputPath, const std::string &rulesPath) {
         throw std::runtime_error("Rules path is not a file: " + rulesPath);
     }
 
-    simdjson::ondemand::parser parser;
     m_evaluator->setRulesFilename(rulesPath);
     m_evaluator->setRulesList(
-        *m_loader, parser); // first of all load rules inside the RuleEngine
+        *m_loader); // first of all load rules inside the RuleEngine
 
     std::atomic<bool> stopRequested{
         false}; // concurrent operations on std::atomic are "well-defined"
@@ -89,8 +87,6 @@ void AstraLog::run(const std::string &inputPath, const std::string &rulesPath) {
     std::thread evaluatorThread([this]() { m_evaluator->run(); });
 
     std::thread ingestorThread([this, &inputDir, &stopRequested]() {
-        simdjson::ondemand::parser localParser; // initialize the parser
-
         while (!stopRequested.load()) {
             bool foundFile = false;
 
@@ -104,8 +100,7 @@ void AstraLog::run(const std::string &inputPath, const std::string &rulesPath) {
                     // since parseTelemetry method throws some exceptions we
                     // need to handle them
                     try {
-                        m_ingestor->parseTelemetry(localParser,
-                                                   entry.path().string());
+                        m_ingestor->parseTelemetry(entry.path().string());
                         std::filesystem::remove(entry.path());
                         // APPROACH: erase files that have been parsed --> good
                         // for storage, not so good for availability and

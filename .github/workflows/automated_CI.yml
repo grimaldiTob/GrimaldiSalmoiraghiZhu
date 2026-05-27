@@ -124,14 +124,21 @@ jobs:
         run: |
           cmake -B build-valgrind -S . -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DMEMORYCHECK_COMMAND=$(command -v valgrind) \
-            -DMEMORYCHECK_COMMAND_OPTIONS="--leak-check=full --show-leak-kinds=all --error-exitcode=1"
-
+            -DMEMORYCHECK_COMMAND_OPTIONS="--leak-check=full --show-leak-kinds=all --errors-for-leak-kinds=definite,indirect --error-exitcode=1" 
+# Had to remove "Potentially lost" from the error code because Valgrind shows a false positive each time OpenMP is used (as in our tests).
       - name: Build for Valgrind # We need to build again since Valgrind needs debug symbols, which we don't have in the Release build. 
         run: cmake --build build-valgrind --config RelWithDebInfo -j $(nproc)
 
       - name: Run MemCheck (Valgrind)
         working-directory: build-valgrind
         run: ctest -D ExperimentalMemCheck -E "AstraLog shuts down after having evaluated all batches in the collector directory" --output-on-failure
+
+      - name: Upload Valgrind logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: valgrind-logs
+          path: build-valgrind/Testing/Temporary
 
   # ==========================================
   # GATE 5: FULL END-TO-END ASTRALOG TEST

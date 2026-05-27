@@ -194,12 +194,8 @@ void MpiRuleEngine::run() {
                    my head.
                 */
                 m_evaluationTimestamp = activeTimestamp;
-#if USE_MPI_RULE_ENGINE
-                evaluateRulesMPI(subBatch, MPI_COMM_WORLD);
-#else
-                evaluateRules(subBatch);
 
-#endif
+                evaluateRules(subBatch);
                 checkRuleResult();
                 resetCache();
                 // serialEvaluate(subBatch);
@@ -214,11 +210,7 @@ void MpiRuleEngine::run() {
         // in the end we evaluate the remaining measurements in the batch
         if (subBatch.getSize() > 0) {
             m_evaluationTimestamp = activeTimestamp;
-#if USE_MPI_RULE_ENGINE
-            evaluateRulesMPI(subBatch, MPI_COMM_WORLD);
-#else
             evaluateRules(subBatch);
-#endif
         }
     }
 }

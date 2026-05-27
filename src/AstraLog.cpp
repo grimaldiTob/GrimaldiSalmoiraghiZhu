@@ -76,8 +76,8 @@ void AstraLog::run(const std::string &inputPath, const std::string &rulesPath) {
     }
 
     m_evaluator->setRulesFilename(rulesPath);
-    m_evaluator->setRulesList(
-        *m_loader); // first of all load rules inside the RuleEngine
+    m_evaluator
+        ->setRulesList(); // first of all load rules inside the RuleEngine
 
     std::atomic<bool> stopRequested{
         false}; // concurrent operations on std::atomic are "well-defined"

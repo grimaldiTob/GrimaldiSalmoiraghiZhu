@@ -88,14 +88,14 @@ TEST_CASE("RuleEngine processes batches correctly", "[RuleEngine]") {
     ThreadSafeBuffer<TelemetryBatch> buffer(4);
     FakeMeasDB db;
     FakeOutputDispatcher dispatcher;
+    FakeRuleLoader loader;
 
     // Initialize engine with an initial timestamp of 1 so first collected
     // measurements are evaluated when timestamp changes.
-    RuleEngine engine(buffer, db, dispatcher, std::optional<int64_t>(1));
+    RuleEngine engine(buffer, db, dispatcher, loader,
+                      std::optional<int64_t>(1));
 
-    FakeRuleLoader loader;
-    simdjson::ondemand::parser parser;
-    engine.setRulesList(loader);
+    engine.setRulesList();
 
     // Build a batch containing two measurements with different timestamps.
     TelemetryBatch bat(2);
@@ -124,11 +124,12 @@ TEST_CASE("RuleEngine calls appendValidData when all rules are true",
     ThreadSafeBuffer<TelemetryBatch> buffer(2);
     FakeMeasDB db;
     FakeOutputDispatcher dispatcher;
-
-    RuleEngine engine(buffer, db, dispatcher, std::optional<int64_t>(1));
-
     FakeRuleLoader loader;
-    engine.setRulesList(loader);
+
+    RuleEngine engine(buffer, db, dispatcher, loader,
+                      std::optional<int64_t>(1));
+
+    engine.setRulesList();
 
     TelemetryBatch bat(1);
     bat.emplaceBack("s1", 1, 20.0, 1); // >10, rule should be true
@@ -145,11 +146,12 @@ TEST_CASE("RuleEngine calls appendAlarms when any rule is false",
     ThreadSafeBuffer<TelemetryBatch> buffer(2);
     FakeMeasDB db;
     FakeOutputDispatcher dispatcher;
-
-    RuleEngine engine(buffer, db, dispatcher, std::optional<int64_t>(1));
-
     FakeRuleLoader loader;
-    engine.setRulesList(loader);
+
+    RuleEngine engine(buffer, db, dispatcher, loader,
+                      std::optional<int64_t>(1));
+
+    engine.setRulesList();
 
     TelemetryBatch bat(1);
     bat.emplaceBack("s1", 1, 5.0, 1); // <=10, rule should be false
@@ -159,4 +161,11 @@ TEST_CASE("RuleEngine calls appendAlarms when any rule is false",
 
     REQUIRE(dispatcher.validCalls == 0);
     REQUIRE(dispatcher.alarmCalls == 1);
+}
+
+TEST_CASE("Verify if the RuleEngine invoke the correct allarm method",
+          "[checkRuleResults]") {
+    ThreadSafeBuffer<TelemetryBatch> buffer(2);
+    FakeMeasDB db;
+    FakeOutputDispatcher dispatcher;
 }

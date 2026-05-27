@@ -32,9 +32,10 @@ class RuleEngine : public RuleEngineInterface {
     explicit RuleEngine(ConsumerBuffer<TelemetryBatch> &broker,
                         MeasDatabaseInterface &db,
                         OutputDispatcherInterface &outputDispatcher,
+                        RuleLoaderInterface &loader,
                         std::optional<int64_t> initialTimestamp)
         : m_evaluationTimestamp(initialTimestamp), m_broker(broker), db(db),
-          m_outputDispatcher(outputDispatcher) {}
+          m_outputDispatcher(outputDispatcher), m_loader(loader) {}
 
     virtual ~RuleEngine() = default;
 
@@ -57,7 +58,7 @@ class RuleEngine : public RuleEngineInterface {
     virtual void evaluateRules(const TelemetryBatch &batch) override;
 
     // Send a request to load rules from RuleLoader
-    void setRulesList(RuleLoaderInterface &loader);
+    void setRulesList();
 
     void checkRuleResult();
 
@@ -74,6 +75,7 @@ class RuleEngine : public RuleEngineInterface {
     MeasDatabaseInterface &db;
 
     OutputDispatcherInterface &m_outputDispatcher;
+    RuleLoaderInterface &m_loader;
 
     /**
      * By setting the below attribus with protected flag we

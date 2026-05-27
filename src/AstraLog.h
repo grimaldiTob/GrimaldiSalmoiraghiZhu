@@ -27,9 +27,10 @@ class AstraLog {
             std::make_unique<BatchAccumulator>(*m_broker, batchSize);
         m_ingestor = std::make_unique<DataIngestor>(*m_accumulator);
         m_outputDispatcher = std::make_unique<OutputDispatcher>();
-        m_evaluator = std::make_unique<RuleEngine>(
-            *m_broker, *m_database, *m_outputDispatcher, std::nullopt);
         m_loader = std::make_unique<RuleLoader>();
+        m_evaluator = std::make_unique<RuleEngine>(*m_broker, *m_database,
+                                                   *m_outputDispatcher,
+                                                   *m_loader, std::nullopt);
     }
 
     /*============== GETTER ====================*/

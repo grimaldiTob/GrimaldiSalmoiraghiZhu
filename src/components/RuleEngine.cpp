@@ -23,10 +23,10 @@ void RuleEngine::resetCache() {
 /** @brief method that populates the rules_list calling the loadRules()
  * method through the loader interface object.
  */
-void RuleEngine::setRulesList(RuleLoaderInterface &loader) {
+void RuleEngine::setRulesList() {
     rules_list.clear();
     rules_cache.clear(); // avoid stale cache entries
-    loader.loadRules(rules_filename, rules_list);
+    m_loader.loadRules(rules_filename, rules_list);
 
     for (auto &rule : rules_list) {
         if (rule->getType() == RuleType::STATEFUL) {
@@ -42,8 +42,8 @@ void RuleEngine::setRulesList(RuleLoaderInterface &loader) {
 }
 
 void RuleEngine::checkRuleResult() {
+
     bool all_true = true;
-    // std::unordered_map<std::string, std::optional<bool>> failed_rules;
     std::vector<std::shared_ptr<BaseRule>> failed_rules;
     failed_rules.reserve(
         rules_list
@@ -54,15 +54,9 @@ void RuleEngine::checkRuleResult() {
         const std::string &rule_id = rule->getRuleId();
         auto it = rules_cache.find(rule_id); // find returns the pointer to the
                                              // entry associated to the rule_id
-        if (it == rules_cache.end() ||
-            !it->second.value_or(
-                false)) { // value_or() used for std::optional<bool>
+        if (it == rules_cache.end() || !it->second.value_or(false)) {
             all_true = false;
-            // failed_rules.emplace(rule, it == rules_cache.end() ? std::nullopt
-            // : it->second);
             failed_rules.emplace_back(rule);
-            // if the rule was not found return std::nullopt otherwise the value
-            // (either false or std::nullopt again)
         }
     }
 

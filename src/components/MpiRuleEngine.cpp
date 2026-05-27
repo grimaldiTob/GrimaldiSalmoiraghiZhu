@@ -173,14 +173,6 @@ void MpiRuleEngine::evaluateRules(const TelemetryBatch &batch) {
 
     // Replicate DB state (needed by stateful rules)
     storeBatchMeasurements(batch);
-
-    // Only rank 0 should go in output
-    if (rank == 0) {
-        checkRuleResult();
-        resetCache();
-    } else {
-        resetCache();
-    }
 }
 
 void MpiRuleEngine::run() {
@@ -206,9 +198,10 @@ void MpiRuleEngine::run() {
                 evaluateRulesMPI(subBatch, MPI_COMM_WORLD);
 #else
                 evaluateRules(subBatch);
+
+#endif
                 checkRuleResult();
                 resetCache();
-#endif
                 // serialEvaluate(subBatch);
                 subBatch.clear();
                 activeTimestamp = currentBatch.timestamps[i];

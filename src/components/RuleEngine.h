@@ -55,8 +55,6 @@ class RuleEngine : public RuleEngineInterface {
     // Protect the batch as read-only since the RuleEngine has to read and
     // make evaluation without modify it
     virtual void evaluateRules(const TelemetryBatch &batch) override;
-    void evaluateRulesMPI(TelemetryBatch &batch, MPI_Comm comm);
-    void serialEvaluate(const TelemetryBatch &batch);
 
     // Send a request to load rules from RuleLoader
     void setRulesList(RuleLoaderInterface &loader);

@@ -80,15 +80,6 @@ void RuleEngine::storeBatchMeasurements(const TelemetryBatch &batch) {
     }
 }
 
-void RuleEngine::serialEvaluate(const TelemetryBatch &batch) {
-    for (size_t i = 0; i < rules_list.size(); ++i) {
-        auto &rule = rules_list[i];
-        std::optional<bool> result = rule->evaluate(batch, rules_cache);
-        rules_cache[rule->getRuleId()] = result;
-    }
-    storeBatchMeasurements(batch);
-}
-
 /** @brief Method which evaluates all the rules stored in the rules_list
  * For each rule checks if there is a match between the measurement in the
  * batch and evaluates the rule

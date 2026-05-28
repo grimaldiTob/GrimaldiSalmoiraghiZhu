@@ -36,6 +36,27 @@ class FakeRuleLoader : public RuleLoaderInterface {
     }
 };
 
+class NulloptRule : public BaseRule {
+  public:
+    explicit NulloptRule(const std::string &rule_id)
+        : BaseRule(rule_id, RuleType::SIMPLE, RulePriority::HIGH) {}
+
+    std::optional<bool>
+    evaluate(const TelemetryBatch &,
+             std::unordered_map<std::string, std::optional<bool>> &) override {
+        return std::nullopt;
+    }
+};
+
+class NulloptRuleLoader : public RuleLoaderInterface {
+  public:
+    void
+    loadRules(const std::string & /*filename*/,
+              std::vector<std::shared_ptr<BaseRule>> &rules_list) override {
+        rules_list.emplace_back(std::make_shared<NulloptRule>("r_nullopt"));
+    }
+};
+
 class FakeMeasDB : public MeasDatabaseInterface {
   public:
     const std::unordered_map<std::string, std::vector<double>> &
@@ -107,7 +128,7 @@ TEST_CASE("RuleEngine processes batches correctly", "[RuleEngine]") {
 
     engine.run();
 
-    // One successful evaluation should have triggered appendValidData.
+    // One successful evaluation should have triggered one valid and one alarm.
     REQUIRE(dispatcher.validCalls == 1);
     REQUIRE(dispatcher.alarmCalls == 1);
 
@@ -137,8 +158,8 @@ TEST_CASE("RuleEngine calls appendValidData when all rules are true",
     engine.evaluateRules(bat);
     engine.checkRuleResult();
 
-    REQUIRE(dispatcher.validCalls == 1);
-    REQUIRE(dispatcher.alarmCalls == 0);
+    REQUIRE(dispatcher.validCalls == 0);
+    REQUIRE(dispatcher.alarmCalls == 1);
 }
 
 TEST_CASE("RuleEngine calls appendAlarms when any rule is false",
@@ -159,8 +180,29 @@ TEST_CASE("RuleEngine calls appendAlarms when any rule is false",
     engine.evaluateRules(bat);
     engine.checkRuleResult();
 
-    REQUIRE(dispatcher.validCalls == 0);
-    REQUIRE(dispatcher.alarmCalls == 1);
+    REQUIRE(dispatcher.validCalls == 1);
+    REQUIRE(dispatcher.alarmCalls == 0);
+}
+
+TEST_CASE("RuleEngine treats nullopt results as nominal", "[RuleEngine]") {
+    ThreadSafeBuffer<TelemetryBatch> buffer(2);
+    FakeMeasDB db;
+    FakeOutputDispatcher dispatcher;
+    NulloptRuleLoader loader;
+
+    RuleEngine engine(buffer, db, dispatcher, loader,
+                      std::optional<int64_t>(1));
+
+    engine.setRulesList();
+
+    TelemetryBatch bat(1);
+    bat.emplaceBack("s1", 1, 5.0, 1);
+
+    engine.evaluateRules(bat);
+    engine.checkRuleResult();
+
+    REQUIRE(dispatcher.validCalls == 1);
+    REQUIRE(dispatcher.alarmCalls == 0);
 }
 
 TEST_CASE("Verify if the RuleEngine invoke the correct allarm method",

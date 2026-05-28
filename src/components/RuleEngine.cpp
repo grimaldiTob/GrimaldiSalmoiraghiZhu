@@ -44,12 +44,15 @@ void RuleEngine::checkRuleResult() {
     for (auto &rule : rules_list) {
         const std::string &rule_id = rule->getRuleId();
         auto it = rules_cache.find(rule_id); // find returns the pointer to the
-        if (it == rules_cache.end() || !it->second.value_or(false)) {
+        // Only treat an explicit `true` as a failure (violation). Missing
+        // entries or `std::nullopt` are considered nominal.
+        if (it != rules_cache.end() && it->second.has_value() &&
+            it->second.value()) {
             all_true = false;
+
             failed_rules.emplace_back(rule);
         }
     }
-    std::cout << failed_rules.size() << "\n";
 
     if (all_true) {
         m_outputDispatcher.appendValidData(db, m_evaluationTimestamp);
@@ -92,6 +95,7 @@ void RuleEngine::evaluateRules(const TelemetryBatch &batch) {
                 }
                 const std::string &rule_id = rule->getRuleId();
                 auto result = rule->evaluate(batch, rules_cache);
+
                 local_results.emplace_back(rule_id, result);
 
                 /*

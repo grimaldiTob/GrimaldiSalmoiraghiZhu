@@ -100,7 +100,7 @@ void AstraLog::run(const std::string &inputPath, const std::string &rulesPath) {
                     // need to handle them
                     try {
                         m_ingestor->parseTelemetry(entry.path().string());
-                        // std::filesystem::remove(entry.path());
+                        std::filesystem::remove(entry.path());
                         // APPROACH: erase files that have been parsed --> good
                         // for storage, not so good for availability and
                         // resilience of the data. Should we consider to store

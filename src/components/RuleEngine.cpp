@@ -44,7 +44,7 @@ void RuleEngine::checkRuleResult() {
     for (auto &rule : rules_list) {
         const std::string &rule_id = rule->getRuleId();
         auto it = rules_cache.find(rule_id); // find returns the pointer to the
-        if (/*it == rules_cache.end() || */ !it->second.value_or(false)) {
+        if (it == rules_cache.end() || !it->second.value_or(false)) {
             all_true = false;
             failed_rules.emplace_back(rule);
         }

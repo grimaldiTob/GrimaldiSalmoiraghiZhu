@@ -1,6 +1,7 @@
 collector_output/
 build/
 Singularity.def
+__pycache__/
 
 # Various Latex related stuff for the RADD
 ## Core latex/pdflatex auxiliary files:

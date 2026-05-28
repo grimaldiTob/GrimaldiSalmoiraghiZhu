@@ -89,7 +89,6 @@ void AstraLog::run(const std::string &inputPath, const std::string &rulesPath) {
     std::thread ingestorThread([this, &inputDir, &stopRequested]() {
         while (!stopRequested.load()) {
             bool foundFile = false;
-
             for (const auto &entry :
                  std::filesystem::directory_iterator(inputDir)) {
                 if (entry.path().extension() != ".txt") {
@@ -101,7 +100,7 @@ void AstraLog::run(const std::string &inputPath, const std::string &rulesPath) {
                     // need to handle them
                     try {
                         m_ingestor->parseTelemetry(entry.path().string());
-                        std::filesystem::remove(entry.path());
+                        // std::filesystem::remove(entry.path());
                         // APPROACH: erase files that have been parsed --> good
                         // for storage, not so good for availability and
                         // resilience of the data. Should we consider to store

@@ -122,8 +122,8 @@ void DataIngestor::parseTelemetry(const std::string &filename) {
             continue;
         }
     }
-    std::cout << "Valid packages: " << valid_pkg << std::endl;
-    std::cout << "Invalid packages: " << invalid_pkg << std::endl;
+    // std::cout << "Valid packages: " << valid_pkg << std::endl;
+    // std::cout << "Invalid packages: " << invalid_pkg << std::endl;
     printTelemetry(m_validBatch);
 
     // Finally send valid package

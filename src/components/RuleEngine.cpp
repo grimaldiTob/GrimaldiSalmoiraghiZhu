@@ -9,16 +9,7 @@
 /** @brief
  * Reset the content of the cache erasing just the values not the key.
  */
-void RuleEngine::resetCache() {
-    // ho trovato questa funzione ed è troppo in stile Formaggia
-    // Luca: e ovviamente come tutte le funzioni incomprensibili in
-    // stile Formaggia c'era un bel problema di binging una non-const
-    // reference a un elemento della mappa, che è stato risolto con
-    // value_or(), che invece restituisce una copia del valore
-    // (e quindi std::optional<bool> invece che una reference).
-    std::for_each(rules_cache.begin(), rules_cache.end(),
-                  [](auto &p) { p.second = std::nullopt; });
-}
+void RuleEngine::resetCache() { rules_cache.clear(); }
 
 /** @brief method that populates the rules_list calling the loadRules()
  * method through the loader interface object.
@@ -53,12 +44,12 @@ void RuleEngine::checkRuleResult() {
     for (auto &rule : rules_list) {
         const std::string &rule_id = rule->getRuleId();
         auto it = rules_cache.find(rule_id); // find returns the pointer to the
-                                             // entry associated to the rule_id
-        if (it == rules_cache.end() || !it->second.value_or(false)) {
+        if (/*it == rules_cache.end() || */ !it->second.value_or(false)) {
             all_true = false;
             failed_rules.emplace_back(rule);
         }
     }
+    std::cout << failed_rules.size() << "\n";
 
     if (all_true) {
         m_outputDispatcher.appendValidData(db, m_evaluationTimestamp);

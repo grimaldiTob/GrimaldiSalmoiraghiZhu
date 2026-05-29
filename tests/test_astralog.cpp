@@ -81,7 +81,7 @@ TEST_CASE("AstraLog shuts down after having evaluated all batches in the "
     REQUIRE(countTxtFiles(inputDir) > 0);
     REQUIRE(std::filesystem::is_regular_file(rulesFile));
 
-    AstraLog app(16, 32);
+    AstraLog app(false, 16, 32);
     auto start = std::chrono::steady_clock::now();
     app.run(inputDir, rulesFile);
     auto elapsed = std::chrono::steady_clock::now() - start;
@@ -115,7 +115,7 @@ TEST_CASE("AstraLog run removes ingested .txt files", "[AstraLog][cleanup]") {
         0); // require that the content of the collector_output has been copied
     REQUIRE(std::filesystem::is_regular_file(rulesFile));
 
-    AstraLog app(16, 32);
+    AstraLog app(false, 16, 32);
     app.run(inputDir, rulesFile);
 
     REQUIRE(countTxtFiles(inputDir) ==

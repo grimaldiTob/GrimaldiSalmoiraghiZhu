@@ -30,11 +30,13 @@ struct RuleEvalMsg {
 class MpiRuleEngine : public RuleEngine {
 
   public:
+    // contructor calls the basis class contructor
     MpiRuleEngine(ConsumerBuffer<TelemetryBatch> &broker,
                   MeasDatabaseInterface &db,
                   OutputDispatcherInterface &outputDispatcher,
+                  RuleLoaderInterface &loader,
                   std::optional<int64_t> initialTimestamp, MPI_Comm &comm)
-        : RuleEngine(broker, db, outputDispatcher, initialTimestamp),
+        : RuleEngine(broker, db, outputDispatcher, loader, initialTimestamp),
           m_comm(comm) {}
 
     void evaluateRules(const TelemetryBatch &batch) override;

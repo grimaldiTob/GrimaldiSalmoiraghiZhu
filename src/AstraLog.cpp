@@ -1,4 +1,12 @@
 #include "AstraLog.h"
+
+// includes and constructor moved to .cpp file in order to keep .mpi in this
+// file
+#ifdef ASTRALOG_MPI
+#include "components/MpiRuleEngine.h"
+#include <mpi.h>
+#endif
+
 #include <atomic>
 #include <chrono>
 #include <filesystem>
@@ -16,6 +24,34 @@ constexpr auto kPollInterval = std::chrono::milliseconds(
 constexpr auto kIdleTimeout =
     std::chrono::seconds(5); // output of maximum idle time we can handle.
 } // namespace
+
+static std::unique_ptr<RuleEngine>
+makeRuleEngine(bool useMpi, ConsumerBuffer<TelemetryBatch> &broker,
+               MeasDatabaseInterface &db, OutputDispatcherInterface &out,
+               RuleLoaderInterface &loader, std::optional<int64_t> ts) {
+
+// we can discuss on the macro approach --> basically for me macro is better
+// because it allows to avoid completely mpi compilation if not needed.
+#ifdef ASTRALOG_USE
+    // we can set useMpi as a runtime or a constant time variable (MACRO???)
+    if (useMpi) {
+        return std::make_unique<MpiRuleEngine>(broker, db, out, loader, ts,
+                                               MPI_COMM_WORLD);
+    }
+#endif
+    return std::make_unique<RuleEngine>(broker, db, out, loader, ts);
+}
+
+AstraLog::AstraLog(bool useMpi, size_t batchSize, size_t queueSize) {
+    m_database = std::make_unique<MeasDatabase>();
+    m_broker = std::make_shared<ThreadSafeBuffer<TelemetryBatch>>(queueSize);
+    m_accumulator = std::make_unique<BatchAccumulator>(*m_broker, batchSize);
+    m_ingestor = std::make_unique<DataIngestor>(*m_accumulator);
+    m_outputDispatcher = std::make_unique<OutputDispatcher>();
+    m_loader = std::make_unique<RuleLoader>();
+    m_evaluator = makeRuleEngine(useMpi, *m_broker, *m_database,
+                                 *m_outputDispatcher, *m_loader, std::nullopt);
+}
 
 /** @brief Reads each single entry in the directory filename
  * passed as input and calls the method ParseTelemetry to initiate
@@ -155,6 +191,11 @@ int main(int argc, char **argv) {
     std::string rulesPath = "./input/rules.json";
     size_t batchSize = DEFAULT_BATCH_SIZE;
     size_t queueSize = DEFAULT_QUEUE_SIZE;
+    bool useMpi = false;
+
+#ifdef ASTRALOG_MPI
+    useMpi = true;
+#endif
 
     // basic parsing considering to pass different batch and queue size, --> I
     // dont think we need Bucelli's library here
@@ -172,7 +213,7 @@ int main(int argc, char **argv) {
     }
 
     try {
-        AstraLog astralog(batchSize, queueSize);
+        AstraLog astralog(useMpi, batchSize, queueSize);
         astralog.run(inputPath, rulesPath);
     } catch (const std::exception &ex) {
         std::cerr << "AstraLog error: " << ex.what() << '\n';

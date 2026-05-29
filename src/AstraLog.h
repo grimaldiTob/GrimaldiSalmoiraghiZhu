@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../external/simdjson.h"
 #include "components/BatchAccumulator.h"
 #include "components/DataIngestor.h"
@@ -19,24 +21,15 @@ class AstraLog {
      * provide, for all, the necessary interfaces which allow them
      * to communicate
      */
-    AstraLog(size_t batchSize = 100, size_t queueSize = 50) {
-        m_database = std::make_unique<MeasDatabase>();
-        m_broker =
-            std::make_shared<ThreadSafeBuffer<TelemetryBatch>>(queueSize);
-        m_accumulator =
-            std::make_unique<BatchAccumulator>(*m_broker, batchSize);
-        m_ingestor = std::make_unique<DataIngestor>(*m_accumulator);
-        m_outputDispatcher = std::make_unique<OutputDispatcher>();
-        m_loader = std::make_unique<RuleLoader>();
-        m_evaluator = std::make_unique<RuleEngine>(*m_broker, *m_database,
-                                                   *m_outputDispatcher,
-                                                   *m_loader, std::nullopt);
-    }
+    AstraLog(bool useMpi, size_t batchSize = 100, size_t queueSize = 50);
 
     /*============== GETTER ====================*/
-    const DataIngestor getIngestor() const;
-    const BatchAccumulator getAccumulator() const;
-    const RuleEngine getEvaluator() const;
+    /*
+    Never implemented + never used
+    const DataIngestor& getIngestor() const;
+    const BatchAccumulator& getAccumulator() const;
+    const RuleEngine& getEvaluator() const;
+    */
 
     /** @brief read the input from the filename */
     void readInput(const std::string &filename);

@@ -10,7 +10,7 @@ static void broadcastTelemetryBatch(TelemetryBatch &batch, int root,
     MPI_Bcast(&n, 1, MPI_INT32_T, root, comm);
 
     if (n == 0)
-        return; // if batch is emptu
+        return; // if batch is empty
 
     // Resize on non-root rank
     if (batch.getSize() != static_cast<size_t>(n)) {
@@ -213,4 +213,6 @@ void MpiRuleEngine::run() {
             evaluateRules(subBatch);
         }
     }
+    checkRuleResult();
+    resetCache();
 }

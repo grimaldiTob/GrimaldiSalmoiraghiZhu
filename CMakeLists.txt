@@ -278,5 +278,13 @@ add_executable(astralog
     external/simdjson.cpp
 )
 
+# SETS THE MPI FLAG TO OFF MEANS NO MPI IN THE PROJECT
+option(ASTRALOG_MPI "Enable MPI engine" OFF) 
+
 target_include_directories(astralog PRIVATE src)
-target_link_libraries(astralog PRIVATE OpenMP::OpenMP_CXX MPI::MPI_CXX)
+target_link_libraries(astralog PRIVATE OpenMP::OpenMP_CXX)
+
+if(ASTRALOG_MPI)
+  target_compile_definitions(astralog PRIVATE ASTRALOG_MPI) # defines the macro inside the astralog executable
+  target_link_libraries(astralog PRIVATE MPI::MPI_CXX)
+endif()

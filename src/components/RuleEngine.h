@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <mpi.h>
 #include <optional>
 #include <string>
 #include <unordered_map>

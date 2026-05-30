@@ -54,6 +54,31 @@ size_t countTxtFiles(const std::string &dir) {
 
 } // namespace
 
+// RAII guard (Resource Acquisition Is Initialization) to ensure that the
+// working directory is reset and the temporary directory is cleaned up after
+// each test, even if exceptions occur. This is a common pattern in C++ to
+// manage resources safely and avoid side effects between tests. In fact, this
+// was added due to strange behaviour and side effects between these test.
+struct ScopeCleanup {
+    std::filesystem::path
+        oldCwd; // store the original working directory to reset it later
+    std::filesystem::path
+        dir; // store the temporary directory to clean it up later
+    explicit ScopeCleanup(const std::string &d)
+        : oldCwd(std::filesystem::current_path()), dir(d) {
+    } // constructor that takes the temporary directory path and stores the
+      // current working directory
+    ~ScopeCleanup() {
+        std::error_code ec;
+        std::filesystem::current_path(
+            oldCwd, ec); // reset the working directory to the original one,
+                         // handling any potential errors
+        std::filesystem::remove_all(
+            dir, ec); // remove the temporary directory and its contents,
+                      // handling any potential errors
+    }
+};
+
 TEST_CASE("AstraLog shuts down after having evaluated all batches in the "
           "collector directory",
           "[AstraLog][shutdown]") {
@@ -66,16 +91,8 @@ TEST_CASE("AstraLog shuts down after having evaluated all batches in the "
             .string();
     const std::string inputDir =
         makeWorkDir("test_fake_run"); // fake directory just for this test
-    const auto oldCwd = std::filesystem::current_path();
-
+    ScopeCleanup cleanup(inputDir);
     std::filesystem::current_path(inputDir);
-    auto cleanupDeleter = [inputDir, oldCwd](void *) {
-        std::error_code ec;
-        std::filesystem::current_path(oldCwd, ec);
-        std::filesystem::remove_all(inputDir, ec);
-    };
-    auto cleanup = std::unique_ptr<void, decltype(cleanupDeleter)>(
-        nullptr, cleanupDeleter);
 
     copyCollectorOutput(fixturesDir, inputDir);
     REQUIRE(countTxtFiles(inputDir) > 0);
@@ -99,15 +116,8 @@ TEST_CASE("AstraLog run removes ingested .txt files", "[AstraLog][cleanup]") {
          "rules.json")
             .string();
     const std::string inputDir = makeWorkDir("test_fake_cleanup");
-    const auto oldCwd = std::filesystem::current_path();
+    ScopeCleanup cleanup(inputDir);
     std::filesystem::current_path(inputDir);
-    auto cleanupDeleter = [inputDir, oldCwd](void *) {
-        std::error_code ec;
-        std::filesystem::current_path(oldCwd, ec);
-        std::filesystem::remove_all(inputDir, ec);
-    };
-    auto cleanup = std::unique_ptr<void, decltype(cleanupDeleter)>(
-        nullptr, cleanupDeleter);
 
     copyCollectorOutput(fixturesDir, inputDir);
     REQUIRE(

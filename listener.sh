@@ -4,7 +4,7 @@
 REPO="grimaldiTob/GrimaldiSalmoiraghiZhu"
 BRANCH="dev" # just for testing, ideally this should be "main"
 CHECK_INTERVAL=60 # Check every 60 seconds what the status of the branch is
-TOKEN = $GITHUB_TOKEN # GitHub Personal Access Token with repo access (configured as a variable on Cineca)
+TOKEN=$GITHUB_TOKEN # GitHub Personal Access Token with repo access (configured as a variable on Cineca)
 if [ -z "$TOKEN" ]; then
     echo "Error: GITHUB_API_TOKEN environment variable is not set."
     exit 1

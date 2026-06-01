@@ -194,6 +194,7 @@ int main(int argc, char **argv) {
     bool useMpi = false;
 
 #ifdef ASTRALOG_MPI
+    MPI_Init(&argc, &argv);
     useMpi = true;
 #endif
 
@@ -217,9 +218,15 @@ int main(int argc, char **argv) {
         astralog.run(inputPath, rulesPath);
     } catch (const std::exception &ex) {
         std::cerr << "AstraLog error: " << ex.what() << '\n';
+#ifdef ASTRALOG_MPI
+        MPI_Finalize();
+#endif
         return 1;
     }
-
+#ifdef ASTRALOG_MPI
+    MPI_Finalize();
+#endif
     return 0;
 }
+
 #endif

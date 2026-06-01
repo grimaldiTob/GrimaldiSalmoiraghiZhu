@@ -229,6 +229,21 @@ target_link_libraries(test_rule_engine PRIVATE MPI::MPI_CXX)
 
 catch_discover_tests(test_rule_engine)
 
+###################### Benchmark executable for RuleEngine ####################
+add_executable(benchmark_parallelization
+    tests/test_parallelization.cpp
+    src/components/RuleEngine.cpp
+    src/components/MpiRuleEngine.cpp
+    src/types/rules/SimpleRule.cpp
+    src/types/rules/StepDifferenceRule.cpp
+    src/types/rules/StatefulRule.cpp
+    external/simdjson.cpp
+)
+
+target_include_directories(benchmark_parallelization PRIVATE src)
+target_link_libraries(benchmark_parallelization PRIVATE OpenMP::OpenMP_CXX)
+target_link_libraries(benchmark_parallelization PRIVATE MPI::MPI_CXX)
+
 ###################### Test executable for OutputDispatcher ####################
 add_executable(test_output_dispatcher
     tests/components/test_OutputDispatcher.cpp

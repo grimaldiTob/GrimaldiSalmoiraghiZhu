@@ -1,0 +1,9 @@
+Engine,Measurements,Batch Size,Rules,Iterations,MPI Ranks,Engine Component,Avg Time (ms),Min Time (ms),Max Time (ms)
+omp,100000,1000,1000,3,1,RuleEngine,234.76,185.504,290.224
+omp,100000,1000,1000,3,1,RuleEngine,200.917,177.416,247.822
+mpi,100000,1000,1000,3,4,MpiRuleEngine,283.105,282.478,283.45
+mpi,100000,1000,1000,3,4,MpiRuleEngine,286.848,284.101,292.107
+omp,100000,1000,1000,3,1,RuleEngine,191.36,173.692,202.254
+omp,100000,1000,1000,3,1,RuleEngine,194.468,171.184,234.99
+mpi,100000,1000,1000,3,8,MpiRuleEngine,279.891,257.088,325.005
+mpi,100000,1000,1000,3,8,MpiRuleEngine,306.444,287.427,319.543

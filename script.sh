@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-singularity exec astralog.sif /opt/astralog/astralog
+#SBATCH --job-name=slurm-check
+#SBATCH --output=slurm-check-%j.out
+#SBATCH --error=slurm-check-%j.err
+#SBATCH --time=00:01:00
 
-# module load singularity
-# singularity run astralog.sif
+set -euo pipefail
+
+echo "SLURM job ${SLURM_JOB_ID:-unknown} ran successfully on $(hostname)"

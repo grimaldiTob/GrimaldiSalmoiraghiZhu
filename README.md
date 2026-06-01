@@ -187,3 +187,27 @@ At the moment I specified some placeholder commands just to check if everything 
 At some point we will change the script file in order to run the executable of the project.
 
 In addition to that, in the `Singularity.def` file I specified the SLURM scheduler command in order to run the container on the Galileo100 cluster.
+
+### Parallelization testing and benchmarking
+
+Wrote a little script (AI slopped, this can be useful to write in the documentation required by prof Di Nitto). It generates on the fly a set of rules which is deterministic (much more than the rules provided by Reale) and compares the performance between OMP and MPI.
+
+In my opinion we should remove the compilation of the executable from the CMakeLists once benchmarking is over.
+In order to run the tests use the following commands:
+
+```bash
+cmake --build build --target benchmark_parallelization
+./build/benchmark_parallelization --engine omp --measurements 100000 --batch-size 1000 --rules 1000 --iterations 3
+```
+
+for OMP
+
+```bash
+mpirun -n 4 ./build/benchmark_parallelization --engine mpi --measurements 100000 --batch-size 1000 --rules 1000 --iterations 3
+```
+
+for MPI
+
+The results obtained are coherent with what we expected. The simpler and lighter implementation of OpenMP is **relatively faster** (~20%/~30% speedup) against the OpenMPI+OpenMP implementation.
+
+In addition to that we can notice how the performance of OpenMPI implementation gets worse if we increase the number of parallel processes, demonstrating how **the bottleneck of the application is indeed the telemetry broadcasting** and **gather** operations performed.

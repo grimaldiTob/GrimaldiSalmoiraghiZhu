@@ -1,5 +1,6 @@
 collector_output/
 build/
+.ssh/
 Singularity.def
 __pycache__/
 

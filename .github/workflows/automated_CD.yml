@@ -11,9 +11,10 @@ permissions:
 
 jobs:
   deploy-on-galileo100:
+    # check wheter the the github CI workflow has finished and if it was on the main branch
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 30 # stops after a certain time
 
     steps:
       - name: Check out code at the tested commit
@@ -22,5 +23,82 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
 
       #- name: Configure SSH access to Galileo100
-      # TODO: This is were the pain begins... 
-        
+      # TODO: This is were the pain begins...
+      - name: Install SSH and OTP tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends openssh-client sshpass oathtool
+
+      - name: Configure SSH and Multiplexing
+        env:
+          # define env variables from secrets
+          GALILEO_HOST: ${{ secrets.GALILEO_HOST }}
+          GALILEO_USER: ${{ secrets.GALILEO_USER }}
+          GALILEO_SSH_KEY: ${{ secrets.GALILEO_SSH_KEY }}
+          # the following run command creates the /.ssh folder, takes from GitHub
+          # the secrets and stores ssh information. In the end we save info about
+          # cineca host so that we do not need human intervention.
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$GALILEO_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$GALILEO_HOST" >> ~/.ssh/known_hosts
+
+      - name: Sync source to Galileo100
+        env:
+          GALILEO_HOST: ${{ secrets.GALILEO_HOST }}
+          GALILEO_USER: ${{ secrets.GALILEO_USER }}
+          GALILEO_TOTP_SEED: ${{ secrets.GALILEO_TOTP_SEED }}
+        run: |
+          # Generate OTP as late as possible to avoid expiry
+          OTP="$(oathtool --totp -b "$GALILEO_TOTP_SEED")"
+
+          SSH_OPTS=(
+            -o BatchMode=no
+            -o StrictHostKeyChecking=yes
+            -o PreferredAuthentications=publickey,keyboard-interactive
+            -o NumberOfPasswordPrompts=1
+          )
+
+          # Use a ControlMaster socket so rsync + ssh share ONE authenticated session
+          # This means only ONE OTP is consumed for both operations
+          SSH_CTRL="$HOME/.ssh/ctrl-%C"
+          SSH_OPTS+=(
+            -o ControlMaster=auto
+            -o ControlPath="$SSH_CTRL"
+            -o ControlPersist=120
+          )
+
+          # need to understand better what all these macros are
+          SSH_ASKPASS_REQUIRE=force \
+          SSH_ASKPASS="$(mktemp)" \
+
+          # here from what I got I use sshpass to pass the OTP to the ssh, which will not require a man-in-the-middle
+          # later I connect to the galileo cluster using the options defined in ssh_opts (which are all for security reasons) 
+          # this connection is used to pass the OTP token to Galileo
+          sshpass -p "$OTP" \
+          ssh "${SSH_OPTS[@]}" \
+            -o ControlMaster=yes \
+            "$GALILEO_USER@$GALILEO_HOST"
+
+          # rsync reuses the socket to perform another ssh to the galileo cluster this time as a 
+          # user. In this case Galileo should NOT ask for an OTP since it already received a token.
+          # RSYNC IS USED TO COPY THE CONTENT OF ./ (PROJECT DICT) INTO A DIRECTORY ON THE CLUSTER
+          rsync -az --delete \
+            -e "ssh -o ControlPath=$SSH_CTRL -o ControlMaster=no" \
+            ./ "$GALILEO_USER@$GALILEO_HOST:astralog/"
+
+          # USE AGAIN THE SOCKET TO CONNECT TO THE CLUSTER AND RUN THE SINGULARITY SCRIPTS
+          ssh -o ControlPath="$SSH_CTRL" -o ControlMaster=no \
+            "$GALILEO_USER@$GALILEO_HOST" bash -lc '
+              set -euo pipefail
+              cd "$GALILEO_WORKDIR"
+              chmod +x build.sh script.sh
+              ./build.sh
+              ./script.sh
+            '
+
+          # Close the master
+          ssh -o ControlPath="$SSH_CTRL" -o ControlMaster=no \
+            -O exit "$GALILEO_USER@$GALILEO_HOST" || true

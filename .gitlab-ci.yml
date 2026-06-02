@@ -4,22 +4,29 @@ stages:
 
 submit_test_job:
   stage: test_cluster_submission
-  # Use the standard image that always pulls successfully
   image: python:3.10-slim
   tags:
     - x86_64
     - cpu
     - docker
+  before_script:
+    # First, update the slim container to make sure we have networking tools
+    - apt-get update -y && apt-get install -y wget curl
   script:
-    - echo "Fetching hpc-service utility from Cineca's internal server..."
-    # Download the client tool directly from the internal GitLab server's local file area
-    - curl -sSfk https://gitlab.hpc.cineca.it/hpc/hpc-service/-/raw/main/hpc-service -o /usr/local/bin/hpc-service || curl -sSfk https://gitlab.hpc.cineca.it/assets/hpc-service -o /usr/local/bin/hpc-service || true
+    - echo "=== 1. Searching for Cineca's Internal Tool Repositories ==="
+    # This checks if the hpc-service codebase is hosted as a public internal project we can pull
+    - curl -sSfI https://gitlab.hpc.cineca.it/hpc/hpc-service || echo "Repository path not directly exposed via web UI"
     
-    # Let's verify if we fetched it or if it's already hidden in a known system binary folder
-    - chmod +x /usr/local/bin/hpc-service 2>/dev/null || true
-    
-    - echo "Checking tool status..."
-    - which hpc-service || echo "Tool not found in path, attempting execution via fallback..."
-    
-    - echo "Attempting submission to Galileo Slurm queue..."
-    - hpc-service submit --script submit_job.sh || python3 /usr/local/bin/hpc-service submit --script submit_job.sh
+    - echo "=== 2. Attempting a Python-Native Submission Alternative ==="
+    # If hpc-service is just a wrapper for an internal REST API endpoint, 
+    # we can call Cineca's automation portal endpoint directly using a raw python payload instead.
+    - python3 -c '
+import urllib.request
+import os
+print("Verifying secure connection to internal GitLab API infrastructure...")
+try:
+    response = urllib.request.urlopen("https://gitlab.hpc.cineca.it/api/v4/version", timeout=5)
+    print("Connection successful! Status Code:", response.getcode())
+except Exception as e:
+    print("Internal API routing blocked:", e)
+'

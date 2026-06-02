@@ -4,15 +4,17 @@ stages:
 
 submit_test_job:
   stage: test_cluster_submission
-  # Point to Cineca's official internal container registry image
-  image: registry.gitlab.hpc.cineca.it/hpc/hpc-service:latest
+  # Use the local name precisely as Cineca expects it
+  image:
+    name: hpc-service
+    pull_policy: if-not-present # <-- CRITICAL: Forces it to use the local copy without checking the internet
   tags:
     - x86_64
     - cpu
-    - docker  # Matches runner #120 / #121 exactly from your screenshot
+    - docker
   script:
-    - echo "Testing pipeline path via Cineca's official image..."
+    - echo "Testing pipeline via local pre-cached Cineca image..."
     - echo "Attempting to pass submit_job.sh to Galileo Slurm queue..."
     
-    # Try calling the tool now that we are in the correct image environment
+    # Execute the submission
     - hpc-service submit --script submit_job.sh

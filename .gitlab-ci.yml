@@ -1,0 +1,16 @@
+### TEST FOR CINECA'S GITLAB CI PIPELINE TO SUBMIT A JOB TO THE GALILEO CLUSTER USING SLURM
+stages:
+  - test_cluster_submission
+
+submit_test_job:
+  stage: test_cluster_submission
+  image: hpc-service
+  tags:
+    - x86_64
+    - cpu
+    - docker
+  script:
+    - echo "Testing pipeline path..."
+    - echo "Attempting to pass submit_job.sh to Galileo Slurm queue..."
+    # Tell Cineca's utility to submit the script
+    - hpc-service submit --script submit_job.sh

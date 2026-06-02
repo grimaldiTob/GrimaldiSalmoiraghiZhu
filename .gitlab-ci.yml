@@ -4,12 +4,13 @@ stages:
 
 submit_test_job:
   stage: test_cluster_submission
-  # This uses GitLab's internal tracking variable to find the local registry safely
-  image: $CI_REGISTRY/hpc/hpc-service:latest
+  # This pattern instructs the local runner daemon to grab the image out of 
+  # its own cluster proxy registry, completely satisfying the "always" pull policy.
+  image: gitlab.hpc.cineca.it:5050/hpc/hpc-service:latest
   tags:
     - x86_64
     - cpu
     - docker
   script:
-    - echo "Testing pipeline via local registry variable..."
+    - echo "Testing official internal port pipeline path..."
     - hpc-service submit --script submit_job.sh

@@ -4,17 +4,21 @@ stages:
 
 submit_test_job:
   stage: test_cluster_submission
-  # Use the local name precisely as Cineca expects it
-  image:
-    name: hpc-service
-    pull_policy: if-not-present # <-- CRITICAL: Forces it to use the local copy without checking the internet
+  # Use the image we know the runner successfully downloaded and approved
+  image: python:3.10-slim
   tags:
     - x86_64
     - cpu
     - docker
   script:
-    - echo "Testing pipeline via local pre-cached Cineca image..."
-    - echo "Attempting to pass submit_job.sh to Galileo Slurm queue..."
+    - echo "Testing pipeline path inside standard Python container..."
     
-    # Execute the submission
+    # 1. Inspect common directories to find where Cineca mounts hpc-service
+    - echo "Searching for hpc-service executable location..."
+    - find /usr /opt /bin /sbin -name "*hpc-service*" 2>/dev/null || echo "Not found in standard paths"
+    
+    # 2. Try calling it via explicit path fallback if it's in the common /usr/local/bin or /opt mount
+    - export PATH=$PATH:/usr/local/bin:/opt/hpc-service/bin
+    
+    - echo "Attempting submission..."
     - hpc-service submit --script submit_job.sh

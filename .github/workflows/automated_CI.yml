@@ -1,5 +1,5 @@
 # Title that appears in the GitHub Actions UI for this workflow
-name: C++ CMake Build and Test CI
+name: C++ CMake Build and Test CI + GitLab Mirroring
 
 # When to trigger the workflow. In this case, it runs on every push to the repository.
 on: [push]
@@ -150,7 +150,7 @@ jobs:
   #   2) this test has timeout features, which don't play well with Valgrind, which keeps
   #      saying that the test has timed out and failed.
   astralog-integration-test:
-    needs: [memcheck]
+    needs: [lint-and-format, codeql-analysis, build-and-test, memcheck]
     runs-on: ubuntu-latest
     timeout-minutes: 20 # Set a timeout for this job, useful if a test gets stuck in an infinite loop.
     steps:
@@ -172,3 +172,20 @@ jobs:
       - name: Run AstraLog shutdown test
         working-directory: build-integration
         run: ctest -R "AstraLog shuts down after having evaluated all batches in the collector directory" --output-on-failure
+
+  # ==========================================
+  # GATE 6: MIRROR TO CINECA'S GITLAB
+  # ==========================================
+  mirror_to_cineca:
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, codeql-analysis, build-and-test, memcheck, astralog-integration-test] # This job will only run if ALL previous gates have passed successfully
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Preserves full git history tracking for stable mirroring
+
+      - name: Push to Cineca GitLab
+        run: |
+          git remote add cineca https://oauth2:${{ secrets.CINECA_GITLAB_TOKEN }}@gitlab.hpc.cineca.it/lsalmoir/grimaldisalmoiraghizhu.git || true
+          git push cineca dev --force

@@ -4,14 +4,15 @@ stages:
 
 submit_test_job:
   stage: test_cluster_submission
-  image: python:3.10-slim
+  # Point to Cineca's official internal container registry image
+  image: registry.gitlab.hpc.cineca.it/hpc/hpc-service:latest
   tags:
     - x86_64
     - cpu
-    - docker
+    - docker  # Matches runner #120 / #121 exactly from your screenshot
   script:
-    - echo "Testing pipeline path..."
+    - echo "Testing pipeline path via Cineca's official image..."
     - echo "Attempting to pass submit_job.sh to Galileo Slurm queue..."
     
-    # Run the pre-installed cineca tool command from the runner host shell
+    # Try calling the tool now that we are in the correct image environment
     - hpc-service submit --script submit_job.sh

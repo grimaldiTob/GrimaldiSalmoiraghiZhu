@@ -4,7 +4,7 @@ stages:
 
 submit_test_job:
   stage: test_cluster_submission
-  image: hpc-service
+  image: python:3.10-slim
   tags:
     - x86_64
     - cpu
@@ -12,5 +12,6 @@ submit_test_job:
   script:
     - echo "Testing pipeline path..."
     - echo "Attempting to pass submit_job.sh to Galileo Slurm queue..."
-    # Tell Cineca's utility to submit the script
+    
+    # Run the pre-installed cineca tool command from the runner host shell
     - hpc-service submit --script submit_job.sh

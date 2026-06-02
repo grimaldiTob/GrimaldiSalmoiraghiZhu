@@ -1,16 +1,24 @@
 ### TEST FOR CINECA'S GITLAB CI PIPELINE TO SUBMIT A JOB TO THE GALILEO CLUSTER USING SLURM
 stages:
-  - test_cluster_submission
+  - discover_environment
 
-submit_test_job:
-  stage: test_cluster_submission
-  # This pattern instructs the local runner daemon to grab the image out of 
-  # its own cluster proxy registry, completely satisfying the "always" pull policy.
-  image: gitlab.hpc.cineca.it:5050/hpc/hpc-service:latest
+explore_runner:
+  stage: discover_environment
+  image: python:3.10-slim
   tags:
     - x86_64
     - cpu
     - docker
   script:
-    - echo "Testing official internal port pipeline path..."
-    - hpc-service submit --script submit_job.sh
+    - echo "=== 1. Inspecting All GitLab Environment Variables ==="
+    # This will print out hidden variables Cineca injects to point to their tools
+    - env | grep -E "CI_|HPC|SERVICE|REGISTRY|GALILEO" || true
+    
+    - echo "=== 2. Checking Mounted Volumes ==="
+    # Let's see if Cineca mounts special cluster directories inside the container
+    - df -h
+    - mount | grep -E "hpc|cineca|galileo" || true
+    
+    - echo "=== 3. Testing direct localhost/host internal connections ==="
+    # Checking if there's a local daemon listening on the host gateway
+    - ip route show || true

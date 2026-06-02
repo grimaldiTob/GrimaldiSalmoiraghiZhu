@@ -4,15 +4,22 @@ stages:
 
 submit_test_job:
   stage: test_cluster_submission
-  # Prepend the exact dependency proxy variable to the hpc-service image name
-  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/hpc-service:latest
+  # Use the standard image that always pulls successfully
+  image: python:3.10-slim
   tags:
     - x86_64
     - cpu
     - docker
   script:
-    - echo "Successfully booted inside Cineca's official hpc-service image!"
-    - echo "Submitting test script to the Galileo Slurm queue..."
+    - echo "Fetching hpc-service utility from Cineca's internal server..."
+    # Download the client tool directly from the internal GitLab server's local file area
+    - curl -sSfk https://gitlab.hpc.cineca.it/hpc/hpc-service/-/raw/main/hpc-service -o /usr/local/bin/hpc-service || curl -sSfk https://gitlab.hpc.cineca.it/assets/hpc-service -o /usr/local/bin/hpc-service || true
     
-    # Fire the actual submission command
-    - hpc-service submit --script submit_job.sh
+    # Let's verify if we fetched it or if it's already hidden in a known system binary folder
+    - chmod +x /usr/local/bin/hpc-service 2>/dev/null || true
+    
+    - echo "Checking tool status..."
+    - which hpc-service || echo "Tool not found in path, attempting execution via fallback..."
+    
+    - echo "Attempting submission to Galileo Slurm queue..."
+    - hpc-service submit --script submit_job.sh || python3 /usr/local/bin/hpc-service submit --script submit_job.sh

@@ -1,4 +1,4 @@
-name: Contenarisation and Deployment on Cineca Galileo100 Cluster
+name: Containerisation and Deployment on Cineca Galileo100 Cluster
 
 on:
   workflow_run:
@@ -11,94 +11,91 @@ permissions:
 
 jobs:
   deploy-on-galileo100:
-    # check wheter the the github CI workflow has finished and if it was on the main branch
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
-    timeout-minutes: 30 # stops after a certain time
+    timeout-minutes: 30
 
     steps:
       - name: Check out code at the tested commit
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
-      #- name: Configure SSH access to Galileo100
-      # TODO: This is were the pain begins...
       - name: Install SSH and OTP tooling
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends openssh-client sshpass oathtool
+          sudo apt-get install -y --no-install-recommends \
+            openssh-client sshpass oathtool
 
-      - name: Configure SSH and Multiplexing
+      - name: Configure SSH
         env:
-          # define env variables from secrets
           GALILEO_HOST: ${{ secrets.GALILEO_HOST }}
           GALILEO_USER: ${{ secrets.GALILEO_USER }}
           GALILEO_SSH_KEY: ${{ secrets.GALILEO_SSH_KEY }}
-          # the following run command creates the /.ssh folder, takes from GitHub
-          # the secrets and stores ssh information. In the end we save info about
-          # cineca host so that we do not need human intervention.
+          GALILEO_SSH_PORT: ${{ secrets.GALILEO_SSH_PORT }}
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           printf '%s\n' "$GALILEO_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "$GALILEO_HOST" >> ~/.ssh/known_hosts
+          # Specify port explicitly in case Galileo uses non-standard port
+          ssh-keyscan -p "${GALILEO_SSH_PORT:-22}" -H "$GALILEO_HOST" >> ~/.ssh/known_hosts
 
-      - name: Sync source to Galileo100
+      - name: Sync and deploy
         env:
           GALILEO_HOST: ${{ secrets.GALILEO_HOST }}
           GALILEO_USER: ${{ secrets.GALILEO_USER }}
+          GALILEO_SSH_PORT: ${{ secrets.GALILEO_SSH_PORT }}
           GALILEO_TOTP_SEED: ${{ secrets.GALILEO_TOTP_SEED }}
         run: |
-          # Generate OTP as late as possible to avoid expiry
-          OTP="$(oathtool --totp -b "$GALILEO_TOTP_SEED")"
+          set -euo pipefail
+
+          SSH_PORT="${GALILEO_SSH_PORT:-22}"
+          SSH_CTRL="$HOME/.ssh/ctrl-%C"
 
           SSH_OPTS=(
+            -p "$SSH_PORT"
             -o BatchMode=no
             -o StrictHostKeyChecking=yes
             -o PreferredAuthentications=publickey,keyboard-interactive
             -o NumberOfPasswordPrompts=1
-          )
-
-          # Use a ControlMaster socket so rsync + ssh share ONE authenticated session
-          # This means only ONE OTP is consumed for both operations
-          SSH_CTRL="$HOME/.ssh/ctrl-%C"
-          SSH_OPTS+=(
             -o ControlMaster=auto
-            -o ControlPath="$SSH_CTRL"
+            -o "ControlPath=$SSH_CTRL"
             -o ControlPersist=120
           )
 
-          # need to understand better what all these macros are
-          SSH_ASKPASS_REQUIRE=force \
-          SSH_ASKPASS="$(mktemp)" \
+          # Generate OTP as late as possible — 30s window is tight
+          OTP="$(oathtool --totp -b "$GALILEO_TOTP_SEED")"
 
-          # here from what I got I use sshpass to pass the OTP to the ssh, which will not require a man-in-the-middle
-          # later I connect to the galileo cluster using the options defined in ssh_opts (which are all for security reasons) 
-          # this connection is used to pass the OTP token to Galileo
+          # Open the master connection in the background (-f) with no command (-N).
+          # sshpass feeds the OTP to the keyboard-interactive prompt.
+          # Without -f -N the runner would hang waiting for the session to close.
           sshpass -p "$OTP" \
-          ssh "${SSH_OPTS[@]}" \
-            -o ControlMaster=yes \
+            ssh "${SSH_OPTS[@]}" -o ControlMaster=yes -f -N \
             "$GALILEO_USER@$GALILEO_HOST"
 
-          # rsync reuses the socket to perform another ssh to the galileo cluster this time as a 
-          # user. In this case Galileo should NOT ask for an OTP since it already received a token.
-          # RSYNC IS USED TO COPY THE CONTENT OF ./ (PROJECT DICT) INTO A DIRECTORY ON THE CLUSTER
+          # rsync reuses the already-authenticated socket — no OTP needed again
           rsync -az --delete \
-            -e "ssh -o ControlPath=$SSH_CTRL -o ControlMaster=no" \
-            ./ "$GALILEO_USER@$GALILEO_HOST:astralog/"
+            -e "ssh -p $SSH_PORT -o ControlPath=$SSH_CTRL -o ControlMaster=no" \
+            ./ "$GALILEO_USER@$GALILEO_HOST:/g100/home/userexternal/tgrimald/"
 
-          # USE AGAIN THE SOCKET TO CONNECT TO THE CLUSTER AND RUN THE SINGULARITY SCRIPTS
-          ssh -o ControlPath="$SSH_CTRL" -o ControlMaster=no \
-            "$GALILEO_USER@$GALILEO_HOST" bash -lc '
-              set -euo pipefail
-              cd "$GALILEO_WORKDIR"
-              chmod +x build.sh script.sh
-              ./build.sh
-              ./script.sh
-            '
+          # Remote execution also reuses the socket
+          ssh -p "$SSH_PORT" \
+              -o "ControlPath=$SSH_CTRL" \
+              -o ControlMaster=no \
+              "$GALILEO_USER@$GALILEO_HOST" bash -lc "
+                set -euo pipefail
+                cd \"/g100/home/userexternal/tgrimald/"
+                chmod +x build.sh script.sh
+                ./build.sh
+                ./script.sh
+              "
 
-          # Close the master
-          ssh -o ControlPath="$SSH_CTRL" -o ControlMaster=no \
-            -O exit "$GALILEO_USER@$GALILEO_HOST" || true
+          # Close the master socket cleanly
+          ssh -p "$SSH_PORT" \
+              -o "ControlPath=$SSH_CTRL" \
+              -o ControlMaster=no \
+              -O exit "$GALILEO_USER@$GALILEO_HOST" || true

@@ -187,3 +187,7 @@ At the moment I specified some placeholder commands just to check if everything 
 At some point we will change the script file in order to run the executable of the project.
 
 In addition to that, in the `Singularity.def` file I specified the SLURM scheduler command in order to run the container on the Galileo100 cluster.
+
+```bash
+step ssh list --raw  'tobia.grimaldi@mail.polimi.it' | step ssh inspect
+```

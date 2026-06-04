@@ -20,19 +20,31 @@ Here you can access the official documentation hub and web interface for the **A
 
 **To be changed**
 
-| Name Surname  | Person Code | Role / Main Focus                        | Effort (Hours) |
-| :------------ | :---------- | :--------------------------------------- | :------------- |
-| **Student 1** | 12345678    | e.g., Software Architect & Backend Logic | XXh            |
-| **Student 2** | 12345678    | e.g., DevOps, CI/CD Pipeline & SLURM     | XXh            |
-| **Student 3** | 12345678    | e.g., QA, Pytest & Singularity Container | XXh            |
+| Name Surname         | Person Code | Role / Main Focus                        | Effort (Hours) |
+| :------------------- | :---------- | :--------------------------------------- | :------------- |
+| **Tobia Grimaldi**   | 11127377    | Logic, Parallelization & Singularity     | XXh            |
+| **Luca Salmoiraghi** | 12345678    | e.g., DevOps, CI/CD Pipeline & SLURM     | XXh            |
+| **Dong Hua Zhu**     | 12345678    | e.g., QA, Pytest & Singularity Container | XXh            |
 
-_(Note: If your group has 3 or 4 students, explicitly describe who handled the distribution/parallelization logic below)._
+Group of 3. **Parallelization**:
+Parallelization logic and testing was mostly handled by Tobia Grimaldi with the aid of Dong Hua Zhu with class and functions refactoring.
 
 ---
 
 ## Repository Structure
 
-**To be completed**
+Quick map of the main folders and files:
+
+- `src/`: C++ and Python sources: here we defined the core AstraLog logic with its components, interfaces and types.
+- `tests/`: C++ Catch2 tests, integration fixtures and parallelization testing to assess the model performance.
+- `docs/`: Latest version of our requirement analysis and specification document.
+- `input/`: Sample CSV datasets and `rules.json`.
+- `collector_output/`: Runtime directory used to collect AstraLog control data.
+- `external/`: Reference to external libraries used in the project (just `simdjson` in this case).
+- `singularity/`: Singularity container definition.
+- `.github/`: CI workflows;
+
+In addition to these folders we also have main directory files, scripts (`build.sh`, `submit_job.sh`, `listener.sh`) and configs (`CMakeLists.txt`, `requirements.txt`).
 
 ---
 
@@ -42,8 +54,14 @@ _(Note: If your group has 3 or 4 students, explicitly describe who handled the d
 
 ### Language and Libraries
 
-- **Language:**
-- **Libraries:** `paho-mqtt` (for HiveMQ Broker connection), ... **to be completed/changed as needed**.
+- **Language:** C++17 (for core pipeline) and Python 3 (using legacy code provided in the start).
+- **Libraries:**
+  - `simdjson`: for rules and measurements efficient parsing.
+  - `Catch2`: C++ unit testing framework used to define and run the test suite.
+  - `OpenMP`: used to define the main parallelism workflow.
+  - `OpenMPI`: used to increase the level of parallelism (ended up reducing the speedup).
+  - `paho-mqtt`: used to connect our application to the Broker of the 'fake' spaceship simulation.
+  - `pytest` TO REMOVE I GUESS ???
 
 ### Architecture & Relation to Phase 1
 
@@ -53,13 +71,42 @@ _(Note: If your group has 3 or 4 students, explicitly describe who handled the d
 
 **To be completed**
 
-### (For groups of three and four students) Distribution and parallelization approach
+### Distribution and parallelization approach
 
-**To be completed**
+**Description of the parallelism strategy adopted:**
+
+In the first place our idea was to exploit the evaluation of rules in parallel, still respecting the constraint of the `priority` limitation which imposed us to evaluate rules in a certain sequential order.
+
+We used OpenMP for the thread parallelism. Rules are evaluated in parallel within each priority group, and each thread accumulates results locally; the shared `rules_cache` is updated only after the parallel section to avoid race conditions.
+
+To scale across processes, we added an MPI-based rule engine (enabled when compiling with `ASTRALOG_MPI`). Rank 0 broadcasts the telemetry batch, each rank evaluates a subset of rules (still by priority, with OpenMP inside each rank), and results are synchronized with a `Gather` so every rank updates its cache consistently.
+
+In practice, the MPI communication overhead (broadcast + all-gather) dominated at the scale of the provided dataset. In our setup (with roughly ~20 rules), the OpenMP version was consistently faster, and performance degraded as the number of MPI ranks increased.
+
+**Commands to run in order to test parallelization performance**
+
+```bash
+cmake --build build --target benchmark_parallelization
+./build/benchmark_parallelization --engine omp --measurements 100000 --batch-size 1000 --rules 1000 --iterations 3
+```
+
+for OMP
+
+```bash
+mpirun -n 4 ./build/benchmark_parallelization --engine mpi --measurements 100000 --batch-size 1000 --rules 1000 --iterations 3
+```
+
+for MPI
+
+The results obtained are coherent with what we expected. The simpler and lighter implementation of OpenMP is **relatively faster** (~20%/~30% speedup) against the OpenMPI+OpenMP implementation.
+
+In addition to that we can notice how the performance of OpenMPI implementation gets worse if we increase the number of parallel processes, demonstrating how **the bottleneck of the application is indeed the telemetry broadcasting** and **gather** operations performed.
 
 ### Usage of AI (if any)
 
-**To be completed**
+We used AI to accelerate testing and performance assessment. Some scripts where used to generate deterministic rules and test scenarios.
+
+In particular, we used AI models (`Gemini`, `Claude`) to generate scripts that tested our model parallelization performance. This allowed rapid andrepeatable comparisons between the OpenMP and OpenMP+MPI variants and helped identify that MPI communication overhead dominated the execution time. AI-driven test generation and result aggregation significantly sped up our benchmarking iterations.
 
 ---
 
@@ -194,20 +241,3 @@ Wrote a little script (AI slopped, this can be useful to write in the documentat
 
 In my opinion we should remove the compilation of the executable from the CMakeLists once benchmarking is over.
 In order to run the tests use the following commands:
-
-```bash
-cmake --build build --target benchmark_parallelization
-./build/benchmark_parallelization --engine omp --measurements 100000 --batch-size 1000 --rules 1000 --iterations 3
-```
-
-for OMP
-
-```bash
-mpirun -n 4 ./build/benchmark_parallelization --engine mpi --measurements 100000 --batch-size 1000 --rules 1000 --iterations 3
-```
-
-for MPI
-
-The results obtained are coherent with what we expected. The simpler and lighter implementation of OpenMP is **relatively faster** (~20%/~30% speedup) against the OpenMPI+OpenMP implementation.
-
-In addition to that we can notice how the performance of OpenMPI implementation gets worse if we increase the number of parallel processes, demonstrating how **the bottleneck of the application is indeed the telemetry broadcasting** and **gather** operations performed.

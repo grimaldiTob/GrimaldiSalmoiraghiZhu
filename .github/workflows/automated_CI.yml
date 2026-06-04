@@ -6,176 +6,175 @@ on: [push]
 
 # # What jobs to run in this workflow.
 jobs:
-#   # ==========================================
-#   # GATE 1: CODE LINTING & LAYOUT CHECK
-#   # ==========================================
-#   lint-and-format:
-#     runs-on: ubuntu-latest # Type of runner, in this case, the latest version of Ubuntu
-#     steps:
-#       - name: Check out code # Step to check out the code from the repository
-#         uses: actions/checkout@v6 # Action to check out the code, using version 6 of the checkout action
+  # ==========================================
+  # GATE 1: CODE LINTING & LAYOUT CHECK
+  # ==========================================
+  lint-and-format:
+    runs-on: ubuntu-latest # Type of runner, in this case, the latest version of Ubuntu
+    steps:
+      - name: Check out code # Step to check out the code from the repository
+        uses: actions/checkout@v6 # Action to check out the code, using version 6 of the checkout action
 
-#       - name: Run Clang-Format Check # Step to run clang-format to check code formatting (uses user-defined .clang-format file in the repository)
-#         run: |
-#           sudo apt-get update && sudo apt-get install -y clang-format
-#           # Only check common C++ source/header extensions and handle filenames with spaces
-#           find src/ tests/ -type f \( -name "*.cpp" -o -name "*.cc" -o -name "*.cxx" -o -name "*.hpp" -o -name "*.hh" -o -name "*.hxx" \) -print0 | xargs -0 clang-format --dry-run --Werror
-
-#   # ==========================================
-#   # GATE 2: DEEP CODEQL SEMANTIC ANALYSIS
-#   # ==========================================
-#   # Using Github CodeQL for static code analysis. 
-#   # In practice, it compares our code patterns against a vast database of known vulnerabilities
-#   # and coding issues, providing insights into potential security risks and code quality problems.
-#   # It needs compilation even though it's a static analysis tool. from what I have gathered (Luca)
-#   # this is because compiling helps CodeQL understand the code structure.
-#   codeql-analysis:
-#     needs: lint-and-format # Skip deep scans if code isn't even formatted correctly
-#     runs-on: ubuntu-latest 
-#     permissions:
-#       security-events: write
-#     steps:
-#       - name: Check out code 
-#         uses: actions/checkout@v6 
-
-#       - uses: github/codeql-action/init@v4
-#         with:
-#           languages: cpp, python
-
-#       - name: Install Build Dependencies # Step to install necessary build dependencies
-#         run: |
-#           sudo apt-get update
-#           sudo apt-get install -y libopenmpi-dev openmpi-bin
-#           sudo apt-get install -y cmake build-essential
-
-#       - name: Compile Code Base for Tracking
-#         run: |
-#           cmake -B build -S . -DCMAKE_BUILD_TYPE=Release # Create a build directory and configure the project using CMake
-#           cmake --build build --config Release -j $(nproc) # Build the project using CMake, specifying the build directory and configuration, and using all available CPU cores
-
-#       - name: Upload Release build artifacts # In this way we can reuse the build artifatcs for the next step
-#         uses: actions/upload-artifact@v7
-#         with:
-#           name: release-artifacts
-#           path: build
-
-#       - name: Perform CodeQL Analysis
-#         uses: github/codeql-action/analyze@v4
-
-#   # ==========================================
-#   # GATE 3: COMPILATION AND TEST RUNNER
-#   # ==========================================
-#   build-and-test:
-#     # This job requires BOTH previous gates to completely pass before executing!
-#     needs: [lint-and-format, codeql-analysis]
-#     runs-on: ubuntu-latest # Type of runner, in this case, the latest version of Ubuntu
-#     timeout-minutes: 20 # Set a timeout for this job, useful if a test gets stuck in an infinite loop.
-
-#     steps:
-#     - name: Check out code # Step to check out the code from the repository
-#       uses: actions/checkout@v6 # Action to check out the code, using version 6 of the checkout action
-
-#     - name: Install Build Dependencies # Step to install necessary build dependencies
-#       run: |
-#         sudo apt-get update
-#         sudo apt-get install -y cmake build-essential libopenmpi-dev openmpi-bin valgrind
-
-#     # Cache the built dependencies and CMake configurations
-#     # This is to avoid re-downloading and re-building CMake and Catch2 every time
-#     # we need to run the workflow, which can save time and resources.
-#     - name: Cache Build Directory
-#       uses: actions/cache@v5 # again, using an already existing action for caching
-#       with:
-#         path: |
-#           build/_deps
-#           ~/.cache/pip
-#         key: ${{ runner.os }}-cmake-${{ hashFiles('**/CMakeLists.txt') }} 
-#         restore-keys: |
-#           ${{ runner.os }}-cmake-
-
-#     - name: Download Release build artifacts
-#       uses: actions/download-artifact@v7
-#       with:
-#         name: release-artifacts
-#         path: build
-
-#     - name: Restore execute permissions on test binaries
-#       run: find build -type f -name 'test_*' -exec chmod +x {} +
-
-#     - name: Run Tests
-#       working-directory: build
-#       run: ctest -E "AstraLog shuts down after having evaluated all batches in the collector directory" --output-on-failure # Run the tests using CTest (which we have configured in our CMakeLists.txt)
-
-#   # ==========================================
-#   # GATE 4: MEMCHECK WITH VALGRIND
-#   # ==========================================
-#   memcheck:
-#     needs: [lint-and-format, codeql-analysis, build-and-test]
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Check out code
-#         uses: actions/checkout@v6
-
-#       - name: Install Build Dependencies + MPI + Valgrind
-#         run: |
-#           sudo apt-get update
-#           sudo apt-get install -y cmake build-essential libopenmpi-dev openmpi-bin valgrind
-
-#       - name: Configure CMake for Valgrind (RelWithDebInfo)
-#         run: |
-#           cmake -B build-valgrind -S . -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-#             -DMEMORYCHECK_COMMAND=$(command -v valgrind) \
-#             -DMEMORYCHECK_COMMAND_OPTIONS="--leak-check=full --show-leak-kinds=all --errors-for-leak-kinds=definite,indirect --error-exitcode=1" 
-# # Had to remove "Potentially lost" from the error code because Valgrind shows a false positive each time OpenMP is used (as in our tests).
-#       - name: Build for Valgrind # We need to build again since Valgrind needs debug symbols, which we don't have in the Release build. 
-#         run: cmake --build build-valgrind --config RelWithDebInfo -j $(nproc)
-
-#       - name: Run MemCheck (Valgrind)
-#         working-directory: build-valgrind
-#         run: ctest -D ExperimentalMemCheck -E "AstraLog shuts down after having evaluated all batches in the collector directory" --output-on-failure
-
-#       - name: Upload Valgrind logs on failure
-#         if: failure()
-#         uses: actions/upload-artifact@v7
-#         with:
-#           name: valgrind-logs
-#           path: build-valgrind/Testing/Temporary
-
-#   # ==========================================
-#   # GATE 5: FULL END-TO-END ASTRALOG TEST
-#   # ==========================================
-#   # This is the final gate, where we run the full end-to-end test for AstraLog.
-#   # I have removed this test from Valgrind for two reasons: 
-#   #   1) we have already tested all the units and their memory managament, so have already excluded memory leaks
-#   #   2) this test has timeout features, which don't play well with Valgrind, which keeps
-#   #      saying that the test has timed out and failed.
-#   astralog-integration-test:
-#     needs: [lint-and-format, codeql-analysis, build-and-test, memcheck]
-#     runs-on: ubuntu-latest
-#     timeout-minutes: 20 # Set a timeout for this job, useful if a test gets stuck in an infinite loop.
-#     steps:
-#       - name: Check out code
-#         uses: actions/checkout@v6
-
-#       - name: Install Build Dependencies
-#         run: |
-#           sudo apt-get update
-#           sudo apt-get install -y cmake build-essential libopenmpi-dev openmpi-bin
-
-#       - name: Configure CMake (Release)
-#         run: |
-#           cmake -B build-integration -S . -DCMAKE_BUILD_TYPE=Release
-
-#       - name: Build AstraLog integration target
-#         run: cmake --build build-integration --config Release --target test_astralog -j $(nproc)
-
-#       - name: Run AstraLog shutdown test
-#         working-directory: build-integration
-#         run: ctest -R "AstraLog shuts down after having evaluated all batches in the collector directory" --output-on-failure
+      - name: Run Clang-Format Check # Step to run clang-format to check code formatting (uses user-defined .clang-format file in the repository)
+        run: |
+          sudo apt-get update && sudo apt-get install -y clang-format
+          # Only check common C++ source/header extensions and handle filenames with spaces
+          find src/ tests/ -type f \( -name "*.cpp" -o -name "*.cc" -o -name "*.cxx" -o -name "*.hpp" -o -name "*.hh" -o -name "*.hxx" \) -print0 | xargs -0 clang-format --dry-run --Werror
 
   # ==========================================
-  # GATE 6: MIRROR TO CINECA'S GITLAB
+  # GATE 2: DEEP CODEQL SEMANTIC ANALYSIS
   # ==========================================
+  # Using Github CodeQL for static code analysis.
+  # In practice, it compares our code patterns against a vast database of known vulnerabilities
+  # and coding issues, providing insights into potential security risks and code quality problems.
+  # It needs compilation even though it's a static analysis tool. from what I have gathered (Luca)
+  # this is because compiling helps CodeQL understand the code structure.
+  codeql-analysis:
+    needs: lint-and-format # Skip deep scans if code isn't even formatted correctly
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: cpp, python
+
+      - name: Install Build Dependencies # Step to install necessary build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libopenmpi-dev openmpi-bin
+          sudo apt-get install -y cmake build-essential
+
+      - name: Compile Code Base for Tracking
+        run: |
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release # Create a build directory and configure the project using CMake
+          cmake --build build --config Release -j $(nproc) # Build the project using CMake, specifying the build directory and configuration, and using all available CPU cores
+
+      - name: Upload Release build artifacts # In this way we can reuse the build artifatcs for the next step
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-artifacts
+          path: build
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+
+  # ==========================================
+  # GATE 3: COMPILATION AND TEST RUNNER
+  # ==========================================
+  build-and-test:
+    # This job requires BOTH previous gates to completely pass before executing!
+    needs: [lint-and-format, codeql-analysis]
+    runs-on: ubuntu-latest # Type of runner, in this case, the latest version of Ubuntu
+    timeout-minutes: 20 # Set a timeout for this job, useful if a test gets stuck in an infinite loop.
+
+    steps:
+      - name: Check out code # Step to check out the code from the repository
+        uses: actions/checkout@v6 # Action to check out the code, using version 6 of the checkout action
+
+      - name: Install Build Dependencies # Step to install necessary build dependencies
+        run: |
+          sudo apt-get update
+      #         sudo apt-get install -y cmake build-essential libopenmpi-dev openmpi-bin valgrind
+      # Cache the built dependencies and CMake configurations
+      # This is to avoid re-downloading and re-building CMake and Catch2 every time
+      # we need to run the workflow, which can save time and resources.
+      - name: Cache Build Directory
+        uses: actions/cache@v5 # again, using an already existing action for caching
+        with:
+          path: |
+            build/_deps
+            ~/.cache/pip
+          key: ${{ runner.os }}-cmake-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-cmake-
+
+      - name: Download Release build artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: release-artifacts
+          path: build
+
+      - name: Restore execute permissions on test binaries
+        run: find build -type f -name 'test_*' -exec chmod +x {} +
+
+      - name: Run Tests
+        working-directory: build
+        run: ctest -E "AstraLog shuts down after having evaluated all batches in the collector directory" --output-on-failure # Run the tests using CTest (which we have configured in our CMakeLists.txt)
+
+  # ==========================================
+  # GATE 4: MEMCHECK WITH VALGRIND
+  # ==========================================
+  memcheck:
+    needs: [lint-and-format, codeql-analysis, build-and-test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Install Build Dependencies + MPI + Valgrind
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential libopenmpi-dev openmpi-bin valgrind
+
+      - name: Configure CMake for Valgrind (RelWithDebInfo)
+        run: |
+          cmake -B build-valgrind -S . -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DMEMORYCHECK_COMMAND=$(command -v valgrind) \
+            -DMEMORYCHECK_COMMAND_OPTIONS="--leak-check=full --show-leak-kinds=all --errors-for-leak-kinds=definite,indirect --error-exitcode=1"
+      # Had to remove "Potentially lost" from the error code because Valgrind shows a false positive each time OpenMP is used (as in our tests).
+      - name: Build for Valgrind # We need to build again since Valgrind needs debug symbols, which we don't have in the Release build.
+        run: cmake --build build-valgrind --config RelWithDebInfo -j $(nproc)
+
+      - name: Run MemCheck (Valgrind)
+        working-directory: build-valgrind
+        run: ctest -D ExperimentalMemCheck -E "AstraLog shuts down after having evaluated all batches in the collector directory" --output-on-failure
+
+      - name: Upload Valgrind logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: valgrind-logs
+          path: build-valgrind/Testing/Temporary
+
+  # ==========================================
+  # GATE 5: FULL END-TO-END ASTRALOG TEST
+  # ==========================================
+  # This is the final gate, where we run the full end-to-end test for AstraLog.
+  # I have removed this test from Valgrind for two reasons:
+  #   1) we have already tested all the units and their memory managament, so have already excluded memory leaks
+  #   2) this test has timeout features, which don't play well with Valgrind, which keeps
+  #      saying that the test has timed out and failed.
+  astralog-integration-test:
+    needs: [lint-and-format, codeql-analysis, build-and-test, memcheck]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20 # Set a timeout for this job, useful if a test gets stuck in an infinite loop.
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential libopenmpi-dev openmpi-bin
+
+      - name: Configure CMake (Release)
+        run: |
+          cmake -B build-integration -S . -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build AstraLog integration target
+        run: cmake --build build-integration --config Release --target test_astralog -j $(nproc)
+
+      - name: Run AstraLog shutdown test
+        working-directory: build-integration
+        run: ctest -R "AstraLog shuts down after having evaluated all batches in the collector directory" --output-on-failure
+
+    # ==========================================
+    # GATE 6: MIRROR TO CINECA'S GITLAB
+    # ==========================================
   mirror_to_cineca:
     runs-on: ubuntu-latest
     #needs: [lint-and-format, codeql-analysis, build-and-test, memcheck, astralog-integration-test] # This job will only run if ALL previous gates have passed successfully

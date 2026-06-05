@@ -4,12 +4,12 @@ stages:
 
 build_apptainer:
   stage: build_container
-  image: apptainer/apptainer:latest
   tags:
     - x86_64
     - cpu
     - docker
   script:
+    - apt-get update && apt-get install -y apptainer
     - apptainer build singularity/astralog.sif singularity/Singularity.def
   artifacts:
     paths:

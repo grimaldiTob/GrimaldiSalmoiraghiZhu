@@ -195,8 +195,47 @@ python3 -m src.astralog_collector --mode count --limit 100
 python3 -m src.astralog_collector --mode time --limit 5000
 ```
 
-### Testing & Rationale
+### Test Suite Architecture & Rationale
 
+The testing framework is designed to validate the entire lifecycle of the AstraLog-HPC pipeline, ensuring strict operational correctness from initial JSON ingestion up to rule evaluation.
+
+#### Test Suite Architecture & Rationale
+
+The testing strategy directly maps to the modular components of our C++ architecture, ensuring decoupled unit testing, zero-side-effect profiling, and deterministic verification:
+
+* **Ingestion & Validation (`test_data_ingestor.cpp`):**
+    * *Rationale:* Telemetry streams from spacecraft are highly susceptible to communication noise and file system structural anomalies.
+    * *Test Coverage:* Verifies file I/O robustness, data mapping correctness, and real-world integrity integration.
+
+* **Batch Accumulation & Memory Buffering (`test_batch_accumulator.cpp`):**
+    * *Rationale:* Telemetry packets must be buffered up to specified constraints before dispatching to the processing object to minimize processing invocation overhead.
+    * *Test Coverage:* Verifies threshold dynamics, overflow and carry-over semantics, and FIFO queue ordering. 
+
+* **Thread-Safe Buffering & Back-Pressure Synchronization (`test_ThreadSafeBuffer.cpp`):**
+    * *Rationale:* This template class forms the primary inter-thread communication line between ingestion threads and evaluation worker pools. A race condition or stalling issue here could dead-lock an entire HPC cluster node.
+    * *Test Coverage:* Verifies zero-copy move semantics, capacity back-pressure handling, clean pipeline teardown, and concurrency stress testing.
+
+* **Polymorphic Rule Evaluation Engine (`test_*_rule.cpp`):**
+    * *Rationale:* The system relies on an extensible collection of logic filters—ranging from instant scalar thresholds to stateful sliding windows and recursive dependency trees. Each specialized rule must process telemetry deterministically under strict behavioral constraints.
+    * *Test Coverage:* Verifies behavioral specifications across individual rule classes and validates comprehensive fault tolerance. 
+
+* **Rule Parsing Configuration (`test_RuleLoader.cpp`):**
+    * *Rationale:* Space operators configure system behaviors dynamically via JSON specifications. The component must check first the JSON format correctness before injecting into the system.
+    * *Test Coverage:* Verifies polymorphic object creation, strict priority ordering mechanics, and error fallback adaptability. 
+
+* **Rule Engine Execution Lifecycle (`test_rule_engine.cpp`):**
+    * *Rationale:* Validates that the engine cleanly coordinates chronological sliding-window events and tracks evaluation cache states across alternating batches.
+    * *Test Coverage:* Verifies execution flows under isolated framework conditions, handles temporal evaluation limits, and asserts ternary state classifications.
+
+* **Thread-Safe Structured Logging (`test_OutputDispatcher.cpp`):**
+    * *Rationale:* In a multi-threaded consumer architecture, multiple threads may trigger ESA compliance violations simultaneously. Unsynchronized file access would lead to race conditions, overlapping text fragments, or file corruption.
+    * *Test Coverage:* Verifies output format compliance, missing state fallbacks, and complex rule data relationships.
+
+* **End-to-End System Orchestration (`test_astralog.cpp`):**
+    * *Rationale:* A full integration test guarantees that the full multi-threaded ingestion-to-evaluation application pipeline shuts down safely, prevents side effects across tests, and handles disk cleanup identically to a production run on an ESA cluster.
+    * *Test Coverage:* Verifies sandbox environment isolation, raw ingestion input cleanup, and deterministic application lifecycles.
+
+#### How to run tests
 We implemented our test suite using `pytest`. The tests are located in `tests/test_collector.py`.
 
 - **Rationale behind test cases:** The tests were designed to cover the core business logic without requiring an active MQTT connection.
@@ -206,7 +245,6 @@ To run the tests locally:
 ```bash
 python3 -m pytest tests/
 ```
-
 ---
 
 ### CI/CD PIPELINE

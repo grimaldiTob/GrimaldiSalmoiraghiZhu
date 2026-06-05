@@ -12,8 +12,6 @@ From: ubuntu:22.04
 # create a job with: 
 # - N nodes
 # - n tasks
-# 
-# Find the commands in the 'build.sh' and 'script.sh'
 
 %labels
     Project astralog-hpc
@@ -41,15 +39,15 @@ From: ubuntu:22.04
         python3.10-venv \
         && rm -rf /var/lib/apt/lists/*
 
-    # If you need Python deps
+    # For python3 dependencies
     python3 -m venv /opt/astralog/.venv
     /opt/astralog/.venv/bin/pip install -r /opt/astralog/requirements.txt
 
     rm -rf /opt/astralog/build
-    cd /opt/astralog && mkdir -p build && cd build && cmake .. && make
+    cd /opt/astralog/build && cmake .. -DCMAKE_BUILD_TYPE=Release -DASTRALOG_MPI=OFF && make astralog -j$(nproc)
 
 
 %runscript
     cd /opt/astralog
-    exec echo "Arguments: *@"
+    exec echo "Arguments: $@"
     exec "$@"

@@ -1,32 +1,50 @@
-### TEST FOR CINECA'S GITLAB CI PIPELINE TO SUBMIT A JOB TO THE GALILEO CLUSTER USING SLURM
 stages:
-  - test_cluster_submission
+  - build_container
+  - submit_hpc
 
-submit_test_job:
-  stage: test_cluster_submission
-  image: python:3.10-slim
-  tags:
-    - x86_64
-    - cpu
-    - docker
-  before_script:
-    # First, update the slim container to make sure we have networking tools
-    - apt-get update -y && apt-get install -y wget curl
+build_apptainer:
+  stage: build_container
+  image: apptainer/apptainer:latest
   script:
-    - echo "=== 1. Searching for Cineca's Internal Tool Repositories ==="
-    # This checks if the hpc-service codebase is hosted as a public internal project we can pull
-    - curl -sSfI https://gitlab.hpc.cineca.it/hpc/hpc-service || echo "Repository path not directly exposed via web UI"
-    
-    - echo "=== 2. Attempting a Python-Native Submission Alternative ==="
-    # If hpc-service is just a wrapper for an internal REST API endpoint, 
-    # we can call Cineca's automation portal endpoint directly using a raw python payload instead.
-    - python3 -c '
-import urllib.request
-import os
-print("Verifying secure connection to internal GitLab API infrastructure...")
-try:
-    response = urllib.request.urlopen("https://gitlab.hpc.cineca.it/api/v4/version", timeout=5)
-    print("Connection successful! Status Code:", response.getcode())
-except Exception as e:
-    print("Internal API routing blocked:", e)
-'
+    - apptainer build singularity/astralog.sif singularity/Singularity.def
+  artifacts:
+    paths:
+      - singularity/astralog.sif
+    expire_in: 1 hour
+
+submit_slurm:
+  stage: submit_hpc
+  image: ubuntu:22.04
+  dependencies:
+    - build_apptainer
+  before_script: # The most basic SLURM setup ever, just to be able to submit a job.
+    - apt-get update -qq && apt-get install -y -qq slurm-wm munge
+    - mkdir -p /etc/slurm /var/spool/slurm /var/log/slurm /run/munge /etc/munge
+    - dd if=/dev/urandom bs=1 count=1024 of=/etc/munge/munge.key 2>/dev/null
+    - chmod 400 /etc/munge/munge.key
+    - munged --force
+    - |
+      cat > /etc/slurm/slurm.conf << 'EOF'
+      ClusterName=demo
+      SlurmctldHost=localhost
+      MpiDefault=none
+      ProctrackType=proctrack/linuxproc
+      ReturnToService=1
+      SlurmctldPidFile=/var/run/slurmctld.pid
+      SlurmdPidFile=/var/run/slurmd.pid
+      SlurmdSpoolDir=/var/spool/slurm
+      SlurmctldLogFile=/var/log/slurm/slurmctld.log
+      SlurmdLogFile=/var/log/slurm/slurmd.log
+      StateSaveLocation=/var/spool/slurm
+      SwitchType=switch/none
+      TaskPlugin=task/none
+      NodeName=localhost CPUs=2 State=UNKNOWN
+      PartitionName=debug Nodes=localhost Default=YES MaxTime=INFINITE State=UP
+      EOF
+    - slurmctld && slurmd
+    - sleep 3
+  script:
+    - sbatch singularity/job.slurm
+    - sleep 8m # Since there is nothing to actually execute, Astralog should shut itself down after just five seconds
+    - squeue
+    - cat singularity/astralog_*.out

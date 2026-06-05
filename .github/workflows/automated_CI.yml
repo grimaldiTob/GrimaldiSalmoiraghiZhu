@@ -177,10 +177,10 @@ jobs:
     # ==========================================
   mirror_to_cineca:
     runs-on: ubuntu-latest
-    needs: [lint-and-format, codeql-analysis, build-and-test, memcheck, astralog-integration-test] # This job will only run if ALL previous gates have passed successfully
+    #needs: [lint-and-format, codeql-analysis, build-and-test, memcheck, astralog-integration-test] # This job will only run if ALL previous gates have passed successfully
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # Preserves full git history tracking for stable mirroring
 

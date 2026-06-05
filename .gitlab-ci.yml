@@ -5,6 +5,10 @@ stages:
 build_apptainer:
   stage: build_container
   image: apptainer/apptainer:latest
+  tags:
+    - x86_64
+    - cpu
+    - docker
   script:
     - apptainer build singularity/astralog.sif singularity/Singularity.def
   artifacts:
@@ -15,6 +19,10 @@ build_apptainer:
 submit_slurm:
   stage: submit_hpc
   image: ubuntu:22.04
+  tags:
+    - x86_64
+    - cpu
+    - docker
   dependencies:
     - build_apptainer
   before_script: # The most basic SLURM setup ever, just to be able to submit a job.

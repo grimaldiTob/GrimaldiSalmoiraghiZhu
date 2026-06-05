@@ -4,7 +4,7 @@ stages:
 
 build_apptainer:
   stage: build_container
-  image: ghcr.io/apptainer/apptainer:latest
+  image: ubuntu:22.04
   tags:
     - x86_64
     - cpu

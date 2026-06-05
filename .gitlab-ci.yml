@@ -9,8 +9,16 @@ build_apptainer:
     - x86_64
     - cpu
     - docker
+  before_script:
+    # Install minimal network utility tools
+    - apt-get update && apt-get install -y wget
+    
+    # Download and install the official standalone Apptainer package 
+    - wget https://github.com/apptainer/apptainer/releases/download/v1.3.6/apptainer_1.3.6_amd64.deb
+    - apt-get install -y ./apptainer_1.3.6_amd64.deb
   script:
-    - apptainer build singularity/astralog.sif singularity/Singularity.def
+    # 3. Build your SIF file using the unprivileged compilation flags
+    - apptainer build --disable-cache singularity/astralog.sif singularity/Singularity.def
   artifacts:
     paths:
       - singularity/astralog.sif

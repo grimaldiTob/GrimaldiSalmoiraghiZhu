@@ -23,7 +23,7 @@ Here you can access the official documentation hub and web interface for the **A
 | Name Surname         | Person Code | Role / Main Focus                        | Effort (Hours) |
 | :------------------- | :---------- | :--------------------------------------- | :------------- |
 | **Tobia Grimaldi**   | 11127377    | Logic, Parallelization & Singularity     | XXh            |
-| **Luca Salmoiraghi** | 12345678    | e.g., DevOps, CI/CD Pipeline & SLURM     | XXh            |
+| **Luca Salmoiraghi** | 10849129    | Logic, DevOps, CI/CD Pipeline & SLURM     | XXh            |
 | **Dong Hua Zhu**     | 12345678    | e.g., QA, Pytest & Singularity Container | XXh            |
 
 Group of 3. **Parallelization**:
@@ -110,16 +110,116 @@ In particular, we used AI models (`Gemini`, `Claude`) to generate scripts that t
 
 ---
 
-## Testing & Rationale
+### Test Suite Architecture & Rationale
 
-**To be completed**
+The testing framework is designed to validate the entire lifecycle of the AstraLog-HPC pipeline, ensuring strict operational correctness from initial JSON ingestion up to rule evaluation.
+The testing strategy directly maps to the modular components of our C++ architecture, ensuring decoupled unit testing, zero-side-effect profiling, and deterministic verification:
 
+* **Ingestion & Validation (`test_data_ingestor.cpp`):**
+    * *Rationale:* Telemetry streams from spacecraft are highly susceptible to communication noise and file system structural anomalies.
+    * *Test Coverage:* Verifies file I/O robustness, data mapping correctness, and real-world integrity integration.
+
+* **Batch Accumulation & Memory Buffering (`test_batch_accumulator.cpp`):**
+    * *Rationale:* Telemetry packets must be buffered up to specified constraints before dispatching to the processing object to minimize processing invocation overhead.
+    * *Test Coverage:* Verifies threshold dynamics, overflow and carry-over semantics, and FIFO queue ordering. 
+
+* **Thread-Safe Buffering & Back-Pressure Synchronization (`test_ThreadSafeBuffer.cpp`):**
+    * *Rationale:* This template class forms the primary inter-thread communication line between ingestion threads and evaluation worker pools. A race condition or stalling issue here could dead-lock an entire HPC cluster node.
+    * *Test Coverage:* Verifies zero-copy move semantics, capacity back-pressure handling, clean pipeline teardown, and concurrency stress testing.
+
+* **Polymorphic Rule Evaluation Engine (`test_*_rule.cpp`):**
+    * *Rationale:* The system relies on an extensible collection of logic filters—ranging from instant scalar thresholds to stateful sliding windows and recursive dependency trees. Each specialized rule must process telemetry deterministically under strict behavioral constraints.
+    * *Test Coverage:* Verifies behavioral specifications across individual rule classes and validates comprehensive fault tolerance. 
+
+* **Rule Parsing Configuration (`test_RuleLoader.cpp`):**
+    * *Rationale:* Space operators configure system behaviors dynamically via JSON specifications. The component must check first the JSON format correctness before injecting into the system.
+    * *Test Coverage:* Verifies polymorphic object creation, strict priority ordering mechanics, and error fallback adaptability. 
+
+* **Rule Engine Execution Lifecycle (`test_rule_engine.cpp`):**
+    * *Rationale:* Validates that the engine cleanly coordinates chronological sliding-window events and tracks evaluation cache states across alternating batches.
+    * *Test Coverage:* Verifies execution flows under isolated framework conditions, handles temporal evaluation limits, and asserts ternary state classifications.
+
+* **Thread-Safe Structured Logging (`test_OutputDispatcher.cpp`):**
+    * *Rationale:* In a multi-threaded consumer architecture, multiple threads may trigger ESA compliance violations simultaneously. Unsynchronized file access would lead to race conditions, overlapping text fragments, or file corruption.
+    * *Test Coverage:* Verifies output format compliance, missing state fallbacks, and complex rule data relationships.
+
+* **End-to-End System Orchestration (`test_astralog.cpp`):**
+    * *Rationale:* A full integration test guarantees that the full multi-threaded ingestion-to-evaluation application pipeline shuts down safely, prevents side effects across tests, and handles disk cleanup identically to a production run on an ESA cluster.
+    * *Test Coverage:* Verifies sandbox environment isolation, raw ingestion input cleanup, and deterministic application lifecycles.
+
+#### How to run tests
+
+**THIS IS STILL STUFF FROM REALE, NEED TO MODIFY**
+
+We implemented our test suite using `pytest`. The tests are located in `tests/test_collector.py`.
+
+- **Rationale behind test cases:** The tests were designed to cover the core business logic without requiring an active MQTT connection.
+
+To run the tests locally:
+
+```bash
+python3 -m pytest tests/
+```
+---
 ---
 
 ## Pipeline & DevOps Workflow
 
-**To be completed**
+This project implements a multi-step automation pipeline distributed across the **developer's local machine**, **GitHub servers**, and the **Cineca Galileo100 cluster**.
 
+### CI workflow (All branches)
+
+The following steps are triggered automatically at every commit across all branches:
+
+1. **Developer Local Machine**
+   - **Linting:** `pre-commit` automatically checks code against LLVM style guidelines.
+   - **Formatting:** If non-compliant, the commit is blocked and `clang-format` is applied. *The developer must then re-commit and push.*
+2. **GitHub Servers (GitHub Actions)**
+   - **Style Guard:** Verifies LLVM compliance (in case local pre-commits were bypassed).
+   - **Static Analysis:** Executes security and quality scans via `CodeQL`.
+   - **Unit Testing:** Compiles the codebase and runs the unit test suite.
+   - **Memory Profiling:** Checks for memory leaks and errors using `Valgrind`.
+   - **Integration Testing:** Executes full end-to-end integration tests.
+
+Configuration files can be found:
+
+- [pre-commit config file](.pre-commit-config.yaml) for the `pre-commit` software. Note that this configuration is applied automatically every time the project is builded. 
+- [GitHub pipeline config file](.github/workflows/automated_CI.yml) for the GitHub actions workflow.
+
+### CD workflow (Main branch only)
+When changes are merged into the `main` branch, the pipeline executes these additional steps:
+
+3. **GitHub Servers**
+   * **Repository Mirroring:** A GitHub Actions workflow mirrors the repository content directly to Cineca's internal GitLab instance (this happens thanks to a secure connection established using token provided through GitHub Secrets)
+4. **Galileo100 Cluster (Cineca GitLab CI)**
+   * **Containerization:** Builds the execution container using `Apptainer`/`Singularity`.
+   * **HPC Orchestration:** Submits the compiled job to the cluster for execution via the `SLURM` scheduler.
+
+Configuration files can be found:
+
+- [mirroring action](.github/workflows/automated_CI.yml#L175-L191) fro the GitHub to GitLab mirroring action
+- [GitLab deployment on Galileo100](.gitlab-ci.yml) for the actual deployment on Galileo100 cluster.
+
+
+> [!WARNING]
+> **Disclaimer / Proof of Concept**
+> 
+> The final two deployment steps are strictly a **proof of concept**. Cineca does not currently provide an official, fully automated method to submit SLURM jobs through the login node. 
+> 
+> Access to Galileo100 is achieved via a workaround utilizing the *experimental* CI/CD integration between Cineca's internal GitLab and the cluster. Due to this:
+> * Execution on Galileo100 is extremely limited.
+> * The pipeline configuration in [.gitlab-ci.yml](.gitlab-ci.yml) serves purely as a demonstration, as container building and full SLURM orchestration require administrative privileges not granted to users.
+> To know more, check [here](#galileo100-job-submission-ad-cicd-integration).
+
+---
+
+---
+
+## Known problems and limitations
+
+### Galileo100 job submission ad CI/CD integration
+
+---
 ---
 
 ## License
@@ -194,73 +294,6 @@ python3 -m src.astralog_collector --mode count --limit 100
 ```bash
 python3 -m src.astralog_collector --mode time --limit 5000
 ```
-
-### Test Suite Architecture & Rationale
-
-The testing framework is designed to validate the entire lifecycle of the AstraLog-HPC pipeline, ensuring strict operational correctness from initial JSON ingestion up to rule evaluation.
-
-#### Test Suite Architecture & Rationale
-
-The testing strategy directly maps to the modular components of our C++ architecture, ensuring decoupled unit testing, zero-side-effect profiling, and deterministic verification:
-
-* **Ingestion & Validation (`test_data_ingestor.cpp`):**
-    * *Rationale:* Telemetry streams from spacecraft are highly susceptible to communication noise and file system structural anomalies.
-    * *Test Coverage:* Verifies file I/O robustness, data mapping correctness, and real-world integrity integration.
-
-* **Batch Accumulation & Memory Buffering (`test_batch_accumulator.cpp`):**
-    * *Rationale:* Telemetry packets must be buffered up to specified constraints before dispatching to the processing object to minimize processing invocation overhead.
-    * *Test Coverage:* Verifies threshold dynamics, overflow and carry-over semantics, and FIFO queue ordering. 
-
-* **Thread-Safe Buffering & Back-Pressure Synchronization (`test_ThreadSafeBuffer.cpp`):**
-    * *Rationale:* This template class forms the primary inter-thread communication line between ingestion threads and evaluation worker pools. A race condition or stalling issue here could dead-lock an entire HPC cluster node.
-    * *Test Coverage:* Verifies zero-copy move semantics, capacity back-pressure handling, clean pipeline teardown, and concurrency stress testing.
-
-* **Polymorphic Rule Evaluation Engine (`test_*_rule.cpp`):**
-    * *Rationale:* The system relies on an extensible collection of logic filters—ranging from instant scalar thresholds to stateful sliding windows and recursive dependency trees. Each specialized rule must process telemetry deterministically under strict behavioral constraints.
-    * *Test Coverage:* Verifies behavioral specifications across individual rule classes and validates comprehensive fault tolerance. 
-
-* **Rule Parsing Configuration (`test_RuleLoader.cpp`):**
-    * *Rationale:* Space operators configure system behaviors dynamically via JSON specifications. The component must check first the JSON format correctness before injecting into the system.
-    * *Test Coverage:* Verifies polymorphic object creation, strict priority ordering mechanics, and error fallback adaptability. 
-
-* **Rule Engine Execution Lifecycle (`test_rule_engine.cpp`):**
-    * *Rationale:* Validates that the engine cleanly coordinates chronological sliding-window events and tracks evaluation cache states across alternating batches.
-    * *Test Coverage:* Verifies execution flows under isolated framework conditions, handles temporal evaluation limits, and asserts ternary state classifications.
-
-* **Thread-Safe Structured Logging (`test_OutputDispatcher.cpp`):**
-    * *Rationale:* In a multi-threaded consumer architecture, multiple threads may trigger ESA compliance violations simultaneously. Unsynchronized file access would lead to race conditions, overlapping text fragments, or file corruption.
-    * *Test Coverage:* Verifies output format compliance, missing state fallbacks, and complex rule data relationships.
-
-* **End-to-End System Orchestration (`test_astralog.cpp`):**
-    * *Rationale:* A full integration test guarantees that the full multi-threaded ingestion-to-evaluation application pipeline shuts down safely, prevents side effects across tests, and handles disk cleanup identically to a production run on an ESA cluster.
-    * *Test Coverage:* Verifies sandbox environment isolation, raw ingestion input cleanup, and deterministic application lifecycles.
-
-#### How to run tests
-We implemented our test suite using `pytest`. The tests are located in `tests/test_collector.py`.
-
-- **Rationale behind test cases:** The tests were designed to cover the core business logic without requiring an active MQTT connection.
-
-To run the tests locally:
-
-```bash
-python3 -m pytest tests/
-```
----
-
-### CI/CD PIPELINE
-
-Just a sketch, but I have to write something otherwise I end up forgetting what I have already configured.
-Multistep pipeline, both on the dev local machine and on GitHub servers:
-
-1. At every commit, `pre-commit` automatically checks code against the LLVM style guidelines; if it doesn't comply, the commit is blocked and `clang-format` is applied automatically.
-2. GitHub Actions workflows, which:
-   - Check compliance with the LLVM style guidelines
-   - Perform static analysis with CodeQL
-   - Compile and run unit tests
-   - Check for memory leaks with Valgrind
-   - run complete integrate testing
-
----
 
 ### Singularity so far...
 

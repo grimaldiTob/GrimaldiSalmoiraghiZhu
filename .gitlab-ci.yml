@@ -5,6 +5,10 @@ stages:
 build_apptainer:
   stage: build_container
   image: kaczmarj/apptainer
+  tags:
+    - x86_64
+    - cpu
+    - docker
   script:
     - apptainer build --fakeroot singularity/astralog.sif singularity/Singularity.def
   artifacts:

@@ -24,7 +24,7 @@ Here you can access the official documentation hub and web interface for the **A
 | :------------------- | :---------- | :--------------------------------------- | :------------- |
 | **Tobia Grimaldi**   | 11127377    | Logic, Parallelization & Singularity     | XXh            |
 | **Luca Salmoiraghi** | 10849129    | Logic, DevOps, CI/CD Pipeline & SLURM     | XXh            |
-| **Dong Hua Zhu**     | 12345678    | e.g., QA, Pytest & Singularity Container | XXh            |
+| **Dong Hua Zhu**     | 10827613    | e.g., QA, Pytest & Singularity Container | XXh            |
 
 Group of 3. **Parallelization**:
 Parallelization logic and testing was mostly handled by Tobia Grimaldi with the aid of Dong Hua Zhu with class and functions refactoring.
@@ -66,10 +66,24 @@ In addition to these folders we also have main directory files, scripts (`build.
 ### Architecture & Relation to Phase 1
 
 **To be completed**
+The AtroLog software base relies on a **Component-Based Architecture**. Each component of the system performs a specific, well-defined job and interacts with the others exclusively through interfaces, ensuring reliability, scalability and maintainability.
+
+The system is composed of 7 components: DataIngestor, BatchAccumulator, ThreadSafeBuffer, RuleEngine, RuleLoader, OutputDispatcher and MeasDatabase.
+
+The data flow follows a clear pipeline: DataIngestor receives raw stream data from external sources, filters out malformed JSON entries, and parses the valid ones. The parsed data is forwarded to BatchAccumulator, which buffers incoming records until a configured batch size is reached, then pushes the batch into ThreadSafeBuffer. The RuleEngine consumes batches from the buffer, applies the configured rules, and sends a result summary to OutputDispatcher.
+
+To structure the pipeline, three design patterns are employed:
+* **Producer-Consumer**: BatchAccumulator acts as the producer, pushing batches into the ThreadSafeBuffer queue, while RuleEngine acts as the consumer, extracting and processing them. This decouples data accumulation from rule processing and ensures thread-safe communication between the two
+* **Strategy**: RuleEngine acts as the context and operates on a BaseRule abstract class. Each concrete rule is a subclass of BaseRule, allowing different rule implementations to be selected and applied interchangeably at runtime without modifying the engine logic
+* **Centralized Rule Creation**: RuleLoader is responsible for instantiating the correct BaseRule subclass based on the rule configuration, centralizing and decoupling object creation from the rest of the system.
+
 
 ### Simplifications and variations (if any)
 
 **To be completed**
+The RuleLoader component was originally conceived following the Factory Method pattern, where separate creator subclasses would each be responsible for instantiating a specific BaseRule subtype. 
+
+In the actual implementation, this was simplified into a Simple Factory approach: a single loadRules method dispatches object creation through an if/else if chain based on the rule "type" field, with dedicated private parsing methods (parseSimpleRule, parseStepDifferenceRule, parseStatefulRule, parseLogicalCorrelationRule) for each concrete type. While this does not constitute a formal GoF pattern, it preserves the core intent of centralizing and decoupling rule instantiation from the rest of the system.
 
 ### Distribution and parallelization approach
 

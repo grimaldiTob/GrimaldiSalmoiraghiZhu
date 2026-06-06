@@ -4,7 +4,9 @@ stages:
 
 build_apptainer:
   stage: build_container
-  image: kaczmarj/apptainer
+  image: 
+    name: kaczmarj/apptainer
+    entrypoint: [""]
   tags:
     - x86_64
     - cpu

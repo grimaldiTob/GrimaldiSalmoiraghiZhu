@@ -12,7 +12,14 @@ build_apptainer:
     - cpu
     - docker
   script:
-    - apptainer build --fakeroot singularity/astralog.sif singularity/Singularity.def
+    #- apptainer build --fakeroot singularity/astralog.sif singularity/Singularity.def
+    - which sbatch || echo "no sbatch"
+    - which singularity || echo "no singularity"  
+    - which apptainer || echo "no apptainer"
+    - apptainer --version
+    - cat /etc/os-release
+    - ping -c 2 8.8.8.8 || echo "no internet"
+    - curl https://example.com || echo "no curl"
   artifacts:
     paths:
       - singularity/astralog.sif

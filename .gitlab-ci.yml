@@ -4,18 +4,9 @@ stages:
 
 build_apptainer:
   stage: build_container
-  image: ubuntu:22.04
-  tags:
-    - x86_64
-    - cpu
-    - docker
+  image: kaczmarj/apptainer
   script:
-    # Source the environment modules from the host if they are mapped
-    - source /etc/profile.d/modules.sh || true
-    - module load apptainer || module load singularity || echo "Modules not found, falling back"
-    
-    # Run the build
-    - apptainer build --disable-cache singularity/astralog.sif singularity/Singularity.def
+    - apptainer build --fakeroot singularity/astralog.sif singularity/Singularity.def
   artifacts:
     paths:
       - singularity/astralog.sif

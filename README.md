@@ -26,8 +26,8 @@ Here you can access the official documentation hub and web interface for the **A
 | **Luca Salmoiraghi** | 10849129    | Logic, DevOps, CI/CD Pipeline & SLURM     | XXh            |
 | **Dong Hua Zhu**     | 10827613    | e.g., QA, Pytest & Singularity Container | XXh            |
 
-Group of 3. **Parallelization**:
-Parallelization logic and testing was mostly handled by Tobia Grimaldi with the aid of Dong Hua Zhu with class and functions refactoring.
+Group of 3. **Parallelisation**:
+Parallelisation logic and testing was mostly handled by Tobia Grimaldi with the aid of Dong Hua Zhu with class and functions refactoring.
 
 ---
 
@@ -73,17 +73,17 @@ The system is composed of 7 components: DataIngestor, BatchAccumulator, ThreadSa
 The data flow follows a clear pipeline: DataIngestor receives raw stream data from external sources, filters out malformed JSON entries, and parses the valid ones. The parsed data is forwarded to BatchAccumulator, which buffers incoming records until a configured batch size is reached, then pushes the batch into ThreadSafeBuffer. The RuleEngine consumes batches from the buffer, applies the configured rules, and sends a result summary to OutputDispatcher.
 
 To structure the pipeline, three design patterns are employed:
-* **Producer-Consumer**: BatchAccumulator acts as the producer, pushing batches into the ThreadSafeBuffer queue, while RuleEngine acts as the consumer, extracting and processing them. This decouples data accumulation from rule processing and ensures thread-safe communication between the two
-* **Strategy**: RuleEngine acts as the context and operates on a BaseRule abstract class. Each concrete rule is a subclass of BaseRule, allowing different rule implementations to be selected and applied interchangeably at runtime without modifying the engine logic
-* **Centralized Rule Creation**: RuleLoader is responsible for instantiating the correct BaseRule subclass based on the rule configuration, centralizing and decoupling object creation from the rest of the system.
 
+- **Producer-Consumer**: BatchAccumulator acts as the producer, pushing batches into the ThreadSafeBuffer queue, while RuleEngine acts as the consumer, extracting and processing them. This decouples data accumulation from rule processing and ensures thread-safe communication between the two
+- **Strategy**: RuleEngine acts as the context and operates on a BaseRule abstract class. Each concrete rule is a subclass of BaseRule, allowing different rule implementations to be selected and applied interchangeably at runtime without modifying the engine logic
+- **Centralized Rule Creation**: RuleLoader is responsible for instantiating the correct BaseRule subclass based on the rule configuration, centralizing and decoupling object creation from the rest of the system.
 
 ### Simplifications and variations (if any)
 
 **To be completed**
-The RuleLoader component was originally conceived following the Factory Method pattern, where separate creator subclasses would each be responsible for instantiating a specific BaseRule subtype. 
+The RuleLoader component was originally conceived following the Factory Method pattern, where separate creator subclasses would each be responsible for instantiating a specific BaseRule subtype.
 
-In the actual implementation, this was simplified into a Simple Factory approach: a single loadRules method dispatches object creation through an if/else if chain based on the rule "type" field, with dedicated private parsing methods (parseSimpleRule, parseStepDifferenceRule, parseStatefulRule, parseLogicalCorrelationRule) for each concrete type. While this does not constitute a formal GoF pattern, it preserves the core intent of centralizing and decoupling rule instantiation from the rest of the system.
+In the actual implementation, this was simplified into a Simple Factory approach: a single loadRules method dispatches object creation through an if/else if chain based on the rule "type" field, with dedicated private parsing methods (parseSimpleRule, parseStepDifferenceRule, parseStatefulRule, parseLogicalCorrelationRule) for each concrete type. While this does not constitute a formal GoF pattern, it preserves the core intent of centralising and decoupling rule instantiation from the rest of the system.
 
 ### Distribution and parallelization approach
 
@@ -97,7 +97,7 @@ To scale across processes, we added an MPI-based rule engine (enabled when compi
 
 In practice, the MPI communication overhead (broadcast + all-gather) dominated at the scale of the provided dataset. In our setup (with roughly ~20 rules), the OpenMP version was consistently faster, and performance degraded as the number of MPI ranks increased.
 
-**Commands to run in order to test parallelization performance**
+#### Commands to run in order to test parallelisation performance
 
 ```bash
 cmake --build build --target benchmark_parallelization
@@ -129,37 +129,37 @@ In particular, we used AI models (`Gemini`, `Claude`) to generate scripts that t
 The testing framework is designed to validate the entire lifecycle of the AstraLog-HPC pipeline, ensuring strict operational correctness from initial JSON ingestion up to rule evaluation.
 The testing strategy directly maps to the modular components of our C++ architecture, ensuring decoupled unit testing, zero-side-effect profiling, and deterministic verification:
 
-* **Ingestion & Validation (`test_data_ingestor.cpp`):**
-    * *Rationale:* Telemetry streams from spacecraft are highly susceptible to communication noise and file system structural anomalies.
-    * *Test Coverage:* Verifies file I/O robustness, data mapping correctness, and real-world integrity integration.
+- **Ingestion & Validation ([`test_data_ingestor.cpp`](tests/components/test_data_ingestor.cpp)):**
+    - *Rationale:* Telemetry streams from spacecraft are highly susceptible to communication noise and file system structural anomalies.
+    - *Test Coverage:* Verifies file I/O robustness, data mapping correctness, and real-world integrity integration.
 
-* **Batch Accumulation & Memory Buffering (`test_batch_accumulator.cpp`):**
-    * *Rationale:* Telemetry packets must be buffered up to specified constraints before dispatching to the processing object to minimize processing invocation overhead.
-    * *Test Coverage:* Verifies threshold dynamics, overflow and carry-over semantics, and FIFO queue ordering. 
+- **Batch Accumulation & Memory Buffering ([`test_batch_accumulator.cpp`](tests/components/test_batch_accumulator.cpp)):**
+    - *Rationale:* Telemetry packets must be buffered up to specified constraints before dispatching to the processing object to minimize processing invocation overhead.
+    - *Test Coverage:* Verifies threshold dynamics, overflow and carry-over semantics, and FIFO queue ordering. 
 
-* **Thread-Safe Buffering & Back-Pressure Synchronization (`test_ThreadSafeBuffer.cpp`):**
-    * *Rationale:* This template class forms the primary inter-thread communication line between ingestion threads and evaluation worker pools. A race condition or stalling issue here could dead-lock an entire HPC cluster node.
-    * *Test Coverage:* Verifies zero-copy move semantics, capacity back-pressure handling, clean pipeline teardown, and concurrency stress testing.
+- **Thread-Safe Buffering & Back-Pressure Synchronization ([`test_ThreadSafeBuffer.cpp`](tests/components/test_ThreadSafeBuffer.cpp)):**
+    - *Rationale:* This template class forms the primary inter-thread communication line between ingestion threads and evaluation worker pools. A race condition or stalling issue here could dead-lock an entire HPC cluster node.
+    - *Test Coverage:* Verifies zero-copy move semantics, capacity back-pressure handling, clean pipeline teardown, and concurrency stress testing.
 
-* **Polymorphic Rule Evaluation Engine (`test_*_rule.cpp`):**
-    * *Rationale:* The system relies on an extensible collection of logic filters—ranging from instant scalar thresholds to stateful sliding windows and recursive dependency trees. Each specialized rule must process telemetry deterministically under strict behavioral constraints.
-    * *Test Coverage:* Verifies behavioral specifications across individual rule classes and validates comprehensive fault tolerance. 
+- **Polymorphic Rule Evaluation Engine (`test_*_rule.cpp`):**
+    - *Rationale:* The system relies on an extensible collection of logic filters—ranging from instant scalar thresholds to stateful sliding windows and recursive dependency trees. Each specialized rule must process telemetry deterministically under strict behavioral constraints.
+    - *Test Coverage:* Verifies behavioral specifications across individual rule classes and validates comprehensive fault tolerance. 
 
-* **Rule Parsing Configuration (`test_RuleLoader.cpp`):**
-    * *Rationale:* Space operators configure system behaviors dynamically via JSON specifications. The component must check first the JSON format correctness before injecting into the system.
-    * *Test Coverage:* Verifies polymorphic object creation, strict priority ordering mechanics, and error fallback adaptability. 
+- **Rule Parsing Configuration ([`test_RuleLoader.cpp`](tests/components/test_RuleLoader.cpp)):**
+    - *Rationale:* Space operators configure system behaviors dynamically via JSON specifications. The component must check first the JSON format correctness before injecting into the system.
+    - *Test Coverage:* Verifies polymorphic object creation, strict priority ordering mechanics, and error fallback adaptability. 
 
-* **Rule Engine Execution Lifecycle (`test_rule_engine.cpp`):**
-    * *Rationale:* Validates that the engine cleanly coordinates chronological sliding-window events and tracks evaluation cache states across alternating batches.
-    * *Test Coverage:* Verifies execution flows under isolated framework conditions, handles temporal evaluation limits, and asserts ternary state classifications.
+- **Rule Engine Execution Lifecycle ([`test_rule_engine.cpp`](tests/components/test_rule_engine.cpp)):**
+    - *Rationale:* Validates that the engine cleanly coordinates chronological sliding-window events and tracks evaluation cache states across alternating batches.
+    - *Test Coverage:* Verifies execution flows under isolated framework conditions, handles temporal evaluation limits, and asserts ternary state classifications.
 
-* **Thread-Safe Structured Logging (`test_OutputDispatcher.cpp`):**
-    * *Rationale:* In a multi-threaded consumer architecture, multiple threads may trigger ESA compliance violations simultaneously. Unsynchronized file access would lead to race conditions, overlapping text fragments, or file corruption.
-    * *Test Coverage:* Verifies output format compliance, missing state fallbacks, and complex rule data relationships.
+- **Thread-Safe Structured Logging ([`test_OutputDispatcher.cpp`](tests/components/test_OutputDispatcher.cpp)):**
+    - *Rationale:* In a multi-threaded consumer architecture, multiple threads may trigger ESA compliance violations simultaneously. Unsynchronized file access would lead to race conditions, overlapping text fragments, or file corruption.
+    - *Test Coverage:* Verifies output format compliance, missing state fallbacks, and complex rule data relationships.
 
-* **End-to-End System Orchestration (`test_astralog.cpp`):**
-    * *Rationale:* A full integration test guarantees that the full multi-threaded ingestion-to-evaluation application pipeline shuts down safely, prevents side effects across tests, and handles disk cleanup identically to a production run on an ESA cluster.
-    * *Test Coverage:* Verifies sandbox environment isolation, raw ingestion input cleanup, and deterministic application lifecycles.
+- **End-to-End System Orchestration ([`test_astralog.cpp`](tests/test_astralog.cpp)):**
+    - *Rationale:* A full integration test guarantees that the full multi-threaded ingestion-to-evaluation application pipeline shuts down safely, prevents side effects across tests, and handles disk cleanup identically to a production run on an ESA cluster.
+    - *Test Coverage:* Verifies sandbox environment isolation, raw ingestion input cleanup, and deterministic application lifecycles.
 
 #### How to run tests
 
@@ -204,26 +204,27 @@ Configuration files can be found:
 When changes are merged into the `main` branch, the pipeline executes these additional steps:
 
 3. **GitHub Servers**
-   * **Repository Mirroring:** A GitHub Actions workflow mirrors the repository content directly to Cineca's internal GitLab instance (this happens thanks to a secure connection established using token provided through GitHub Secrets)
+   - **Repository Mirroring:** A GitHub Actions workflow mirrors the repository content directly to Cineca's internal GitLab instance (this happens thanks to a secure connection established using token provided through GitHub Secrets)
 4. **Galileo100 Cluster (Cineca GitLab CI)**
-   * **Containerization:** Builds the execution container using `Apptainer`/`Singularity`.
-   * **HPC Orchestration:** Submits the compiled job to the cluster for execution via the `SLURM` scheduler.
+   - **Containerisation:** Builds the execution container using `Apptainer`/`Singularity`.
+   - **HPC Orchestration:** Submits the compiled job to the cluster for execution via the `SLURM` scheduler.
 
 Configuration files can be found:
 
-- [mirroring action](.github/workflows/automated_CI.yml#L175-L191) fro the GitHub to GitLab mirroring action
+- [mirroring action](.github/workflows/automated_CI.yml#L175-L191) for the GitHub to GitLab mirroring action
 - [GitLab deployment on Galileo100](.gitlab-ci.yml) for the actual deployment on Galileo100 cluster.
-
 
 > [!WARNING]
 > **Disclaimer / Proof of Concept**
-> 
+>
 > The final two deployment steps are strictly a **proof of concept**. Cineca does not currently provide an official, fully automated method to submit SLURM jobs through the login node. 
-> 
+>
 > Access to Galileo100 is achieved via a workaround utilizing the *experimental* CI/CD integration between Cineca's internal GitLab and the cluster. Due to this:
-> * Execution on Galileo100 is extremely limited.
-> * The pipeline configuration in [.gitlab-ci.yml](.gitlab-ci.yml) serves purely as a demonstration, as container building and full SLURM orchestration require administrative privileges not granted to users.
-> To know more, check [here](#galileo100-job-submission-ad-cicd-integration).
+>
+> - Execution on Galileo100 is extremely limited.
+> - The pipeline configuration in [.gitlab-ci.yml](.gitlab-ci.yml) serves purely as a demonstration, as container building and full SLURM orchestration require administrative privileges not granted to users.
+> To know more, check [the detailed section](#galileo100-job-submission-ad-cicd-integration).
+>
 
 ---
 
@@ -233,14 +234,38 @@ Configuration files can be found:
 
 ### Galileo100 job submission ad CI/CD integration
 
+The project guidelines originally mandated a fully automated, unattended CI/CD pipeline capable of testing the software, containerising it, and automatically submitting it for execution via SLURM on Cineca's Galileo100 cluster.
+However, fully automatic deployment on Cineca's clusters is restricted by system administrators due to security and policy constraints. This limitation required exploring alternative workarounds and architectural approaches to achieve the closest possible automation.
+What follows is a detailed description of the tested approaches and the technical constraints that rendered them unfeasible.
+
+#### SSH key saved through GitHub Secrets
+
+As outlined in [Cineca's official documentation](https://docs.hpc.cineca.it/general/access.html), cluster access is strictly governed by the SSH protocol, requiring a temporary SSH key generated on-the-fly via `smallstep` alongside Two-Factor Authentication (2FA).
+Because these generated keys expire after 12 hours and require mandatory human interaction for token generation, they are fundamentally incompatible with an automated GitHub Actions pipeline. Even if a user manually generated a key to seed the pipeline, the 12-hour lifespan would severely restrict long-term automation capabilities.
+
+#### Listener script on Cineca's login node
+
+A [listener script](singularity/listener.sh) designed for execution within `tmux` has been provided. When active on the cluster's login node, this script periodically (every minute) monitors the repository status, detects new commits, polls the GitHub pipeline until completion, and, upon success, submits a SLURM job to the compute nodes.
+However, due to strict process limitations enforced on the login node, script execution is automatically terminated after 10 hours, severely restricting long-term automation capabilities.
+
+> [!WARNING]
+> **Important Disclaimer**
+>
+> Attempting this approach on any shared cluster is **highly discouraged**. Even in environments where processes are not automatically killed, running unattended, long-polling scripts on login nodes violates standard HPC etiquette. Login nodes are strictly reserved for light, sporadic tasks (such as code compilation or job submission). Please avoid using this approach in production environments.
+
+#### Integration through Cineca's internal GitLab
+
+This last option is the one currently employed. GitHub mirrors the content of the repository on Cineca's internal GitLab. This gives access to automatic execution on Galielo100 cluster. Unfortunately, the execution enviroment is highly limited, since the GitLab CI runners provided by CINECA run in unprivileged Docker containers based on Alpine Linux. This prevents the use of apptainer build from a definition file, which requires either `root` privileges or `fakeroot` support (`newuidmap`), neither of which is available. Moreover, the `sbatch` command is not available inside the CI containers, and `slurmrestd` is not exposed to the pipeline environment.
+
+These constraints were confirmed both through direct testing and by CINECA's user support team, who explicitly stated that automated job submission from a CI/CD pipeline is not supported on Galileo100.
+As a result, the GitLab CI pipeline demonstrates the intended HPC workflow in a simulated environment: it just provieds how a container should be build and then submitted through SLURM. 
+
 ---
 ---
 
 ## License
 
-**Change this if you prefer to adopt a different license**
-
-This project is licensed under the **MIT License**. See the `LICENSE` file for more details.
+This project is licensed under the **MIT License**. See the [`LICENSE`](LICENSE) file for more details.
 
 ---
 

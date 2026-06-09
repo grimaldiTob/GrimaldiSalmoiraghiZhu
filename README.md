@@ -23,7 +23,7 @@ Here you can access the official documentation hub and web interface for the **A
 | Name Surname         | Person Code | Role / Main Focus                        | Effort (Hours) |
 | :------------------- | :---------- | :--------------------------------------- | :------------- |
 | **Tobia Grimaldi**   | 11127377    | Logic, Parallelization & Singularity     | XXh            |
-| **Luca Salmoiraghi** | 10849129    | Logic, DevOps, CI/CD Pipeline & SLURM     | XXh            |
+| **Luca Salmoiraghi** | 10849129    | Logic, DevOps, CI/CD Pipeline & SLURM    | XXh            |
 | **Dong Hua Zhu**     | 10827613    | e.g., QA, Pytest & Singularity Container | XXh            |
 
 Group of 3. **Parallelisation**:
@@ -130,36 +130,36 @@ The testing framework is designed to validate the entire lifecycle of the AstraL
 The testing strategy directly maps to the modular components of our C++ architecture, ensuring decoupled unit testing, zero-side-effect profiling, and deterministic verification:
 
 - **Ingestion & Validation ([`test_data_ingestor.cpp`](tests/components/test_data_ingestor.cpp)):**
-    - *Rationale:* Telemetry streams from spacecraft are highly susceptible to communication noise and file system structural anomalies.
-    - *Test Coverage:* Verifies file I/O robustness, data mapping correctness, and real-world integrity integration.
+  - _Rationale:_ Telemetry streams from spacecraft are highly susceptible to communication noise and file system structural anomalies.
+  - _Test Coverage:_ Verifies file I/O robustness, data mapping correctness, and real-world integrity integration.
 
 - **Batch Accumulation & Memory Buffering ([`test_batch_accumulator.cpp`](tests/components/test_batch_accumulator.cpp)):**
-    - *Rationale:* Telemetry packets must be buffered up to specified constraints before dispatching to the processing object to minimize processing invocation overhead.
-    - *Test Coverage:* Verifies threshold dynamics, overflow and carry-over semantics, and FIFO queue ordering. 
+  - _Rationale:_ Telemetry packets must be buffered up to specified constraints before dispatching to the processing object to minimize processing invocation overhead.
+  - _Test Coverage:_ Verifies threshold dynamics, overflow and carry-over semantics, and FIFO queue ordering.
 
 - **Thread-Safe Buffering & Back-Pressure Synchronization ([`test_ThreadSafeBuffer.cpp`](tests/components/test_ThreadSafeBuffer.cpp)):**
-    - *Rationale:* This template class forms the primary inter-thread communication line between ingestion threads and evaluation worker pools. A race condition or stalling issue here could dead-lock an entire HPC cluster node.
-    - *Test Coverage:* Verifies zero-copy move semantics, capacity back-pressure handling, clean pipeline teardown, and concurrency stress testing.
+  - _Rationale:_ This template class forms the primary inter-thread communication line between ingestion threads and evaluation worker pools. A race condition or stalling issue here could dead-lock an entire HPC cluster node.
+  - _Test Coverage:_ Verifies zero-copy move semantics, capacity back-pressure handling, clean pipeline teardown, and concurrency stress testing.
 
 - **Polymorphic Rule Evaluation Engine (`test_*_rule.cpp`):**
-    - *Rationale:* The system relies on an extensible collection of logic filters—ranging from instant scalar thresholds to stateful sliding windows and recursive dependency trees. Each specialized rule must process telemetry deterministically under strict behavioral constraints.
-    - *Test Coverage:* Verifies behavioral specifications across individual rule classes and validates comprehensive fault tolerance. 
+  - _Rationale:_ The system relies on an extensible collection of logic filters—ranging from instant scalar thresholds to stateful sliding windows and recursive dependency trees. Each specialized rule must process telemetry deterministically under strict behavioral constraints.
+  - _Test Coverage:_ Verifies behavioral specifications across individual rule classes and validates comprehensive fault tolerance.
 
 - **Rule Parsing Configuration ([`test_RuleLoader.cpp`](tests/components/test_RuleLoader.cpp)):**
-    - *Rationale:* Space operators configure system behaviors dynamically via JSON specifications. The component must check first the JSON format correctness before injecting into the system.
-    - *Test Coverage:* Verifies polymorphic object creation, strict priority ordering mechanics, and error fallback adaptability. 
+  - _Rationale:_ Space operators configure system behaviors dynamically via JSON specifications. The component must check first the JSON format correctness before injecting into the system.
+  - _Test Coverage:_ Verifies polymorphic object creation, strict priority ordering mechanics, and error fallback adaptability.
 
 - **Rule Engine Execution Lifecycle ([`test_rule_engine.cpp`](tests/components/test_rule_engine.cpp)):**
-    - *Rationale:* Validates that the engine cleanly coordinates chronological sliding-window events and tracks evaluation cache states across alternating batches.
-    - *Test Coverage:* Verifies execution flows under isolated framework conditions, handles temporal evaluation limits, and asserts ternary state classifications.
+  - _Rationale:_ Validates that the engine cleanly coordinates chronological sliding-window events and tracks evaluation cache states across alternating batches.
+  - _Test Coverage:_ Verifies execution flows under isolated framework conditions, handles temporal evaluation limits, and asserts ternary state classifications.
 
 - **Thread-Safe Structured Logging ([`test_OutputDispatcher.cpp`](tests/components/test_OutputDispatcher.cpp)):**
-    - *Rationale:* In a multi-threaded consumer architecture, multiple threads may trigger ESA compliance violations simultaneously. Unsynchronized file access would lead to race conditions, overlapping text fragments, or file corruption.
-    - *Test Coverage:* Verifies output format compliance, missing state fallbacks, and complex rule data relationships.
+  - _Rationale:_ In a multi-threaded consumer architecture, multiple threads may trigger ESA compliance violations simultaneously. Unsynchronized file access would lead to race conditions, overlapping text fragments, or file corruption.
+  - _Test Coverage:_ Verifies output format compliance, missing state fallbacks, and complex rule data relationships.
 
 - **End-to-End System Orchestration ([`test_astralog.cpp`](tests/test_astralog.cpp)):**
-    - *Rationale:* A full integration test guarantees that the full multi-threaded ingestion-to-evaluation application pipeline shuts down safely, prevents side effects across tests, and handles disk cleanup identically to a production run on an ESA cluster.
-    - *Test Coverage:* Verifies sandbox environment isolation, raw ingestion input cleanup, and deterministic application lifecycles.
+  - _Rationale:_ A full integration test guarantees that the full multi-threaded ingestion-to-evaluation application pipeline shuts down safely, prevents side effects across tests, and handles disk cleanup identically to a production run on an ESA cluster.
+  - _Test Coverage:_ Verifies sandbox environment isolation, raw ingestion input cleanup, and deterministic application lifecycles.
 
 #### How to run tests
 
@@ -174,7 +174,9 @@ To run the tests locally:
 ```bash
 python3 -m pytest tests/
 ```
+
 ---
+
 ---
 
 ## Pipeline & DevOps Workflow
@@ -187,7 +189,7 @@ The following steps are triggered automatically at every commit across all branc
 
 1. **Developer Local Machine**
    - **Linting:** `pre-commit` automatically checks code against LLVM style guidelines.
-   - **Formatting:** If non-compliant, the commit is blocked and `clang-format` is applied. *The developer must then re-commit and push.*
+   - **Formatting:** If non-compliant, the commit is blocked and `clang-format` is applied. _The developer must then re-commit and push._
 2. **GitHub Servers (GitHub Actions)**
    - **Style Guard:** Verifies LLVM compliance (in case local pre-commits were bypassed).
    - **Static Analysis:** Executes security and quality scans via `CodeQL`.
@@ -197,10 +199,11 @@ The following steps are triggered automatically at every commit across all branc
 
 Configuration files can be found:
 
-- [pre-commit config file](.pre-commit-config.yaml) for the `pre-commit` software. Note that this configuration is applied automatically every time the project is builded. 
+- [pre-commit config file](.pre-commit-config.yaml) for the `pre-commit` software. Note that this configuration is applied automatically every time the project is builded.
 - [GitHub pipeline config file](.github/workflows/automated_CI.yml) for the GitHub actions workflow.
 
 ### CD workflow (Main branch only)
+
 When changes are merged into the `main` branch, the pipeline executes these additional steps:
 
 3. **GitHub Servers**
@@ -217,14 +220,13 @@ Configuration files can be found:
 > [!WARNING]
 > **Disclaimer / Proof of Concept**
 >
-> The final two deployment steps are strictly a **proof of concept**. Cineca does not currently provide an official, fully automated method to submit SLURM jobs through the login node. 
+> The final two deployment steps are strictly a **proof of concept**. Cineca does not currently provide an official, fully automated method to submit SLURM jobs through the login node.
 >
-> Access to Galileo100 is achieved via a workaround utilizing the *experimental* CI/CD integration between Cineca's internal GitLab and the cluster. Due to this:
+> Access to Galileo100 is achieved via a workaround utilizing the _experimental_ CI/CD integration between Cineca's internal GitLab and the cluster. Due to this:
 >
 > - Execution on Galileo100 is extremely limited.
 > - The pipeline configuration in [.gitlab-ci.yml](.gitlab-ci.yml) serves purely as a demonstration, as container building and full SLURM orchestration require administrative privileges not granted to users.
-> To know more, check [the detailed section](#galileo100-job-submission-ad-cicd-integration).
->
+>   To know more, check [the detailed section](#galileo100-job-submission-ad-cicd-integration).
 
 ---
 
@@ -258,9 +260,10 @@ However, due to strict process limitations enforced on the login node, script ex
 This last option is the one currently employed. GitHub mirrors the content of the repository on Cineca's internal GitLab. This gives access to automatic execution on Galielo100 cluster. Unfortunately, the execution enviroment is highly limited, since the GitLab CI runners provided by CINECA run in unprivileged Docker containers based on Alpine Linux. This prevents the use of apptainer build from a definition file, which requires either `root` privileges or `fakeroot` support (`newuidmap`), neither of which is available. Moreover, the `sbatch` command is not available inside the CI containers, and `slurmrestd` is not exposed to the pipeline environment.
 
 These constraints were confirmed both through direct testing and by CINECA's user support team, who explicitly stated that automated job submission from a CI/CD pipeline is not supported on Galileo100.
-As a result, the GitLab CI pipeline demonstrates the intended HPC workflow in a simulated environment: it just provieds how a container should be build and then submitted through SLURM. 
+As a result, the GitLab CI pipeline demonstrates the intended HPC workflow in a simulated environment: it just provieds how a container should be build and then submitted through SLURM.
 
 ---
+
 ---
 
 ## License
@@ -351,3 +354,28 @@ Wrote a little script (AI slopped, this can be useful to write in the documentat
 
 In my opinion we should remove the compilation of the executable from the CMakeLists once benchmarking is over.
 In order to run the tests use the following commands:
+
+```bash
+# SBATCH POLLER ON THE CLUSTER
+
+#!/bin/bash
+# ~/astralog/singularity/poller.slurm
+#SBATCH --job-name=astralog-poller
+#SBATCH --time=00:10:00
+#SBATCH --partition=whatever
+#SBATCH --output=%HOME/logs/poller_%j.out
+#SBATCH --error=%HOME/logs/poller_%j.err
+
+# Run the deploy logic
+~/bin/poll_and_deploy.sh
+
+# this is the only way I found to run a script multiple times on cineca cluster
+# also I check if there is already an active request to not populate the queue
+ALREADY_QUEUED=$(squeue --me --name=astralog-poller --noheader | wc -l)
+if [[ "$ALREADY_QUEUED" -eq 0 ]]; then
+  sbatch --begin=now+600 ~/astralog/singularity/poller.slurm
+  echo "Poller called"
+else
+  echo "Poller already in queue, not resubmitting."
+fi
+```

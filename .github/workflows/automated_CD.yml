@@ -1,4 +1,4 @@
-# .github/workflows/build-and-publish.yml
+# .github/workflows/automated-CD.yml
 name: Build and publish Apptainer image
 
 on:

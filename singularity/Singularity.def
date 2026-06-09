@@ -49,5 +49,5 @@ From: ubuntu:22.04
 
 %runscript
     cd /opt/astralog
-    exec echo "Arguments: $@"
+    exec echo "Finazzi, il demone della particella: $@"
     exec "$@"

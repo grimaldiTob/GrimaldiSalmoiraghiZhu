@@ -188,4 +188,4 @@ jobs:
       - name: Push to Cineca GitLab
         run: |
           git remote add cineca https://oauth2:${{ secrets.CINECA_GITLAB_TOKEN }}@gitlab.hpc.cineca.it/lsalmoir/grimaldisalmoiraghizhu.git || true
-          git push cineca dev --force
+          git push cineca HEAD:refs/heads/dev --force

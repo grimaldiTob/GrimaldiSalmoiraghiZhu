@@ -1,0 +1,60 @@
+stages:
+  - build_container
+  - submit_hpc
+
+build_apptainer:
+  stage: build_container
+  image: 
+    name: kaczmarj/apptainer
+    entrypoint: [""]
+  tags:
+    - x86_64
+    - cpu
+    - docker
+  script:
+    - apptainer build --fakeroot singularity/astralog.sif singularity/Singularity.def
+  artifacts:
+    paths:
+      - singularity/astralog.sif
+    expire_in: 1 hour
+
+submit_slurm:
+  stage: submit_hpc
+  image: ubuntu:22.04
+  tags:
+    - x86_64
+    - cpu
+    - docker
+  dependencies:
+    - build_apptainer
+  before_script: # The most basic SLURM setup ever, just to be able to submit a job.
+    - apt-get update -qq && apt-get install -y -qq slurm-wm munge
+    - mkdir -p /etc/slurm /var/spool/slurm /var/log/slurm /run/munge /etc/munge
+    - dd if=/dev/urandom bs=1 count=1024 of=/etc/munge/munge.key 2>/dev/null
+    - chmod 400 /etc/munge/munge.key
+    - munged --force
+    - |
+      cat > /etc/slurm/slurm.conf << 'EOF'
+      ClusterName=demo
+      SlurmctldHost=localhost
+      MpiDefault=none
+      ProctrackType=proctrack/linuxproc
+      ReturnToService=1
+      SlurmctldPidFile=/var/run/slurmctld.pid
+      SlurmdPidFile=/var/run/slurmd.pid
+      SlurmdSpoolDir=/var/spool/slurm
+      SlurmctldLogFile=/var/log/slurm/slurmctld.log
+      SlurmdLogFile=/var/log/slurm/slurmd.log
+      StateSaveLocation=/var/spool/slurm
+      SwitchType=switch/none
+      TaskPlugin=task/none
+      NodeName=localhost CPUs=2 State=UNKNOWN
+      PartitionName=debug Nodes=localhost Default=YES MaxTime=INFINITE State=UP
+      EOF
+    - slurmctld && slurmd
+    - sleep 3
+  script:
+    - sbatch singularity/job.slurm
+    - sleep 8m # Since there is nothing to actually execute, Astralog should shut itself down after just five seconds
+    - squeue
+    - cat singularity/astralog_*.out

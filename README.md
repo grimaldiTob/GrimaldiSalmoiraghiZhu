@@ -31,9 +31,91 @@ Parallelisation logic and testing was mostly handled by Tobia Grimaldi with the 
 
 ---
 
-## Repository Structure
+## Running the software
 
-Quick map of the main folders and files:
+### Compiling and running the software
+
+To build and run the software, the following stepst should be performed:
+
+1. create a `build` directory and move inside it:
+
+```bash
+mkdir build
+cd build
+```
+
+2. generate the build dependencies by invoking:
+
+```bash
+cmake ..
+```
+
+3. build the software (as well as its dependencies and the test suite): 
+
+```bash
+make
+```
+
+4. return to the project's main folder. The software can be executed by invoking:
+
+```bash
+cd ..
+./build/astralog
+```
+To actually receive data to be processed, first the collector has to be activated.
+
+### Running the collector
+
+#### 1. Installation
+
+Install the required dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+#### 2. Running the Collector
+
+To avoid module resolution errors, always run the module from the root directory using the `-m` flag.
+
+Before run the command, make sure to not runn with a eduroam connnection
+
+**Example 1: Batch every 100 valid messages**
+
+```bash
+python3 -m src.astralog_collector --mode count --limit 100
+```
+
+**Example 2: Batch every 5000 milliseconds (5 seconds)**
+
+```bash
+python3 -m src.astralog_collector --mode time --limit 5000
+```
+---
+
+## Repository Structure
+The repository is organized into the following main directories:
+
+```
+.
+├── docs
+│   ├── Configuration_files
+│   └── images
+│       └── SequenceDiagImages
+├── external
+├── input
+├── singularity
+├── src
+│   ├── components
+│   ├── interfaces
+│   └── types
+│       └── rules
+└── tests
+    ├── components
+    ├── integrations
+    └── types
+```
+
 
 - `src/`: C++ and Python sources: here we defined the core AstraLog logic with its components, interfaces and types.
 - `tests/`: C++ Catch2 tests, integration fixtures and parallelization testing to assess the model performance.
@@ -162,6 +244,13 @@ The testing strategy directly maps to the modular components of our C++ architec
     - *Test Coverage:* Verifies sandbox environment isolation, raw ingestion input cleanup, and deterministic application lifecycles.
 
 #### How to run tests
+The Catch2-based tests can be run locally, leveraging the ctest framework.
+
+To run them locally, first build the project. While in the build directory, the entire test suite can be run by invoking:
+
+```bash
+ctest
+```
 
 **THIS IS STILL STUFF FROM REALE, NEED TO MODIFY**
 
@@ -305,34 +394,6 @@ The system supports two **Batch Accumulation Strategies**:
 
 - **Count-based:** Flushes to a timestamped `.txt` file every _N_ valid messages.
 - **Time-based:** Flushes to a timestamped `.txt` file every _N_ milliseconds.
-
-### Local Setup & Usage
-
-#### 1. Installation
-
-Install the required dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-#### 2. Running the Collector
-
-To avoid module resolution errors, always run the module from the root directory using the `-m` flag.
-
-Before run the command, make sure to not runn with a eduroam connnection
-
-**Example 1: Batch every 100 valid messages**
-
-```bash
-python3 -m src.astralog_collector --mode count --limit 100
-```
-
-**Example 2: Batch every 5000 milliseconds (5 seconds)**
-
-```bash
-python3 -m src.astralog_collector --mode time --limit 5000
-```
 
 ### Singularity so far...
 

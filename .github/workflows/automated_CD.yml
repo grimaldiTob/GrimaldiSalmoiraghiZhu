@@ -4,8 +4,6 @@ name: Build and publish Apptainer image
 on:
   push:
     branches: [dev]
-    paths:
-      - singularity/**
 
 jobs:
   build-and-publish:

@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=astralog-poller
 #SBATCH --time=00:10:00
-#SBATCH --partition=g100_usr_dbg
+#SBATCH --partition=g100_all_serial
 #SBATCH --output=%h/logs/poller_%j.out
 #SBATCH --error=%h/logs/poller_%j.err
 

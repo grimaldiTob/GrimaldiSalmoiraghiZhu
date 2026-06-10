@@ -9,7 +9,7 @@ SIF_DEST="$HOME/containers/astralog.sif"
 LAST_SHA_FILE="$HOME/.astralog_last_sha"
 SLURM_SCRIPT="$HOME/astralog/singularity/job.slurm"
 LOG="$HOME/logs/deploy.log"
-LOCKFILE="/tmp/astralog_deploy.lock"
+LOCKFILE="$HOME/.secrets/astralog_deploy.lock"
 # ────────────────────────────────────────────────────────
 
 mkdir -p "$(dirname "$SIF_DEST")" "$(dirname "$LOG")" # creates containers and logs dirs

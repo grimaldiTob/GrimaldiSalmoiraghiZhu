@@ -1,14 +1,14 @@
 #!/bin/bash
-# ~/astralog/poller.slurm
 #SBATCH --job-name=astralog-poller
 #SBATCH --time=00:10:00
 #SBATCH --partition=g100_usr_dbg
-#SBATCH --output=/logs/poller_%j.out
-#SBATCH --error=/logs/poller_%j.err
+#SBATCH --output=%h/logs/poller_%j.out
+#SBATCH --error=%h/logs/poller_%j.err
 
-# this is the only way I found to run a script multiple times on cineca cluster
-# also I check if there is already an active request to not populate the queue
+# Schedule the next check in 10 minutes (600 seconds)
+sbatch --begin=now+600 $HOME/bin/poller.slurm
 
-sbatch --begin=now+600 ./astralog/poller.slurm
-echo "Poller called"
-./bin/poll_and_deploy.sh || echo "Deploy script failed"
+echo "Poller called at $(date)"
+
+# Run the actual deployment script using its absolute path
+$HOME/bin/poll_and_deploy.sh || echo "Deploy script failed"

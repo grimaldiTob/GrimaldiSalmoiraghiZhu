@@ -1,11 +1,11 @@
-Run the following commands and save a Personal Access Toen on Github
+Run the following commands and save a Personal Access Token on Github
 
 ```bash
 mkdir -p ~/bin ~/logs ~/.secrets
 chmod 700 ~/.secrets
 
-echo "glpat-<YOUR-KEY>" > ~/.secrets/gitlab_pat
-chmod 600 ~/.secrets/gitlab_pat
+echo "github_pat_<YOUR-KEY>" > ~/.secrets/github_pat
+chmod 600 ~/.secrets/github_pat
 ```
 
 Create the poll_and_deploy.sh script

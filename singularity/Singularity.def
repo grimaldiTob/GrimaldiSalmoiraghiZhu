@@ -43,11 +43,11 @@ From: ubuntu:22.04
     python3 -m venv /opt/astralog/.venv
     /opt/astralog/.venv/bin/pip install -r /opt/astralog/requirements.txt
 
-    rm -rf /opt/astralog/build
+    mkdir -p /opt/astralog/build
     cd /opt/astralog/build && cmake .. -DCMAKE_BUILD_TYPE=Release -DASTRALOG_MPI=OFF && make astralog -j$(nproc)
 
 
 %runscript
     cd /opt/astralog
-    exec echo "Arguments: $@"
+    exec echo "Finazzi, il demone della particella: $@"
     exec "$@"

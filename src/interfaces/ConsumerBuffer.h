@@ -5,5 +5,6 @@
  */
 template <typename T> class ConsumerBuffer {
   public:
+    virtual ~ConsumerBuffer() = default;
     virtual bool pop(T &item) = 0;
 };

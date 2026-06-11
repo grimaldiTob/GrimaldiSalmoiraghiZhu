@@ -4,6 +4,7 @@
  */
 template <typename T> class ProducerBuffer {
   public:
+    virtual ~ProducerBuffer() = default;
     virtual void push(T item) = 0;
     virtual void finish_production() = 0;
 };

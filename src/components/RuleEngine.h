@@ -18,14 +18,13 @@
 
 // INTERFACES
 #include "../interfaces/ConsumerBuffer.h"
-#include "../interfaces/RuleEngineInterface.h"
 
 // Forward-declare interfaces here to reduce header coupling.
 class RuleLoaderInterface;
 class MeasDatabaseInterface;
 class OutputDispatcherInterface;
 
-class RuleEngine : public RuleEngineInterface {
+class RuleEngine {
 
   public:
     explicit RuleEngine(ConsumerBuffer<TelemetryBatch> &broker,
@@ -54,7 +53,7 @@ class RuleEngine : public RuleEngineInterface {
 
     // Protect the batch as read-only since the RuleEngine has to read and
     // make evaluation without modify it
-    virtual void evaluateRules(const TelemetryBatch &batch) override;
+    virtual void evaluateRules(const TelemetryBatch &batch);
 
     // Send a request to load rules from RuleLoader
     void setRulesList();

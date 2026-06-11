@@ -1,7 +1,6 @@
 #include "RuleEngine.h"
 #include <fstream>
 // Include concrete interface headers here so header can forward-declare them.
-#include "../interfaces/BatchProviderInterface.h"
 #include "../interfaces/MeasDatabaseInterface.h"
 #include "../interfaces/OutputDispatcherInterface.h"
 #include "../interfaces/RuleLoaderInterface.h"

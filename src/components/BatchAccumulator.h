@@ -8,7 +8,6 @@
 
 #include "../interfaces/BatchAccumulatorInterface.h"
 #include "../interfaces/ProducerBuffer.h"
-#include "../interfaces/RuleEngineInterface.h"
 #include "../types/TelemetryBatch.h"
 
 /**

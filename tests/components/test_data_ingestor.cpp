@@ -1,4 +1,5 @@
-#include "../../src/components/DataIngestor.h"
+#include "../../src/components/data_ingestor/CsvDataIngestor.h"
+#include "../../src/components/data_ingestor/JsonDataIngestor.h"
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <cstdio>
@@ -55,7 +56,7 @@ TEST_CASE("DataIngestor File Loading and Error Handling",
           "[DataIngestor][FileIO]") {
 
     MockBatchAccumulator mockAccumulator;
-    DataIngestor ingestor(mockAccumulator);
+    JsonDataIngestor ingestor(mockAccumulator);
 
     SECTION("Throws an exception when the file does not exist") {
         std::string badPath = "SimoneRealeTheGOAT.txt";
@@ -89,7 +90,7 @@ TEST_CASE("DataIngestor File Loading and Error Handling",
 TEST_CASE("Real File Integration Test", "[Integration][FileIO]") {
 
     MockBatchAccumulator mockAccumulator;
-    DataIngestor ingestor(mockAccumulator);
+    JsonDataIngestor ingestor(mockAccumulator);
 
     // In this particular json file we have a total of 50 measurements, whose
     // 47 have valid format and 3 invalid format

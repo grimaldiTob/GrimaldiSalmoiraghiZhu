@@ -2,12 +2,12 @@
 
 #include "../external/simdjson.h"
 #include "components/BatchAccumulator.h"
-#include "components/DataIngestor.h"
 #include "components/MeasDatabase.h"
 #include "components/OutputDispatcher.h"
 #include "components/RuleEngine.h"
 #include "components/RuleLoader.h"
 #include "components/ThreadSafeBuffer.h"
+#include "components/data_ingestor/JsonDataIngestor.h"
 #include "types/TelemetryBatch.h"
 #include <memory>
 #include <optional>

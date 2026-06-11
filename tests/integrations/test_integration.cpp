@@ -10,8 +10,8 @@
 
 #include "../../external/simdjson.h"
 #include "../../src/components/BatchAccumulator.h"
-#include "../../src/components/DataIngestor.h"
 #include "../../src/components/ThreadSafeBuffer.h"
+#include "../../src/components/data_ingestor/JsonDataIngestor.h"
 
 TEST_CASE(
     "DataIngestor processes all available text files in the target directory",
@@ -21,7 +21,7 @@ TEST_CASE(
 
     ThreadSafeBuffer<TelemetryBatch> broker(QUEUE_SIZE);
     BatchAccumulator accumulator(broker, BATCH_SIZE);
-    DataIngestor ingestor(accumulator);
+    JsonDataIngestor ingestor(accumulator);
 
     const std::string input_path = "../tests/test_collector_output";
     /**

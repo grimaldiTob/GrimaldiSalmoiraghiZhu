@@ -90,7 +90,9 @@ catch_discover_tests(test_telemetry_batch)
 # Test executable for DataIngestor
 add_executable(test_data_ingestor
     tests/components/test_data_ingestor.cpp
-    src/components/DataIngestor.cpp
+    src/components/data_ingestor/CsvDataIngestor.cpp
+    src/components/data_ingestor/DataIngestor.cpp
+    src/components/data_ingestor/JsonDataIngestor.cpp
     external/simdjson.cpp
 )
 
@@ -205,7 +207,8 @@ catch_discover_tests(test_batch_accumulator)
 add_executable(test_integration
     tests/integrations/test_integration.cpp
     src/components/BatchAccumulator.cpp
-    src/components/DataIngestor.cpp
+    src/components/data_ingestor/DataIngestor.cpp
+    src/components/data_ingestor/JsonDataIngestor.cpp
     external/simdjson.cpp
 )
 target_include_directories(test_integration PRIVATE src)
@@ -258,7 +261,9 @@ catch_discover_tests(test_output_dispatcher)
 add_executable(test_astralog
     tests/test_astralog.cpp
     src/AstraLog.cpp
-    src/components/DataIngestor.cpp
+    src/components/data_ingestor/DataIngestor.cpp
+    src/components/data_ingestor/JsonDataIngestor.cpp
+    src/components/data_ingestor/CsvDataIngestor.cpp
     src/components/BatchAccumulator.cpp
     src/components/RuleEngine.cpp
     src/components/RuleLoader.cpp
@@ -280,7 +285,8 @@ catch_discover_tests(test_astralog)
 ##################### Astralog Executable ###############################
 add_executable(astralog
     src/AstraLog.cpp
-    src/components/DataIngestor.cpp
+    src/components/data_ingestor/DataIngestor.cpp
+    src/components/data_ingestor/JsonDataIngestor.cpp
     src/components/BatchAccumulator.cpp
     src/components/RuleEngine.cpp
     src/components/RuleLoader.cpp

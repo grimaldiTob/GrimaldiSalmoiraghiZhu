@@ -46,7 +46,7 @@ AstraLog::AstraLog(bool useMpi, size_t batchSize, size_t queueSize) {
     m_database = std::make_unique<MeasDatabase>();
     m_broker = std::make_shared<ThreadSafeBuffer<TelemetryBatch>>(queueSize);
     m_accumulator = std::make_unique<BatchAccumulator>(*m_broker, batchSize);
-    m_ingestor = std::make_unique<DataIngestor>(*m_accumulator);
+    m_ingestor = std::make_unique<JsonDataIngestor>(*m_accumulator);
     m_outputDispatcher = std::make_unique<OutputDispatcher>();
     m_loader = std::make_unique<RuleLoader>();
     m_evaluator = makeRuleEngine(useMpi, *m_broker, *m_database,

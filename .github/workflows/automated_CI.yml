@@ -1,8 +1,12 @@
 # # Title that appears in the GitHub Actions UI for this workflow
-name: C++ CMake Build and Test CI + GitLab Mirroring
+name: C++ CMake Build and Test CI + Conteiner build
 
 # # When to trigger the workflow. In this case, it runs on every push to the repository.
 on: [push]
+
+permissions:
+  contents: write
+
 
 # # What jobs to run in this workflow.
 jobs:
@@ -173,19 +177,26 @@ jobs:
         run: ctest -R "AstraLog shuts down after having evaluated all batches in the collector directory" --output-on-failure
 
     # ==========================================
-    # GATE 6: MIRROR TO CINECA'S GITLAB
+    # GATE 6: COMPILE CONTAINER
     # ==========================================
-  mirror_to_cineca:
+  build-and-publish:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    needs: [lint-and-format, codeql-analysis, build-and-test, memcheck, astralog-integration-test] # This job will only run if ALL previous gates have passed successfully
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0 # Preserves full git history tracking for stable mirroring
+    needs: [lint-and-format, codeql-analysis, build-and-test, memcheck, astralog-integration-test]
 
-      - name: Push to Cineca GitLab
-        run: |
-          git remote add cineca https://oauth2:${{ secrets.CINECA_GITLAB_TOKEN }}@gitlab.hpc.cineca.it/lsalmoir/grimaldisalmoiraghizhu.git || true
-          git push cineca dev --force
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build Apptainer image
+        uses: eWaterCycle/setup-apptainer@v2
+        with:
+          apptainer-version: 1.3.4
+
+      - name: Build .sif
+        run: sudo apptainer build singularity/astralog.sif singularity/Singularity.def # build without fakeroot but sudo
+      - name: Upload to GitHub Releases
+        uses: softprops/action-gh-release@v3 # use the Releases github action
+        with:
+          tag_name: latest-sif
+          files: singularity/astralog.sif
+          token: ${{ secrets.GITHUB_TOKEN }} # github configures it by itself

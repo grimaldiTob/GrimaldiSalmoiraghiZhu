@@ -209,6 +209,7 @@ add_executable(test_integration
     src/components/BatchAccumulator.cpp
     src/components/data_ingestor/DataIngestor.cpp
     src/components/data_ingestor/JsonDataIngestor.cpp
+    src/components/data_ingestor/CsvDataIngestor.cpp
     external/simdjson.cpp
 )
 target_include_directories(test_integration PRIVATE src)
@@ -264,6 +265,7 @@ add_executable(test_astralog
     src/components/data_ingestor/DataIngestor.cpp
     src/components/data_ingestor/JsonDataIngestor.cpp
     src/components/data_ingestor/CsvDataIngestor.cpp
+    src/components/data_ingestor/CsvDataIngestor.cpp
     src/components/BatchAccumulator.cpp
     src/components/RuleEngine.cpp
     src/components/RuleLoader.cpp
@@ -287,6 +289,7 @@ add_executable(astralog
     src/AstraLog.cpp
     src/components/data_ingestor/DataIngestor.cpp
     src/components/data_ingestor/JsonDataIngestor.cpp
+    src/components/data_ingestor/CsvDataIngestor.cpp
     src/components/BatchAccumulator.cpp
     src/components/RuleEngine.cpp
     src/components/RuleLoader.cpp

@@ -42,13 +42,22 @@ makeRuleEngine(bool useMpi, ConsumerBuffer<TelemetryBatch> &broker,
     return std::make_unique<RuleEngine>(broker, db, out, loader, ts);
 }
 
-AstraLog::AstraLog(bool useMpi, size_t batchSize, size_t queueSize) {
+static std::unique_ptr<DataIngestor>
+makeDataIngestor(bool useCSV, BatchAccumulatorInterface &accumulator) {
+    if (useCSV)
+        return std::make_unique<CsvDataIngestor>(accumulator);
+    else
+        return std::make_unique<JsonDataIngestor>(accumulator);
+}
+
+AstraLog::AstraLog(bool useMpi, bool useCSV, size_t batchSize,
+                   size_t queueSize) {
     m_database = std::make_unique<MeasDatabase>();
     m_broker = std::make_shared<ThreadSafeBuffer<TelemetryBatch>>(queueSize);
     m_accumulator = std::make_unique<BatchAccumulator>(*m_broker, batchSize);
-    m_ingestor = std::make_unique<JsonDataIngestor>(*m_accumulator);
     m_outputDispatcher = std::make_unique<OutputDispatcher>();
     m_loader = std::make_unique<RuleLoader>();
+    m_ingestor = makeDataIngestor(useCSV, *m_accumulator);
     m_evaluator = makeRuleEngine(useMpi, *m_broker, *m_database,
                                  *m_outputDispatcher, *m_loader, std::nullopt);
 }

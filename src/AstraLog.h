@@ -7,7 +7,9 @@
 #include "components/RuleEngine.h"
 #include "components/RuleLoader.h"
 #include "components/ThreadSafeBuffer.h"
+#include "components/data_ingestor/CsvDataIngestor.h"
 #include "components/data_ingestor/JsonDataIngestor.h"
+
 #include "types/TelemetryBatch.h"
 #include <memory>
 #include <optional>
@@ -21,7 +23,8 @@ class AstraLog {
      * provide, for all, the necessary interfaces which allow them
      * to communicate
      */
-    AstraLog(bool useMpi, size_t batchSize = 100, size_t queueSize = 50);
+    AstraLog(bool useMpi, bool useCSV, size_t batchSize = 100,
+             size_t queueSize = 50);
 
     /*============== GETTER ====================*/
     /*

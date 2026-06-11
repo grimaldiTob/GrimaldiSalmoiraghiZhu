@@ -18,6 +18,7 @@ class DataIngestor {
     /** @brief Constructor */
     DataIngestor(BatchAccumulatorInterface &accumulator)
         : m_accumulator(accumulator) {}
+    virtual ~DataIngestor() = default;
 
     /** @brief Telemetry Printer
      *

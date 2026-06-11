@@ -87,7 +87,8 @@ TEST_CASE("DataIngestor File Loading and Error Handling",
     }
 }
 
-TEST_CASE("Real File Integration Test", "[Integration][FileIO]") {
+TEST_CASE("Real File Integration Test with JSON file",
+          "[Integration][FileIO]") {
 
     MockBatchAccumulator mockAccumulator;
     JsonDataIngestor ingestor(mockAccumulator);
@@ -142,4 +143,36 @@ TEST_CASE("Real File Integration Test", "[Integration][FileIO]") {
     // Print a success message to the console showing how many batches it read
     WARN("Success! Read real external file. Batches extracted: "
          << mockAccumulator.callCount);
+}
+
+TEST_CASE("Real File Integration Test with CSV file", "[Integration][CSV]") {
+    MockBatchAccumulator mockAccumulator;
+    CsvDataIngestor ingestor(mockAccumulator);
+
+    const std::string filepath("../input/export_sat_alpha_small.csv");
+    REQUIRE_NOTHROW(ingestor.parseTelemetry(filepath));
+
+    SECTION("Verify that data is correctly stored") {
+
+        const TelemetryBatch &batch = mockAccumulator.batch;
+        const size_t size = mockAccumulator.batch.getSize();
+
+        // Verify that data was actually sent time to the accumulator
+        REQUIRE(mockAccumulator.callCount == 1);
+
+        // Check if the FIRST element of the file match with the last element of
+        // the batch inside the BatchAccumulator
+        CHECK(batch.sensors_name[0] == "TEMP-001");
+        CHECK(batch.timestamps[0] == parseISO8601("2026-04-14T08:11:27Z"));
+        CHECK(batch.values[0] == Catch::Approx(35.979));
+        CHECK(batch.priorities[0] == 1);
+
+        // Check if the LAST element of the file match with the last element of
+        // the batch inside the BatchAccumulator
+        CHECK(batch.sensors_name[size - 1] == "ACCEL-004");
+        CHECK(batch.timestamps[size - 1] ==
+              parseISO8601("2026-04-14T08:11:27Z"));
+        CHECK(batch.values[size - 1] == Catch::Approx(50.959));
+        CHECK(batch.priorities[size - 1] == 0);
+    }
 }

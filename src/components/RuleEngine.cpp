@@ -164,13 +164,18 @@ void RuleEngine::run() {
                    METHOD CAN HAVE MANY PROBLEMS, but for now it works fine in
                    my head.
                 */
-                m_evaluationTimestamp = activeTimestamp;
+                // Avoid evaluating and emitting outputs for an empty subBatch
+                // (happens at startup when m_evaluationTimestamp is not set).
+                if (subBatch.getSize() > 0) {
+                    m_evaluationTimestamp = activeTimestamp;
 
-                evaluateRules(subBatch);
-                checkRuleResult();
-                resetCache();
-                // serialEvaluate(subBatch);
-                subBatch.clear();
+                    evaluateRules(subBatch);
+                    checkRuleResult();
+                    resetCache();
+                    // serialEvaluate(subBatch);
+                    subBatch.clear();
+                }
+
                 activeTimestamp = currentBatch.timestamps[i];
             }
             // collect the measurement in the currentBatch

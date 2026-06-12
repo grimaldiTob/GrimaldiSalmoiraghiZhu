@@ -63,6 +63,40 @@ cd ..
 ./build/astralog
 ```
 
+### AstraLog command line usage
+
+`astralog` supports optional command-line arguments for input path, rules file, batch size, queue size, CSV mode and MPI mode.
+
+| Flag | Argument | Default | Description |
+| --- | --- | --- | --- |
+| `--input` | `<input_path>` | `./collector_output` | Input directory path containing telemetry files |
+| `--rules` | `<rules_path>` | `./input/rules.json` | Rules JSON file path |
+| `--batch` | `<batch_size>` | `32` | Batch size for the accumulator |
+| `--queue` | `<queue_size>` | `32` | Size of the internal queue buffer |
+| `--csv` | none | disabled | Treat input files as CSV instead of default text format |
+| `--mpi` | none | disabled | Enable MPI-enabled rule engine (requires MPI build support) |
+| `-h`, `--help` | none | disabled | Show help and usage information |
+
+Example: run using CSV input files in `./input`
+
+```bash
+./build/astralog --csv --input ./input
+```
+
+Example: specify rules file and batch/queue sizes
+
+```bash
+./build/astralog --csv --input ./input --rules ./input/rules.json --batch 32 --queue 32
+```
+
+If `--csv` is omitted, the program uses the default input format and reads `.json` files provided by the data collector in the `collector_output` folder.
+
+Use `-h` or `--help` to print the full usage information:
+
+```bash
+./build/astralog -h
+```
+
 To actually receive data to be processed, first the collector has to be activated. Note that the collector has to remain active for the whole duration of the data anlysis.
 
 ### Running the collector
@@ -155,6 +189,7 @@ In addition to these folders the main directory also includes scripts (`.gitlab-
   - `Catch2`: C++ unit testing framework used to define and run the test suite.
   - `OpenMP`: used to define the main parallelism workflow.
   - `OpenMPI`: used to increase the level of parallelism (ended up reducing the speedup).
+  - `clipp`: for command line parsing.
   - `paho-mqtt`: used to connect our application to the Broker of the 'fake' spaceship simulation.
   - `pytest`: used to test legacy Python3 code.
 

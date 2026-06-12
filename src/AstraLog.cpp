@@ -9,6 +9,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <clipp.h>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -203,25 +204,39 @@ int main(int argc, char **argv) {
     size_t queueSize = DEFAULT_QUEUE_SIZE;
     bool useMpi = false;
     bool useCsv = false;
+    bool showHelp = false;
 
 #ifdef ASTRALOG_MPI
     MPI_Init(&argc, &argv);
     useMpi = true;
 #endif
 
-    // basic parsing considering to pass different batch and queue size, --> I
-    // dont think we need Bucelli's library here
-    if (argc > 1) {
-        inputPath = argv[1];
+    using namespace clipp;
+
+    auto cli =
+        ((option("--input") & value("input_path", inputPath)) |
+             opt_value("input_path", inputPath) %
+                 "Input directory path (default ./collector_output)",
+         (option("--rules") & value("rules_path", rulesPath)) |
+             opt_value("rules_path", rulesPath) %
+                 "Rules file path (default ./input/rules.json)",
+         (option("--batch") & value("batch_size", batchSize)) |
+             opt_value("batch_size", batchSize) % "Batch size (default 32)",
+         (option("--queue") & value("queue_size", queueSize)) |
+             opt_value("queue_size", queueSize) % "Queue size (default 32)",
+         option("--csv").set(useCsv) % "Parse input files as CSV",
+         option("--mpi").set(useMpi) % "Run using MPI-enabled rule engine",
+         option("-h", "--help").set(showHelp) % "Show this help message");
+
+    if (!parse(argc, argv, cli)) {
+        std::cout << "Error on using commands.\n";
+        std::cout << make_man_page(cli, argv[0]);
+        return 1;
     }
-    if (argc > 2) {
-        rulesPath = argv[2];
-    }
-    if (argc > 3) {
-        batchSize = static_cast<size_t>(std::stoul(argv[3]));
-    }
-    if (argc > 4) {
-        queueSize = static_cast<size_t>(std::stoul(argv[4]));
+
+    if (showHelp) {
+        std::cout << make_man_page(cli, argv[0]);
+        return 0;
     }
 
     try {

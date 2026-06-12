@@ -57,6 +57,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
+FetchContent_Declare(
+    clipp
+    GIT_REPOSITORY https://github.com/muellan/clipp.git
+    GIT_TAG        v1.2.3
+)
+FetchContent_MakeAvailable(clipp)
+
 # Used to check if Catch's directory is already exist 
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(Catch)
@@ -305,8 +312,12 @@ add_executable(astralog
 # SETS THE MPI FLAG TO OFF MEANS NO MPI IN THE PROJECT
 option(ASTRALOG_MPI "Enable MPI engine" OFF) 
 
-target_include_directories(astralog PRIVATE src)
+target_include_directories(astralog PRIVATE src ${clipp_SOURCE_DIR}/include)
 target_link_libraries(astralog PRIVATE OpenMP::OpenMP_CXX)
+
+target_include_directories(test_astralog PRIVATE src ${clipp_SOURCE_DIR}/include)
+
+target_link_libraries(test_astralog PRIVATE Catch2::Catch2WithMain OpenMP::OpenMP_CXX)
 
 if(ASTRALOG_MPI)
   target_compile_definitions(astralog PRIVATE ASTRALOG_MPI) # defines the macro inside the astralog executable

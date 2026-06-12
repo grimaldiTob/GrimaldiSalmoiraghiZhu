@@ -10,6 +10,7 @@
 #include <atomic>
 #include <chrono>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -22,7 +23,7 @@ constexpr size_t DEFAULT_QUEUE_SIZE = 32;
 constexpr auto kPollInterval = std::chrono::milliseconds(
     500); // interval of polling in the ./collector_output
 constexpr auto kIdleTimeout =
-    std::chrono::seconds(5); // output of maximum idle time we can handle.
+    std::chrono::seconds(10); // output of maximum idle time we can handle.
 } // namespace
 
 static std::unique_ptr<RuleEngine>
@@ -224,8 +225,34 @@ int main(int argc, char **argv) {
     }
 
     try {
+        // --- Output directory and file initialization ---
+        std::string validDataPath = "./output/valid_data.csv";
+        std::string alarmsPath = "./output/alarms.log";
+        bool isRank0 = true; // handle file creation with OpenMPI.
+
+#ifdef ASTRALOG_MPI
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        isRank0 = (rank == 0);
+#endif
+
+        if (isRank0) {
+            namespace fs = std::filesystem;
+            fs::create_directories(fs::path(validDataPath).parent_path());
+            fs::create_directories(fs::path(alarmsPath).parent_path());
+
+            // Initialize empty files if they don't exist
+            std::ofstream(validDataPath, std::ios::app);
+            std::ofstream(alarmsPath, std::ios::app);
+        }
+
+#ifdef ASTRALOG_MPI
+        // wait for each rank
+        MPI_Barrier(MPI_COMM_WORLD);
+#endif
         AstraLog astralog(useMpi, useCsv, batchSize, queueSize);
         astralog.run(inputPath, rulesPath);
+
     } catch (const std::exception &ex) {
         std::cerr << "AstraLog error: " << ex.what() << '\n';
 #ifdef ASTRALOG_MPI

@@ -81,10 +81,10 @@ To avoid module resolution errors, always run the module from the root directory
 
 Before run the command, make sure to not runn with a eduroam connnection
 
-**Example 1: Batch every 100 valid messages**
+**Example 1: Batch every 12 valid messages**
 
 ```bash
-python3 -m src.astralog_collector --mode count --limit 100
+python3 -m src.astralog_collector --mode count --limit 12
 ```
 
 **Example 2: Batch every 1000 milliseconds (1 second)**
@@ -92,6 +92,16 @@ python3 -m src.astralog_collector --mode count --limit 100
 ```bash
 python3 -m src.astralog_collector --mode time --limit 1000
 ```
+
+#### 3. Run the whole System
+
+Execute both the data collector and the astralog System with the following command in the project's home directory.
+
+```bash
+./script.sh
+```
+
+**N.B.**: in order to ingest data you need to make sure that the collector is working (which is not true with a consistent and non negligible probability).
 
 ---
 
@@ -201,9 +211,35 @@ In addition to that we can notice how the performance of OpenMPI implementation 
 
 ### Usage of AI (if any)
 
+LLMs were largely used to review code quality and assist with architectural choices. These are some examples of the prompts used:
+
+```
+- Is the function <function-name> consistent? Please review its code quality and suggest improvements.
+
+- What is the most efficient way to use MPI communicators for this specific function?
+
+- Can you review this c++ code and tell if its structure is correct?
+```
+
 We used AI to accelerate testing and performance assessment. Some scripts where used to generate deterministic rules and test scenarios.
 
 In particular, we used AI models (`Gemini`, `Claude`) to generate scripts that tested our model parallelisation performance. This allowed rapid and repeatable comparisons between the OpenMP and OpenMP+MPI variants and helped identify that MPI communication overhead dominated the execution time. AI-driven test generation and result aggregation significantly sped up our benchmarking iterations.
+
+```
+- Generate a script in c++ that tests the parallelization workflow. I want a deterministic set of rules and measurements that the system has to evaluate with both OpenMP and OpenMPI+OpenMP application.
+
+Provide also a bash script I can use to test different OpenMPI parallel distributions. Append the results in a .csv file.
+```
+
+In addition to that, AI was largely used in order to understand the constraints of Galileo100 cluster architecture. With the joint usage of Cineca's documentations and LLM we were able to figure out a CD pipeline able to deploy the application on an HPC environment with many limitations. Some examples:
+
+```
+- How can I configure a CI/CD pull-based workflow on the Galileo100 cluster?
+
+- Is Galileo100 cluster allowing api calls to the Github API?
+
+- Is it possible to run consecutive slurm jobs after a certain period of time given the cluster's crontab limitations?
+```
 
 ---
 

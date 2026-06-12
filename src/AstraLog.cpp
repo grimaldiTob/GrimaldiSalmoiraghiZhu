@@ -201,6 +201,7 @@ int main(int argc, char **argv) {
     size_t batchSize = DEFAULT_BATCH_SIZE;
     size_t queueSize = DEFAULT_QUEUE_SIZE;
     bool useMpi = false;
+    bool useCsv = false;
 
 #ifdef ASTRALOG_MPI
     MPI_Init(&argc, &argv);
@@ -223,7 +224,7 @@ int main(int argc, char **argv) {
     }
 
     try {
-        AstraLog astralog(useMpi, batchSize, queueSize);
+        AstraLog astralog(useMpi, useCsv, batchSize, queueSize);
         astralog.run(inputPath, rulesPath);
     } catch (const std::exception &ex) {
         std::cerr << "AstraLog error: " << ex.what() << '\n';

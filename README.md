@@ -22,7 +22,7 @@ Here you can access the official documentation hub and web interface for the **A
 
 | Name Surname         | Person Code | Role / Main Focus                        | Effort (Hours) |
 | :------------------- | :---------- | :--------------------------------------- | :------------- |
-| **Tobia Grimaldi**   | 11127377    | Logic, Parallelisation & Singularity     | XXh            |
+| **Tobia Grimaldi**   | 11127377    | Logic, Parallelisation & Singularity     | ~50h           |
 | **Luca Salmoiraghi** | 10849129    | Logic, DevOps, CI/CD Pipeline & SLURM    | XXh            |
 | **Dong Hua Zhu**     | 10827613    | e.g., QA, Pytest & Singularity Container | XXh            |
 
@@ -62,6 +62,7 @@ make
 cd ..
 ./build/astralog
 ```
+
 To actually receive data to be processed, first the collector has to be activated. Note that the collector has to remain active for the whole duration of the data anlysis.
 
 ### Running the collector
@@ -91,9 +92,11 @@ python3 -m src.astralog_collector --mode count --limit 100
 ```bash
 python3 -m src.astralog_collector --mode time --limit 1000
 ```
+
 ---
 
 ## Repository Structure
+
 The repository is organised into the following main directories:
 
 ```bash
@@ -251,7 +254,6 @@ To run them locally, first build the project. While in the build directory, the 
 ctest
 ```
 
-
 The legacy code providded can be tested using `pytest`. The tests are located in `tests/test_collector.py`. The tests were designed to cover the core business logic of the collector without requiring an active MQTT connection.
 
 To run the tests locally:
@@ -344,7 +346,6 @@ However, due to strict process limitations enforced on the login node, script ex
 > **Important Disclaimer**
 >
 > Attempting this approach on any shared cluster is **highly discouraged**. Even in environments where processes are not automatically killed, running unattended, long-polling scripts on login nodes violates standard HPC etiquette. Login nodes are strictly reserved for light, sporadic tasks (such as code compilation or job submission). Please avoid using this approach in production environments.
->
 
 #### Automatic Resubmitting SLURM Listener Job
 

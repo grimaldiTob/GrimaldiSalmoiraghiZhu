@@ -11,6 +11,7 @@
 #include "components/data_ingestor/JsonDataIngestor.h"
 
 #include "types/TelemetryBatch.h"
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <string>
@@ -42,6 +43,9 @@ class AstraLog {
              const std::string &rulesPath = "./rules.json");
 
   private:
+    bool shouldProcessFile(const std::filesystem::path &path) const;
+    bool hasMatchingFiles(const std::filesystem::path &dir) const;
+
     std::unique_ptr<DataIngestor> m_ingestor;
     std::unique_ptr<BatchAccumulator> m_accumulator;
     std::unique_ptr<RuleEngine> m_evaluator;
@@ -49,4 +53,5 @@ class AstraLog {
     std::unique_ptr<MeasDatabase> m_database;
     std::unique_ptr<OutputDispatcher> m_outputDispatcher;
     std::shared_ptr<ThreadSafeBuffer<TelemetryBatch>> m_broker;
+    bool m_useCsv = false;
 };

@@ -52,8 +52,8 @@ makeDataIngestor(bool useCSV, BatchAccumulatorInterface &accumulator) {
         return std::make_unique<JsonDataIngestor>(accumulator);
 }
 
-AstraLog::AstraLog(bool useMpi, bool useCSV, size_t batchSize,
-                   size_t queueSize) {
+AstraLog::AstraLog(bool useMpi, bool useCSV, size_t batchSize, size_t queueSize)
+    : m_useCsv(useCSV) {
     m_database = std::make_unique<MeasDatabase>();
     m_broker = std::make_shared<ThreadSafeBuffer<TelemetryBatch>>(queueSize);
     m_accumulator = std::make_unique<BatchAccumulator>(*m_broker, batchSize);
@@ -62,6 +62,24 @@ AstraLog::AstraLog(bool useMpi, bool useCSV, size_t batchSize,
     m_ingestor = makeDataIngestor(useCSV, *m_accumulator);
     m_evaluator = makeRuleEngine(useMpi, *m_broker, *m_database,
                                  *m_outputDispatcher, *m_loader, std::nullopt);
+}
+
+bool AstraLog::shouldProcessFile(const std::filesystem::path &path) const {
+    const auto ext = path.extension().string();
+    if (m_useCsv) {
+        return ext == ".csv";
+    }
+    return ext == ".txt";
+}
+
+bool AstraLog::hasMatchingFiles(const std::filesystem::path &dir) const {
+    for (const auto &entry : std::filesystem::directory_iterator(dir)) {
+        if (std::filesystem::is_regular_file(entry.path()) &&
+            shouldProcessFile(entry.path())) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /** @brief Reads each single entry in the directory filename
@@ -81,9 +99,7 @@ void AstraLog::readInput(const std::string &filename) {
         std::vector<std::filesystem::path> files;
         for (const auto &entry :
              std::filesystem::directory_iterator(inputPath)) {
-            // here we could handle the case in which we take the data from
-            // csv_input
-            if (entry.path().extension() == ".txt") {
+            if (shouldProcessFile(entry.path())) {
                 files.emplace_back(entry.path());
             }
         }
@@ -138,23 +154,29 @@ void AstraLog::run(const std::string &inputPath, const std::string &rulesPath) {
             bool foundFile = false;
             for (const auto &entry :
                  std::filesystem::directory_iterator(inputDir)) {
-                if (entry.path().extension() != ".txt") {
+                // Skip directories, only process regular files
+                if (!std::filesystem::is_regular_file(entry.path())) {
                     continue;
-                } else {
-                    foundFile = true;
+                }
 
-                    // since parseTelemetry method throws some exceptions we
-                    // need to handle them
-                    try {
-                        m_ingestor->parseTelemetry(entry.path().string());
-                        std::filesystem::remove(entry.path());
-                        // APPROACH: erase files that have been parsed --> good
-                        // for storage, not so good for availability and
-                        // resilience of the data. Should we consider to store
-                        // them in another folder?
-                    } catch (const std::exception &ex) {
-                        std::cerr << "Ingestor error: " << ex.what() << '\n';
-                    }
+                if (!shouldProcessFile(entry.path())) {
+                    // File doesn't match expected format, skip it
+                    continue;
+                }
+
+                foundFile = true;
+
+                // since parseTelemetry method throws some exceptions we
+                // need to handle them
+                try {
+                    m_ingestor->parseTelemetry(entry.path().string());
+                    std::filesystem::remove(entry.path());
+                    // APPROACH: erase files that have been parsed --> good
+                    // for storage, not so good for availability and
+                    // resilience of the data. Should we consider to store
+                    // them in another folder?
+                } catch (const std::exception &ex) {
+                    std::cerr << "Ingestor error: " << ex.what() << '\n';
                 }
             }
 
@@ -167,12 +189,12 @@ void AstraLog::run(const std::string &inputPath, const std::string &rulesPath) {
     // the main thread checks if the system is in idle or not.
     auto idleStart = std::chrono::steady_clock::now();
     while (true) {
-        const bool dirEmpty = std::filesystem::is_empty(inputDir);
+        const bool hasPendingFiles = hasMatchingFiles(inputDir);
         const bool queueEmpty = m_broker->getQueue().empty();
 
-        // if both the collector directory and the queue are empty check the
+        // if both there are no pending files and the queue is empty check the
         // system idle state
-        if (dirEmpty && queueEmpty) {
+        if (!hasPendingFiles && queueEmpty) {
             if (std::chrono::steady_clock::now() - idleStart >= kIdleTimeout) {
                 stopRequested.store(true); // set to true so that the ingestor
                                            // is not collecting data anymore

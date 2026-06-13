@@ -9,6 +9,7 @@
 \usepackage{color}
 \usepackage{tabularx}
 \usepackage{longtable}
+\usepackage{pdflscape}
 
 \hypersetup{
 	colorlinks=true, %set true if you want colored links
@@ -31,6 +32,13 @@
 \fancyhead[L]{\nouppercase{\leftmark}}
 \fancyfoot{}
 \fancyfoot[C]{\thepage}
+
+\fancypagestyle{landscapepage}{
+    \fancyhf{}                    % svuota header e footer
+    \fancyfoot[C]{}       % numero pagina al centro
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0pt}
+}
 
 \newcommand{\tablerefer}[1]{%
     \hyperref[#1_top]{Table \ref*{#1}}%
@@ -277,38 +285,63 @@ The following non-functional requirements define the quality characteristics and
 \clearpage
 \section{Design}
 \subsection{General description of the architecture}
+
+The AstraLog software base relies on a \textbf{Component-Based Architecture}. Each component of the system performs a specific, well-defined job and interacts with the others exclusively through interfaces, ensuring reliability, scalability and maintainability.
+
+\medskip
+
 The system is comprised of the following components: 
 \begin{itemize}
     \item \textbf{DataIngestor}: handles the stream of data provided by the Broker and imports it in the Astralog-HPC system; It also filters out syntactically invalid packets, given the corruption cases already defined (\tablerefer{tab:corruption_cases}).
     % \item \textbf{InvalidPacketsFilter}: filters out syntactically invalid packets; %[Mike: having a dedicated component for the filtering isn't rendudant? We can put the filtering logic within the Data Injector in order to reduce latency] [Tob: si sono d'accordo con Mike. Tralaltro il filter non conserva uno stato ma decide semplicemente se il pacchetto è corretto o no. In più ci rende l'implementazione dell'Ingestor più semplice]
     \item \textbf{BatchAccumulator}: accumulates filtered (hence valid) packets in a local batch file for further processing, it must accumulate up to a specified batch file dimension;
     \item \textbf{RuleLoader}: reads and provides access to static configurations and rules, specifically monitoring rules from \verb|rules.json|. Moreover, it handles the reordering of these rules given a \textit{PRIORITY} parameter;
-    \item \textbf{RuleEngine}: applies the previously loaded rules to the local batch file according to their priority (low, medium, high);
+    \item \textbf{ThreadSafeBuffer}: collects the complete batches accumulated in the Batch Accumulator and appends them in a queue structure;
+    \item \textbf{RuleEngine}: pops the first element from the ThreadSafeBuffer's queue and applies the previously loaded rules to the batch according to a priority value (low, medium, high);
+    \item \textbf{MeasDatabase:} database where we store previous measurements associated to each sensor. Specifically used to evaluate step-difference and stateful rules;
     \item \textbf{OutputDispatcher}: directs the evaluation results to the correct files. If no rules are violated, the batch files is appended to \verb|valid_data.csv|, otherwise nothing is written to \verb|valid_data.csv|, while all the violated rules are reported on \verb|alarms.log|.
-    %TODO: Since in some cases we have to evaluate the evolution of a certain rule in time, should we include some sort of DB to the components as well??- [Mike: I agree since we have a rule that depends on time. My question is if the database should be implemented within components (Rule Engine and Data INjestor) or as external component that interacts directly to those interested or even a hybrid architecture. I think having an external memory will increase scalability and can introduce the possibility to adopt a distributed memory system]
-    
-    %[Tob: ye but an external memory means we lose I/O time in reading data each time we evaluate a rule and writing when the evaluation is finished. Even if we do it in a local file I dont think it is feasible considering we need to run this shit on a cluster. We need to discuss about it.]
-
-\end{itemize}
-%TODO: What about parallelisation? Should we make RuleEngine as a component with submodules which can be run in paralle, thus allowing us to show even in the Components Diagram how we plan to run things in parallel (decide if pipeline parallelism or batch parallelism as well) --> LET'S GO HYBRID (tob)
-To provide full support for an HPC architecture, as stated in the non-functional requirements, the \textbf{RuleEngine} component is splitted in the following subcomponents: 
-\begin{itemize}
-    \item \textbf{TaskDistributor}: takes the batch file provided by the \textbf{BatchAccumulator} and distributes it across the parallel threads and/or parallel processor. % This obviously depends on wether we want to use OpenMP, MPI or both. Moreover, this description should be updated by actually explaining how we plan on introduce parallelisation.
-    \item \textbf{RuleSlave}: multiple instances of this component process individual work units. %Again, we must decide what a work unit actually is.
-    \item \textbf{ResultAggregator}: collects the results produced by the \textbf{RuleSlave} multiple instances.
-
-    %TODO: With this respect, I was initially considering an hybrid in-memory/persistent DB architecture: the in-memory part seemed nice for performance, but I am not so sure how well it copes with MPI. This is something we have to discuss togethere (and is strictly related to the implementation).
-
-    % Tob: My idea (la scrivo sennò me la dimentico). Innanzitutto capiamo come ogni regola viene valutata considerando l'accumulator. Sicuramente ci servirà un altra struttura dove ad esempio ogni riga contiene le misurazioni di un sensore. Dunque quando dobbiamo valutare regole statefull accediamo a questo oggetto. Potremmo pensare ad una hashtable con chiave il sensor_id e come value un vettore di valori dove all'indice n-1 c'è l'ultima misurazione. Ovviamente se usiamo MPI dovremmo fare tipo un broadcast dell'indirizzo a questa struttura così che tutti i nodi possano accedervi.
 \end{itemize}
 
 Their mutual relation is expressed by the following component diagram (Figure \ref{fig:component_diag}): 
 \begin{figure}[htbp]
     \centering
-    \includesvg[width=\textwidth]{images/Component_diagram.svg}
-    \caption{AstraLog-HPC Component Diagram - Parallel Implementation}
+    \label{fig:component_diag}
+    \includegraphics[width=\textwidth]{images/ComponentDiagram/ComponentDiagram.drawio.png}
+    \caption{AstraLog-HPC: Component Diagram}
     \label{fig:component_diag}
 \end{figure}
+
+\subsubsection{Pipeline}
+
+The data flow follows a clear pipeline: DataIngestor receives raw stream data from external sources, filters out malformed JSON entries, and parses the valid ones. The parsed data is forwarded to BatchAccumulator, which buffers incoming records until a configured batch size is reached, then pushes the batch into ThreadSafeBuffer. The RuleEngine consumes batches from the buffer, applies the configured rules, and sends a result summary to OutputDispatcher.
+
+\subsubsection{Design patterns}
+
+To structure the pipeline, three design patterns are employed:
+
+\begin{itemize}
+    \item \textbf{Producer-Consumer:} BatchAccumulator acts as the producer, pushing batches into the ThreadSafeBuffer queue, while RuleEngine acts as the consumer, extracting and processing them. This decouples data accumulation from rule processing and ensures thread-safe communication between the two;
+    \item \textbf{Strategy:} RuleEngine acts as the context and operates on a BaseRule abstract class. Each concrete rule is a subclass of BaseRule, allowing different rule implementations to be selected and applied interchangeably at runtime without modifying the engine logic;
+    \item \textbf{Centralised Rule Creation:} RuleLoader is responsible for instantiating the correct BaseRule subclass based on the rule configuration, centralising and decoupling object creation from the rest of the system.
+\end{itemize}
+
+\begin{landscape}
+\subsection{Class Diagram}
+\thispagestyle{landscapepage}
+\begin{figure}[h]
+    \centering
+    \includesvg[width=1.5\textheight]{images/ClassDiagram/ClassDiagram.svg}
+    \caption{AstraLog-HPC: Class Diagram}
+    \label{fig:class_diag}
+\end{figure}
+\end{landscape}
+
+\subsubsection{Simplifications and variations}
+The RuleLoader component was originally conceived following the Factory Method pattern, where separate creator subclasses would each be responsible for instantiating a specific BaseRule subtype.
+
+\medskip
+
+In the actual implementation, this was simplified into a Simple Factory approach: a single loadRules method dispatches object creation through an if/elseif chain based on the rule "type" field, with dedicated private parsing methods (parseSimpleRule, parseStepDifferenceRule, parseStatefulRule, parseLogicalCorrelationRule) for each concrete type. While this does not constitute a formal GoF pattern, it preserves the core intent of centralising and decoupling rule instantiation from the rest of the system.
 
 \subsection{Sequence diagrams}
 A sequence diagram shows how objects interact with each other over time in a system. It helps visualize the order of messages and operations between objects.
@@ -316,48 +349,51 @@ A sequence diagram shows how objects interact with each other over time in a sys
 \medskip
 The following sequence diagrams correspond to different scenarios that highlight the main functionalities of the system.
 
-\subsubsection{Scenario 1: Receiving an incorrect format}
-This scenario (\figurerefer{fig:incorrectFormato_sequence1_diag}) shows a case when an invalid format data packet is dispatched by the sensor. In particular, once the packet arrives at the \textit{InvalidPacketsFilter} component, the component will reject the incoming data and no operations are performed subsequently.
+\subsubsection{Scenario 1: Accumulation}
+This scenario (\figurerefer{fig:accumulation_dequence_diag}) illustrates the data accumulation pipeline, detailing how raw telemetry is validated and batched for downstream processing. The execution flow proceeds as follows:
+
+\begin{itemize}
+    \item \textbf{Data Ingestion and Validation}: During the telemetry parsing phase, the DataIngestor validates the format of the raw incoming data, actively filtering out any packets that do not adhere to the communication protocol.
+    \item \textbf{Batch Transfer}: Once validated, the ingestor bundles the clean data and forwards it to the BatchAccumulator via the storeValidData() method.
+    \item \textbf{Iterative Accumulation}: The accumulator loops through the incoming payload. It extracts each individual measurement (accumulateSingleMeas()) and appends it to its own internal batch.
+    \item \textbf{Threshold Trigger and Queueing}: Each time the internal batch reaches a predefined size threshold, the accumulator pushes the completed batch into the ThreadSafeBuffer queue, making it available for the rule engine to consume
+    \item \textbf{Reset and Continue}: Following a successful push, the accumulator immediately clears its internal batch (clearBatch()) and resumes processing the remainder of the incoming data until the entire input batch has been read. 
+\end{itemize}
+
 
 \begin{figure}[htbp]
     \centering
-    \label{fig:incorrectFormato_sequence1_diag_top}
-    \includegraphics[width=\textwidth]{images/SequenceDiagImages/IncorrectFormat.drawio.png}
-    \caption{AstraLog-HPC: Invalid Format case - Sequence Diagram}
-    \label{fig:incorrectFormato_sequence1_diag}
+    \label{fig:accumulation_dequence_diag}
+    \includegraphics[width=\textwidth]{images/SequenceDiagram/Accumulation.drawio.png}
+    \caption{AstraLog-HPC: Accumulation - Sequence Diagram}
+    \label{fig:accumulation_dequence_diag}
 \end{figure}
 
-\subsubsection{Scenario 2: Violation of one rule}
-As stated in a previous section, the \textit{BachAccumulator} component waits for incoming data, and once it reaches the specific batch size, the batch file is dispatched to the Rule Engine, where the rules evaluation on this data takes place. Any violations that occur are packaged and finally sent to \textit{the OutputDispatcher} component, which will append the file to an \textit{alarm.log}. The sequence diagram is shown in \figurerefer{fig:OneRuleViolated_sequence1_diag}.
+\subsubsection{Scenario 2: Rule Loading}
+Before execution, the Rule Engine must load the rules required to evaluate data batches. The following scenario (\figurerefer{fig:ruleLoading_sequence_diag}) shows the pipeline:
 
 \begin{figure}[htbp]
-    \label{fig:OneRuleViolated_sequence1_diag_top}
     \centering
-    \includegraphics[width=\textwidth]{images/SequenceDiagImages/OneRuleViolated.drawio.png}
-    \caption{AstraLog-HPC: One rule violated case - Sequence Diagram}
-    \label{fig:OneRuleViolated_sequence1_diag}
+    \label{fig:ruleLoading_sequence_diag}
+    \includegraphics[width=\textwidth]{images/SequenceDiagram/RuleLoading.drawio.png}
+    \caption{AstraLog-HPC: Rule Loading - Sequence Diagram}
+    \label{fig:ruleLoading_sequence_diag}
 \end{figure}
 
-\subsubsection{Scenario 3: Correct message flow}
-This scenario (\figurerefer{fig:correctFlow_sequence1_diag}) shows the flow of messages occurred when the accumulator component reaches the batch size required to start the evaluating rules process with successfully operations. 
+\subsubsection{Scenario 3: Rule Processing}
+This scenario (\figurerefer{fig:ruleProcessing_sequence_diag}) shows how batches are processed from the queue.
+\begin{itemize}
+    \item \textbf{Retrieval and Evaluation:} The Rule Engine pops a batch from the ThreadSafeBuffer and evaluates it against configured rules, storing intermediate results in the MeasDatabase
+    \item \textbf{Dispatch Routing:} After checking the rule outcomes, the engine routes the data to the OutputDispatcher. If all rules pass, valid data is appended; if any fail, alarms are dispatched instead.
+    \item \textbf{Cleanup and Residuals}: Finally, the engine resets its cache and, if any residual data remains in the sub-batch, performs a final evaluation and storage pass.
+\end{itemize}
 
 \begin{figure}[htbp]
-    \label{fig:correctFlow_sequence1_diag_top}
     \centering
-    \includegraphics[width=\textwidth]{images/SequenceDiagImages/CorrectFLOW.drawio.png}
-    \caption{AstraLog-HPC: Correct flow case - Sequence Diagram}
-    \label{fig:correctFlow_sequence1_diag}
-\end{figure}
-
-\subsubsection{Scenario 4: Configuration Setting}
-This scenario (\figurerefer{fig:configurationSetting_sequence1_diag}) shows, in first place, a wrong format for the configuration received by the \textit{RuleLoader} component. The \textit{RuleLoader} component always send the result of the process using synchronous connection. If the configuration format is valid, then the \textit{GroundStationOperator} actor is notified, then the configuration file is propagated to the \textit{RuleEngine} component.
-
-\begin{figure}[htbp]
-    \label{fig:configurationSetting_sequence1_diag_top}
-    \centering
-    \includegraphics[width=\textwidth]{images/SequenceDiagImages/ConfigurationSetting.drawio.png}
-    \caption{AstraLog-HPC: Configuration Setting case - Sequence Diagram}
-    \label{fig:configurationSetting_sequence1_diag}
+    \label{fig:ruleProcessing_sequence_diag}
+    \includegraphics[width=\textwidth]{images/SequenceDiagram/RuleProcessing.drawio.png}
+    \caption{AstraLog-HPC: Rule Processing - Sequence Diagram}
+    \label{fig:ruleProcessing_sequence_diag}
 \end{figure}
 
 \clearpage
@@ -368,47 +404,25 @@ The following decisions regard the choices made to ensure the AstraLog-HPC envir
 \begin{itemize}
     \item The system adopts an Event-Driven Architecture \textbf{(EDA)} using a message broker in order to collect JSON packets coming from spacecraft's sensor. With this approach the system is able to manage the stream of data coming from the aircraft in an aynchronous way. The MQTT Broker topic acts as a collector guaranteeing zero data loss.
     \item The filtering of packets received by the system is performed with a parsing function inside the \textbf{DataIngestor} component that evaluates the correctness of JSON syntax.
-    \item \textbf{Batch Accumulator} needs to maintain the state of previous measurements of sensors in order to check the validity of \textit{STATEFUL} rules. To do so, it is required a structure that acts as a memory and maps each \textit{sensor\_id} to the past measurements.
+    \item \textbf{Rule Engine} needs to maintain the state of previous measurements of sensors in order to check the validity of \textit{STATEFUL} rules. To do so, it is required a structure that acts as a memory and maps each \textit{sensor\_id} to the past measurements. This idea was later formalized into the MeasDatabase component.
     \item The design supports dual-mode operation: embedded execution for real time onboard ingestion and HPC cluster execution via SLURM for high-volume data anlysis. 
 \end{itemize}
 
 \subsubsection{Implementation and HPC integration}
-The following points outline the technical strategies and patterns used to leverage High-Performance Computing capabilities for parallel data processing and efficient resource allocation: 
+The following points outline the technical strategies and patterns used to leverage High-Performance Computing capabilities for parallel data processing and efficient resource allocation:
 \begin{itemize}
-    \item The system is implemented adopting the \textbf{C++} programming language to meet low-latency requirements and utilize high-quality, parallel JSON parsers and MQTT client libraties.
-    \item To exploit the HPC architecture capabilities, the \textbf{RuleEngine} utilizes a Master-Slave pattern. A \textbf{TaskDistributor} partitions data batches across parallel threads or processes, which are then processed by multiple \textbf{RuleSlave} instances.
-    \item To guarantee consistent deployment across the Cineca Galileo cluster, the application is containerised using Singularity, ensuring the execution environment does not vary from local testing to production cluster nodes.
+\item Data ingestion is managed via a Python script that utilizes a HiveMQ broker to receive a continuous data stream from an external academic website.
+\item The system is implemented adopting the \textbf{C++} programming language to meet low-latency requirements and utilize high-quality, parallel JSON parsers.
+\item To guarantee consistent deployment across the Cineca Galileo cluster, the application is containerised using Singularity, ensuring the execution environment does not vary from local testing to production cluster nodes.
+\item The system generates standardised \verb|valid_data.csv| and \verb|alarms.log| according to the previously reported format, ensuring that all safety checks are human-readable and verifiable by mission personnel.  
 \end{itemize}
 
 \subsubsection{Quality assurance (CI/CD)}
 To maintain the reliability and stability required for critical space mission software, the system incorporates automated workflows for continuous verification and validated output generation. In particular, the following strategies are adopted: 
 \begin{itemize}
     \item A \textbf{CI/CD pipeline} is integrated via GitHub Actions, ensuring new software commit is automatically tested to verify stability and rule logic before deployment.
-    \item The system generates standardised \verb|valid_data.csv| and \verb|alarms.log| according to the previously reported format, ensuring that all safety checks are human-readable and verifiable by mission personnel.  
+
 \end{itemize}
-
-% This is a provisional subset of bullet points that briefly describe the design decisions of the system:
-% \begin{itemize}
-%     \item The system adopts an Event-Driven Architecture \textbf{(EDA)} using a message broker in order to collect JSON packets coming from spacecraft's sensor. With this approach the system is able to manage the stream of data coming from the aircraft in an aynchronous way. The MQTT Broker topic acts as a collector guaranteeing zero data loss.
-%     \item The filtering of packets received by the system is performed with a parsing function inside the \textbf{DataIngestor} component that evaluates the correctness of JSON syntax.
-%     \item \textbf{Batch Accumulator} needs to maintain the state of previous measurements of sensors in order to check the validity of \textit{STATEFUL} rules. To do so, it is required a structure that acts as a memory and maps each \textit{sensor\_id} to the past measurements.
-% \end{itemize}
-% DataIngestor receives and aggregates valid packets for each timestamp. It is indeed the only component that interacts with the spacecraft sensors through the broker.
-% RuleEngine receives aggregated data and collects it in a batch file.
-% Output has to be redirected to the correct file.
-% Rules must not be evaluated for filtered packets.
-
-% I insert here the main points I find relevant to consider for the code implementation
-% The following is just a list of points and concerns to consider for the implementation. It is to be removed in the final version of this file, but for now this seems the most logic place where to place the following concerns.
-% \begin{itemize}
-%     \item C++ implementation: S. Reale uses python for data collection with MQTT but I found the same library implemented in C++.
-%     \item Control and Aggregation logic to implement. In this case we require a parallel implementation (using MPI???, maybe better to implement no parallelised version first)
-%     \item CI/CD: basically an automated deployment. Each time we commit on Github, our program runs some tests which verify code stability.
-%     \item The "CD" component in this case regards the HPC deployment of our application, delivering a container image using Singularity.
-%     \item  Understand Singularity in order to containerise our application for the Galileo Cluster.
-%     \item Run script to execute the application on SLURM and make sure all outputs are redirected to the right files.
-%     \item Maybe we can ask something about this to Simone Reale during labs.    
-% \end{itemize}
 
 \clearpage
 \section{Work distribution and effort}
@@ -431,17 +445,19 @@ Functional requirements & Luca Salmoiraghi, Tobia Grimaldi & 5 & Completed \\
 \hline
 Non-functional requirements & Luca Salmoiraghi, Tobia Grimaldi & 4 & Completed \\
 \hline
-Component Diagram & Luca Salmoiraghi, Dong Hua Zhu & 8 & In progress \\
+Component Diagram & Luca Salmoiraghi, Dong Hua Zhu & 8 & Completed \\
+\hline
+Class Diagram & Dong Hua Zhu & 2 & Completed \\
 \hline
 Sequence Diagrams & Dong Hua Zhu & 8 & Completed \\
 \hline
-Critical points and decisions & Tobia Grimaldi & 1 & In progress \\
+Critical points and decisions & Tobia Grimaldi & 1 & Completed \\
 \hline
 Document formatting \& LaTeX & Luca Salmoiraghi & 5 & Completed \\
 \hline
-AI tool integration \& disclosure & Luca Salmoiraghi, Dong Hua Zhu, \par Tobia Grimaldi & 1 & In progress \\
+AI tool integration \& disclosure & Luca Salmoiraghi, Dong Hua Zhu, \par Tobia Grimaldi & 1 & Completed \\
 \hline
-\textbf{Total} & & \textbf{43} & \\
+\textbf{Total} & & \textbf{45} & \\
 \hline
 \end{tabularx}
 \caption{Work distribution and estimated effort}
@@ -458,11 +474,31 @@ The following section details how Generative AI has been employed as a support t
     \item Code refactoring (chatbots employed: Google Gemini and Claude): Generative AI was utilized to draft useless lines of code and troubleshoot compilation errors. All AI-generated snippets were subsequently reviewed, refactored, and tested.
     \item Test cases generation (chatbot employed: Gemini): AI tools helped with providing a right set of test cases that were used in order to assess the functionalities of the system.  
 \end{itemize}
-\end{document}
 
-% Points to discuss in the next call:
-    - implementation of classses and data structures (databases) // Mike
-    - implementation of rules // Luca
-    - parallelization
-    - Dealing with Cineca Cluster --> someone has to start dealing with it
-    - Ingestor has to be rewritten in order to read incoming data from AstraLog Control but also from the directories gave by professor.
+LLMs were largely used to review code quality and assist with architectural choices. These are some examples of the prompts used:
+
+\begin{itemize}
+    \item Is the function \verb|<function-name>| consistent? Please review its code quality and suggest improvements.
+    \item What is the most efficient way to use MPI communicators for this specific function?
+    \item Can you review this c++ code and tell if its structure is correct?
+\end{itemize}
+
+We used AI to accelerate testing and performance assessment. Some scripts where used to generate deterministic rules and test scenarios.
+
+In particular, we used AI models (\texttt{Gemini}, \texttt{Claude}) to generate scripts that tested our model parallelisation performance. This allowed rapid and repeatable comparisons between the OpenMP and OpenMP+MPI variants and helped identify that MPI communication overhead dominated the execution time. AI-driven test generation and result aggregation significantly sped up our benchmarking iterations.
+
+\begin{itemize}
+    \item Generate a script in c++ that tests the parallelization workflow. I want a deterministic set of rules and measurements that the system has to evaluate with both OpenMP and OpenMPI+OpenMP application. 
+    
+    Provide also a bash script I can use to test different OpenMPI parallel distributions. Append the results in a .csv file.
+\end{itemize}
+
+In addition to that, AI was largely used in order to understand the constraints of Galileo100 cluster architecture. With the joint usage of Cineca's documentations and LLM we were able to figure out a CD pipeline able to deploy the application on an HPC environment with many limitations. Some examples:
+
+\begin{itemize}
+    \item How can I configure a CI/CD pull-based workflow on the Galileo100 cluster?
+    \item Is Galileo100 cluster allowing api calls to the Github API?
+    \item Is it possible to run consecutive slurm jobs after a certain period of time given the cluster's crontab limitations?
+\end{itemize}
+
+\end{document}

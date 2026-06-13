@@ -47,5 +47,7 @@ singularity exec \
 
 # Copy the output folder from $HOME/output to the per-job output directory
 if [ -d "$HOME/output" ]; then
-  cp -a "$HOME/output/." "$OUTDIR/" 2>/dev/null || true
+  mkdir -p "$OUTDIR/output"
+  cp -a "$HOME/output/." "$OUTDIR/output/" 2>/dev/null || true
+  rm -rf "$HOME/output"
 fi

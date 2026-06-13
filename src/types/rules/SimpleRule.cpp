@@ -31,11 +31,6 @@ std::optional<bool> SimpleRule::evaluate(
             }
         }
     }
-    /*
-    if (!sensor_found) {
-        return std::nullopt; // Sensor wasn't in this batch at all
-    }
-    */
 
     return std::nullopt; // Default rule evaluation result
 }

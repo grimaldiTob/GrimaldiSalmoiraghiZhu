@@ -18,12 +18,6 @@
 simdjson::ondemand::parser parser;
 
 // Mocks for all the interfaces needed bu the RuleEngine
-// I still have a question: do we need to mock even the rules?
-// For now I have been using the the real Rule (which we have tested and know
-// that are fine), but does this make sense? Or is this test already considered
-// an integration? The point is though that rules are somehow the "core" of the
-// application as much as the rule engine, so I expect them to either work
-// together or not work at all...
 class FakeRuleLoader : public RuleLoaderInterface {
   public:
     void

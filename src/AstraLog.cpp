@@ -171,10 +171,7 @@ void AstraLog::run(const std::string &inputPath, const std::string &rulesPath) {
                 try {
                     m_ingestor->parseTelemetry(entry.path().string());
                     std::filesystem::remove(entry.path());
-                    // APPROACH: erase files that have been parsed --> good
-                    // for storage, not so good for availability and
-                    // resilience of the data. Should we consider to store
-                    // them in another folder?
+                    // Erase files that have been parsed
                 } catch (const std::exception &ex) {
                     std::cerr << "Ingestor error: " << ex.what() << '\n';
                 }

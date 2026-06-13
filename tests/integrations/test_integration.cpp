@@ -25,7 +25,6 @@ TEST_CASE(
 
     const std::string input_path = "../tests/test_collector_output";
     /**
-     * python3 ../src/count_invalid_format_data.py ../collector_output/
      *
      * Files processed: 5
      * Total valid: 240

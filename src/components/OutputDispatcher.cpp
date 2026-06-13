@@ -13,8 +13,6 @@
 std::string OutputDispatcher::timeToString(std::optional<int64_t> timestamp) {
     std::string timestamp_str;
 
-    // asked Gemini about timestamp convertion and this blob code came out take
-    // it as it is.
     if (timestamp.has_value()) {
         const std::time_t ts = static_cast<std::time_t>(*timestamp);
         std::tm utc_tm{};
@@ -48,12 +46,6 @@ void OutputDispatcher::appendValidData(const MeasDatabaseInterface &db,
                                        std::optional<int64_t> timestamp) {
     std::string data_line;
     // Format: TIMESTAMP;NOMINAL;[SENSOR_1]:[VALUE_1]|[SENSOR_2]:[VALUE_2]|...
-    // TODO: we are missing the timestamp in the DB, which has to be changed
-    // as we discussed. I am now printing just the placeholder
-
-    // no need to have a timestamp in the db, we can just pass it as an argument
-    // to the function the timestamp is already implicitly present in the db
-    // since all the measurements are "emplaced_back" in order.
 
     std::string timestamp_str = timeToString(timestamp);
 
@@ -78,8 +70,6 @@ void OutputDispatcher::appendAlarms(
     const std::vector<std::shared_ptr<BaseRule>> &failed_rules,
     std::optional<int64_t> timestamp) {
     std::string alarm_line; // defined a new variable just for clearence
-    // asked Gemini about timestamp convertion and this blob code came out take
-    // it as it is.
 
     std::string timestamp_str = timeToString(timestamp);
 

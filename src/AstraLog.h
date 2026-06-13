@@ -27,14 +27,6 @@ class AstraLog {
     AstraLog(bool useMpi, bool useCSV, size_t batchSize = 100,
              size_t queueSize = 50);
 
-    /*============== GETTER ====================*/
-    /*
-    Never implemented + never used
-    const DataIngestor& getIngestor() const;
-    const BatchAccumulator& getAccumulator() const;
-    const RuleEngine& getEvaluator() const;
-    */
-
     /** @brief read the input from the filename */
     void readInput(const std::string &filename);
 

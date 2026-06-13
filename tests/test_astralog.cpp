@@ -13,8 +13,7 @@
 using namespace std::chrono_literals;
 
 namespace {
-// set of helper functions --> Gemini suggested that in order to be secure and
-// safe
+// set of helper functions
 std::string getTestsRoot() {
     return std::filesystem::path(__FILE__).parent_path().string();
 }

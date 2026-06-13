@@ -51,12 +51,6 @@ std::optional<bool> StepDifferenceRule::evaluate(
                 return step_diff >= value;
         }
     }
-    /*
-    no point having this here if we return std::nullopt anyways.
-    if (!sensor_found) {
-        return std::nullopt; // Sensor wasn't in this batch at all
-    }
-    */
 
     return std::nullopt; // Default to nullopt for any other case
 }

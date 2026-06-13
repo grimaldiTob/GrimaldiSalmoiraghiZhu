@@ -32,25 +32,7 @@ std::optional<bool> StatefulRule::evaluate(
             const auto &history = database->getMeasHistory();
             if (history.find(sensor_id) == history.end() ||
                 history.at(sensor_id).size() < consecutive_meas - 1) {
-                return true; // Not enough history, return true? What if there
-                             // are enough measurements, but they are not
-                // from consecutive time steps?
-                // Say we need five measurements, but the history contains t_{n
-                // - 1}, t_{n - 3}, t_{n - 4}, t_{n - 5}, t_{n - 6} (missing
-                // t_{n - 2}),
-                // should we return true or false?
-                // In fact, I am not even sure are present database allows us to
-                // retrieve the measurements
-                // in a way that we can check if they are from consecutive time
-                // steps or not, since we are just storing the last n
-                // measurements without timestamps.
-
-                // Ok approaches are two in this case. Either we store a vector
-                // of tuples...(value, timestamp) or any possible way of
-                // measuring consecutive measuremets, or we put a NaN in the
-                // moment in which there is no measurement. Also, what to do if
-                // there is a missing measurement? Consider the rule as true, or
-                // false and continue checking?
+                return true; // Not enough history, return true
             }
 
             const std::vector<double> &hist = history.at(sensor_id);
@@ -58,9 +40,6 @@ std::optional<bool> StatefulRule::evaluate(
                 hist.end() - consecutive_meas + 1,
                 hist.end()); // Last `consecutive_meas` elements
             double current_value = batch.values[i];
-
-            /* Ok I'm not a fan of lambdas but in this case MAYBE we could be
-            getting better code since this looks like a mess. */
 
             // if the rule is true for the current measurement return true
             if (oprtor == "==") {
@@ -113,6 +92,5 @@ std::optional<bool> StatefulRule::evaluate(
         return std::nullopt; // Sensor wasn't in this batch at all
     }
 
-    // cache[this->rule_id] = rule;
     return rule;
 }

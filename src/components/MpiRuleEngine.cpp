@@ -189,9 +189,7 @@ void MpiRuleEngine::run() {
                 /*
                     If the timestamp changes we evaluate the measurements
                    collected so far, check the cache content and print values in
-                   output dispatcher and in the end reset the cache values. THIS
-                   METHOD CAN HAVE MANY PROBLEMS, but for now it works fine in
-                   my head.
+                   output dispatcher and in the end reset the cache values.
                 */
                 m_evaluationTimestamp = activeTimestamp;
 

@@ -24,8 +24,6 @@ class OutputDispatcher : public OutputDispatcherInterface {
                          std::optional<int64_t> timestamp) override;
 
     // here together with the batch we need to pass the results as well.
-    // maybe this is not the most clean and efficient approach but it works
-    // fine.
     void
     appendAlarms(const MeasDatabaseInterface &db,
                  const std::vector<std::shared_ptr<BaseRule>> &failed_rules,

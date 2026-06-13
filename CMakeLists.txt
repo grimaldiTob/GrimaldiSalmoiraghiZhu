@@ -22,7 +22,7 @@ set(CMAKE_CXX_EXTENSIONS OFF) # Disable compiler-specific extensions (e.g., gnu+
 
 # -O3 optimization level required for simdjson
 # -march=native: Allows the compiler to use AVX/AVX2/AVX-512 instructions (critical for simdjson)
-# Luca: Unfortunately, from what I have gathered, this is not portable across different machines
+# Unfortunately, from what I have gathered, this is not portable across different machines
 # and can cause issues in CI pipelines, since compilation and testing may happen on different
 # machines with different CPUs. As a fallback, the following detects if it runs on GITHUB_ACTIONS
 # and uses a more conservative set of flags (stuff from first gen intel i series, 2008)
@@ -32,18 +32,6 @@ if(DEFINED ENV{GITHUB_ACTIONS})
 else()
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
 endif()
-
-#add_executable(astralog 
-#    ./src/main.cpp 
-#    #./src/Ingestor.cpp
-#)
-
-# Integrate simdjson from the external directory
-# We compile simdjson.cpp directly into the astralog executable
-# target_sources(astralog PRIVATE external/simdjson.cpp)
-
-# Tell the compiler where to look for "simdjson.h" when it sees an #include
-# target_include_directories(astralog PRIVATE external)
 
 # --------------------------------------------------------------------
 # Catch2 — fetched remotely at configure time via FetchContent

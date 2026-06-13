@@ -41,6 +41,4 @@ class StepDifferenceRule : public BaseRule {
     const double value;
     MeasDatabaseInterface *database =
         nullptr; // pointer to the measurement database
-
-    // std::optional<double> previous_value; // we make it a class parameter
 };

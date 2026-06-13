@@ -85,7 +85,6 @@ void RuleEngine::evaluateRules(const TelemetryBatch &batch) {
             std::vector<std::pair<std::string, std::optional<bool>>>
                 local_results;
 
-// RONZANI FIERO DEL MIO DYNAMIC SCHEDULING
 #pragma omp for schedule(dynamic)
             for (size_t i = 0; i < rules_list.size(); ++i) {
                 auto &rule = rules_list[i];
@@ -96,31 +95,6 @@ void RuleEngine::evaluateRules(const TelemetryBatch &batch) {
                 auto result = rule->evaluate(batch, rules_cache);
 
                 local_results.emplace_back(rule_id, result);
-
-                /*
-                    OK HERE WE HAVE A HUGE PROBLEM, I'LL TRY TO EXPLAIN:
-                        Basically If we evaluate a correlation rule, we are
-                   accessing the cache and storing the results of the
-                   intermediate rules. But we cant do it in a parallel
-                   environment since it would mean race condition in the cache.
-
-                        So I tough, ok we do not store the intermediate result,
-                   but in that case we have another big problem: Some rules
-                   modify the state of the Rule Itself (like the step difference
-                   rule). This means that evaluating a rule two times (once for
-                   the correlation and one for the rule itself) generates
-                   different result.
-
-                        SOLVED:
-                            now rules are completely stateless, which makes it
-                   possible for us to evaluate all the rules in parallel. Since
-                   we cannot store results in the cache after each evaluation,
-                   if a correlation rule and one simple rule associated to it
-                            have both the same priority, the simple rule will be
-                   evaluated twice, but this is a logical limitation of our
-                   program that we cannot overcome.
-
-                */
             }
 
 #pragma omp critical
@@ -160,12 +134,9 @@ void RuleEngine::run() {
                 /*
                     If the timestamp changes we evaluate the measurements
                    collected so far, check the cache content and print values in
-                   output dispatcher and in the end reset the cache values. THIS
-                   METHOD CAN HAVE MANY PROBLEMS, but for now it works fine in
-                   my head.
+                   output dispatcher and in the end reset the cache values.
                 */
                 // Avoid evaluating and emitting outputs for an empty subBatch
-                // (happens at startup when m_evaluationTimestamp is not set).
                 if (subBatch.getSize() > 0) {
                     m_evaluationTimestamp = activeTimestamp;
 

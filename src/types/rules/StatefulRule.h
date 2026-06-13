@@ -43,8 +43,4 @@ class StatefulRule : public BaseRule {
     const double consecutive_meas;
     MeasDatabaseInterface *database =
         nullptr; // pointer to the measurement database
-    // I am using a traditional, C-style pointer, since
-    // BaseRule is not the owner of the database, which likely
-    // needs no shared ownership nor automatic memory management,
-    // since it should be created at program startup and destroyed at shutdown.
 };

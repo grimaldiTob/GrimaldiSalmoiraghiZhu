@@ -18,9 +18,8 @@ class MeasDatabase : public MeasDatabaseInterface {
 
   private:
     const int MAXIMUM_SIZE = 64;
-    // ok the idea here --> are we storing all the results or just the results
-    // associated to stateful rules? Luca: there is no need to fill the RAM with
-    // useless data, so we can indeed store only the results associated to
+    // No need to fill the RAM with useless data, so we can
+    // indeed store only the results associated to
     // stateful rules.
     std::unordered_map<std::string, std::vector<double>>
         m_measurementsHistory; // our database of results

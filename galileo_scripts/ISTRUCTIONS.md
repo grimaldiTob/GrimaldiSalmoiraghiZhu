@@ -1,4 +1,4 @@
-# Configuring the autmoatic deployment on CINECA Galileo100 cluster
+# Configuring the automatic deployment on CINECA Galileo100 cluster
 
 ## 1. Obtain a Personal Access Token from Github
 

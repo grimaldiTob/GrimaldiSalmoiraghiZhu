@@ -44,3 +44,8 @@ singularity exec \
   --pwd "$HOME" \
   "$IMAGE" \
   /opt/astralog/build/astralog --csv --input /opt/astralog/input --rules /opt/astralog/input/rules.json >"$LOG_DIR/astralog.stdout" 2>"$LOG_DIR/astralog.stderr"
+
+# Copy the output folder from $HOME/output to the per-job output directory
+if [ -d "$HOME/output" ]; then
+  cp -a "$HOME/output/." "$OUTDIR/" 2>/dev/null || true
+fi

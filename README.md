@@ -100,11 +100,10 @@ Use `-h` or `--help` to print the full usage information:
 To actually receive data to be processed, first the collector has to be activated. Note that the collector has to remain active for the whole duration of the data anlysis.
 
 > [!WARNING]
+> Astralog automatically deletes processed files. Therefore, if a copy of a file must be preserved, it should be backed up before the software is executed.
 >
-> Note that, Astralog software automatically removes processed files, therefore, if one is interested in keeping a copy, should performe this action before running it.
-> Moreover, Astralog shutsdown whenever there are no more processable files in input directory for more than ten seconds.
+> Furthermore, Astralog terminates automatically when no processable files are present in the input directory for a period exceeding 10 seconds.
 >
-
 ### Running the collector
 
 #### 1. Installation

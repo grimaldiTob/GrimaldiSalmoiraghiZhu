@@ -17,14 +17,30 @@ IMAGE="$HOME/containers/astralog.sif"
 LOG_DIR="$HOME/logs/${SLURM_JOB_ID}"
 OUTDIR="$HOME/logs/astralog/${SLURM_JOB_ID}"
 
-mkdir -p "$LOG_DIR" "$OUTDIR"
+# Host input paths (originals). We'll copy these into a per-job temp input
+# directory so the job can modify files without touching your originals.
+HOST_INPUT_DIR="$HOME/astralog/input"
+HOST_RULES_FILE="$HOME/astralog/rules.json"
 
-# Run from $HOME inside the container. Bind $HOME so the container can access
-# your working tree, and bind the output directory so files written to
-# /opt/astralog/output inside the container appear on the host.
+# Per-job working input (copied from host)
+WORK_INPUT_DIR="$OUTDIR/input"
+
+mkdir -p "$LOG_DIR" "$OUTDIR" "$WORK_INPUT_DIR"
+
+# Copy inputs and rules into the per-job input directory (preserve attrs).
+if [ -d "$HOST_INPUT_DIR" ]; then
+  cp -a "$HOST_INPUT_DIR/." "$WORK_INPUT_DIR/" 2>/dev/null || true
+fi
+if [ -f "$HOST_RULES_FILE" ]; then
+  cp -a "$HOST_RULES_FILE" "$WORK_INPUT_DIR/" 2>/dev/null || true
+fi
+
+# Run from $HOME inside the container. Bind only the per-job input and output
+# directories to avoid accidental writes to originals. Use absolute input
+# path inside the container to avoid relative-path confusion.
 singularity exec \
-  --bind "$HOME":"$HOME" \
-  --bind "$OUTDIR":/opt/astralog/output \
+  --bind "$WORK_INPUT_DIR":/opt/astralog/input:rw \
+  --bind "$OUTDIR":/opt/astralog/output:rw \
   --pwd "$HOME" \
   "$IMAGE" \
-  /opt/astralog/build/astralog --csv --input ./input >"$LOG_DIR/astralog.stdout" 2>"$LOG_DIR/astralog.stderr"
+  /opt/astralog/build/astralog --csv --input /opt/astralog/input --rules /opt/astralog/input/rules.json >"$LOG_DIR/astralog.stdout" 2>"$LOG_DIR/astralog.stderr"

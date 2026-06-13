@@ -10,13 +10,21 @@
 
 module load singularity
 
+# Image path
 IMAGE="$HOME/containers/astralog.sif"
+
+# Per-job directories (logs and astralog outputs)
+LOG_DIR="$HOME/logs/${SLURM_JOB_ID}"
 OUTDIR="$HOME/logs/astralog/${SLURM_JOB_ID}"
 
-mkdir -p "$OUTDIR"
+mkdir -p "$LOG_DIR" "$OUTDIR"
 
+# Run from $HOME inside the container. Bind $HOME so the container can access
+# your working tree, and bind the output directory so files written to
+# /opt/astralog/output inside the container appear on the host.
 singularity exec \
-  --pwd /opt/astralog \
-  --bind "$OUTDIR:/opt/astralog/collector_output" \
+  --bind "$HOME":"$HOME" \
+  --bind "$OUTDIR":/opt/astralog/output \
+  --pwd "$HOME" \
   "$IMAGE" \
-  /opt/astralog/build/astralog --csv --input ./input
+  bash -lc "./build/astralog --csv --input ./input" >"$LOG_DIR/astralog.stdout" 2>"$LOG_DIR/astralog.stderr"

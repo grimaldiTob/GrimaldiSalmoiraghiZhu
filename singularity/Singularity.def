@@ -49,5 +49,11 @@ From: ubuntu:22.04
 
 %runscript
     cd /opt/astralog
-    exec ./build/astralog --csv --input ./input
-    exec "$@"
+    # If no command is provided to `singularity run`, do not auto-run the binary.
+    # Show a brief message and drop to a shell so the user can inspect the image.
+    if [ "$#" -eq 0 ]; then
+        echo "Container ready. To run the program: ./build/astralog --csv --input ./input"
+        exec /bin/bash
+    else
+        exec "$@"
+    fi

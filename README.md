@@ -2,6 +2,38 @@
 
 ### **Software Engineering for HPC - A.Y. 2025-2026**
 
+## Table of Contents
+
+- [AstraLog Control](#astralog-control)
+- [Team Members & Effort](#team-members--effort)
+- [Running the software](#running-the-software)
+  - [Compiling and running the software](#compiling-and-running-the-software)
+  - [AstraLog command line usage](#astralog-command-line-usage)
+  - [Running the collector](#running-the-collector)
+    - [1. Installation](#1-installation)
+    - [2. Running the Collector](#2-running-the-collector)
+    - [3. Run the whole System](#3-run-the-whole-system)
+- [Repository Structure](#repository-structure)
+- [Software Organisation & Architecture](#software-organisation--architecture)
+  - [Language and Libraries](#language-and-libraries)
+  - [Architecture & Relation to Phase 1](#architecture--relation-to-phase-1)
+  - [Simplifications and variations (if any)](#simplifications-and-variations-if-any)
+  - [Distribution and parallelisation approach](#distribution-and-parallelisation-approach)
+    - [Commands to run in order to test parallelisation performance](#commands-to-run-in-order-to-test-parallelisation-performance)
+  - [Test Suite Architecture & Rationale](#test-suite-architecture--rationale)
+    - [How to run tests](#how-to-run-tests)
+- [Pipeline & DevOps Workflow](#pipeline--devops-workflow)
+  - [CI workflow (All branches)](#ci-workflow-all-branches)
+  - [CD workflow (Main branch only)](#cd-workflow-main-branch-only)
+- [Known problems and limitations](#known-problems-and-limitations)
+  - [Galileo100 job submission ad CI/CD integration](#galileo100-job-submission-ad-cicd-integration)
+    - [SSH key saved through GitHub Secrets](#ssh-key-saved-through-github-secrets)
+    - [Integration through Cineca's internal GitLab](#integration-through-cinecas-internal-gitlab)
+    - [Listener script on Cineca's login node](#listener-script-on-cinecas-login-node)
+    - [Automatic Resubmitting SLURM Listener Job](#automatic-resubmitting-slurm-listener-job)
+- [Usage of AI](#usage-of-ai)
+- [License](#license)
+
 This repository contains the **Full Track** solution for the **AstraLog-HPC** project, developed to respond to a simulated "Call for Tenders" issued by the European Space Agency (ESA).
 
 **Selected track**: Full
@@ -249,38 +281,6 @@ The results obtained are coherent with the expected outcome. The simpler and lig
 
 In addition to that we can notice how the performance of OpenMPI implementation gets worse the as number of parallel processes increase, demonstrating how **the bottleneck of the application is indeed the telemetry broadcasting** and **gather** operations performed.
 
-### Usage of AI (if any)
-
-LLMs were largely used to review code quality and assist with architectural choices. These are some examples of the prompts used:
-
-```
-- Is the function <function-name> consistent? Please review its code quality and suggest improvements.
-
-- What is the most efficient way to use MPI communicators for this specific function?
-
-- Can you review this c++ code and tell if its structure is correct?
-```
-
-We used AI to accelerate testing and performance assessment. Some scripts where used to generate deterministic rules and test scenarios.
-
-In particular, we used AI models (`Gemini`, `Claude`) to generate scripts that tested our model parallelisation performance. This allowed rapid and repeatable comparisons between the OpenMP and OpenMP+MPI variants and helped identify that MPI communication overhead dominated the execution time. AI-driven test generation and result aggregation significantly sped up our benchmarking iterations.
-
-```
-- Generate a script in c++ that tests the parallelization workflow. I want a deterministic set of rules and measurements that the system has to evaluate with both OpenMP and OpenMPI+OpenMP application.
-
-Provide also a bash script I can use to test different OpenMPI parallel distributions. Append the results in a .csv file.
-```
-
-In addition to that, AI was largely used in order to understand the constraints of Galileo100 cluster architecture. With the joint usage of Cineca's documentations and LLM we were able to figure out a CD pipeline able to deploy the application on an HPC environment with many limitations. Some examples:
-
-```
-- How can I configure a CI/CD pull-based workflow on the Galileo100 cluster?
-
-- Is Galileo100 cluster allowing api calls to the Github API?
-
-- Is it possible to run consecutive slurm jobs after a certain period of time given the cluster's crontab limitations?
-```
-
 ---
 
 ### Test Suite Architecture & Rationale
@@ -428,6 +428,42 @@ However, due to strict process limitations enforced on the login node, script ex
 This final approach, currently implemented in the repository, is a robust variation of the local background script.
 
 Instead of running on a restricted login node, a persistent [SLURM poller job](galileo_scripts/poller.slurm) is submitted directly to Galileo100's compute queue. This job checks the repository for updated build artifacts at regular intervals. When a new artifact is detected, it automatically downloads the asset and launches the [primary executor job](singularity/job.slurm) using the cluster's native `Apptainer` module.
+
+---
+
+---
+
+## Usage of AI
+
+LLMs were largely used to review code quality and assist with architectural choices. These are some examples of the prompts used:
+
+```
+- Is the function <function-name> consistent? Please review its code quality and suggest improvements.
+
+- What is the most efficient way to use MPI communicators for this specific function?
+
+- Can you review this c++ code and tell if its structure is correct?
+```
+
+We used AI to accelerate testing and performance assessment. Some scripts where used to generate deterministic rules and test scenarios.
+
+In particular, we used AI models (`Gemini`, `Claude`) to generate scripts that tested our model parallelisation performance. This allowed rapid and repeatable comparisons between the OpenMP and OpenMP+MPI variants and helped identify that MPI communication overhead dominated the execution time. AI-driven test generation and result aggregation significantly sped up our benchmarking iterations.
+
+```
+- Generate a script in c++ that tests the parallelization workflow. I want a deterministic set of rules and measurements that the system has to evaluate with both OpenMP and OpenMPI+OpenMP application.
+
+Provide also a bash script I can use to test different OpenMPI parallel distributions. Append the results in a .csv file.
+```
+
+In addition to that, AI was largely used in order to understand the constraints of Galileo100 cluster architecture. With the joint usage of Cineca's documentations and LLM we were able to figure out a CD pipeline able to deploy the application on an HPC environment with many limitations. Some examples:
+
+```
+- How can I configure a CI/CD pull-based workflow on the Galileo100 cluster?
+
+- Is Galileo100 cluster allowing api calls to the Github API?
+
+- Is it possible to run consecutive slurm jobs after a certain period of time given the cluster's crontab limitations?
+```
 
 ---
 

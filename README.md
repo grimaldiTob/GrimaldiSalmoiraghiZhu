@@ -22,9 +22,9 @@ Here you can access the official documentation hub and web interface for the **A
 
 | Name Surname         | Person Code | Role / Main Focus                        | Effort (Hours) |
 | :------------------- | :---------- | :--------------------------------------- | :------------- |
-| **Tobia Grimaldi**   | 11127377    | Logic, Parallelisation & Singularity     | ~50h           |
-| **Luca Salmoiraghi** | 10849129    | Logic, DevOps, CI/CD Pipeline & SLURM    | XXh            |
-| **Dong Hua Zhu**     | 10827613    | e.g., QA, Pytest & Singularity Container | XXh            |
+| **Tobia Grimaldi**   | 11127377    | Logic, Parallelisation & Singularity     | ~60h           |
+| **Luca Salmoiraghi** | 10849129    | Logic, DevOps, CI/CD Pipeline & SLURM    | ~60h           |
+| **Dong Hua Zhu**     | 10827613    | Software Architecture, Testing, Logic    | ~60h           |
 
 Group of 3. **Parallelisation**:
 Parallelisation logic and testing was mostly handled by Tobia Grimaldi with the aid of Dong Hua Zhu with class and functions refactoring.
@@ -98,6 +98,12 @@ Use `-h` or `--help` to print the full usage information:
 ```
 
 To actually receive data to be processed, first the collector has to be activated. Note that the collector has to remain active for the whole duration of the data anlysis.
+
+> [!WARNING]
+>
+> Note that, Astralog software automatically removes processed files, therefore, if one is interested in keeping a copy, should performe this action before running it.
+> Moreover, Astralog shutsdown whenever there are no more processable files in input directory for more than ten seconds.
+>
 
 ### Running the collector
 

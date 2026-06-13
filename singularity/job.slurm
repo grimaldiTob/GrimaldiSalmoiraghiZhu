@@ -27,4 +27,4 @@ singularity exec \
   --bind "$OUTDIR":/opt/astralog/output \
   --pwd "$HOME" \
   "$IMAGE" \
-  bash -lc "./build/astralog --csv --input ./input" >"$LOG_DIR/astralog.stdout" 2>"$LOG_DIR/astralog.stderr"
+  /opt/astralog/build/astralog --csv --input ./input >"$LOG_DIR/astralog.stdout" 2>"$LOG_DIR/astralog.stderr"

@@ -14,4 +14,13 @@
 # singularity exec astralog.sif /opt/astralog/build/astralog
 # ---------------------------------------------------------------
 module load singularity
-singularity exec $HOME/containers/astralog.siff /opt/astralog/build/astralog
+
+# Create a job-specific host output directory using the SLURM job ID.
+OUTPUT_DIR=/logs/astralog_${SLURM_JOB_ID}
+mkdir -p "$OUTPUT_DIR"
+
+# Bind the host directory to the container output directory.
+# Files written to /opt/astralog/output inside the container will appear there.
+singularity exec --bind "$OUTPUT_DIR":/opt/astralog/output \
+    $HOME/containers/astralog.sif \
+    /opt/astralog/build/astralog

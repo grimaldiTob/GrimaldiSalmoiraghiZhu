@@ -18,4 +18,5 @@ mkdir -p "$OUTDIR"
 singularity exec \
   --pwd /opt/astralog \
   --bind "$OUTDIR:/opt/astralog/collector_output" \
-  "$IMAGE"
+  "$IMAGE" \
+  /opt/astralog/build/astralog --csv --input ./input

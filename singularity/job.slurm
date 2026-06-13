@@ -10,28 +10,12 @@
 
 module load singularity
 
-# Job-specific directories
-BASE_DIR="$HOME/logs/astralog"
-OUTPUT_DIR="$BASE_DIR/${SLURM_JOB_ID}"
-
-mkdir -p "$OUTPUT_DIR"
-
-echo "Job ID: $SLURM_JOB_ID"
-echo "Output dir: $OUTPUT_DIR"
-echo "Running on: $(hostname)"
-
-
-# Singularity image 
 IMAGE="$HOME/containers/astralog.sif"
+OUTDIR="$HOME/logs/astralog/${SLURM_JOB_ID}"
 
-if [ ! -f "$IMAGE" ]; then
-    echo "ERROR: Singularity image not found: $IMAGE"
-    exit 1
-fi
+mkdir -p "$OUTDIR"
 
-
-# Run container with output directory bound
 singularity exec \
-    --bind "$OUTPUT_DIR:/opt/astralog/output" \ 
-    "$IMAGE" \
-    /opt/astralog/build/astralog
+  --pwd /opt/astralog \
+  --bind "$OUTDIR:/opt/astralog/collector_output" \
+  "$IMAGE"

@@ -227,7 +227,7 @@ In addition to these folders the main directory also includes scripts (`.gitlab-
   - `OpenMP`: used to define the main parallelism workflow.
   - `OpenMPI`: used to increase the level of parallelism (ended up reducing the speedup).
   - `clipp`: for command line parsing.
-  - `paho-mqtt`: used to connect our application to the Broker of the 'fake' spaceship simulation.
+  - `paho-mqtt`: used to connect our application to the Broker of the spaceship digital twin.
   - `pytest`: used to test legacy Python3 code.
 
 ### Architecture & Relation to Phase 1
@@ -377,7 +377,7 @@ When changes are merged into the `main` branch, the pipeline executes these addi
 
 Configuration files can be found:
 
-- [container build](.github/workflows/automated_CI.yml#L178-L208) for the GitHub to GitLab mirroring action
+- [container build](.github/workflows/automated_CI.yml#L178-L208) for the container building gate in the action definition file.
 - [instructions](galileo_scripts/ISTRUCTIONS.md) for the instructions to set up the poller job on CINECA Galileo100 for automatic deployment.
 
 > [!WARNING]

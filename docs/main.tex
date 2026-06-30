@@ -139,11 +139,11 @@ Main non human actors that interact with the system are:
 \end{itemize}
 \subsection{Use cases}
 This section describes the main use cases of the AstraLog-HPC system. The use cases define the functionalities provided by the application as well as the interactions between them and the actors that interact with the system.
-These interactions are visualized in the use case diagram below (Figure \ref{fig:use_case}), while \tablerefer{tab:use_case_actors} provides a terse overview of the role of each actor in each use case.
+These interactions are visualised in the use case diagram below (Figure \ref{fig:use_case}), while \tablerefer{tab:use_case_actors} provides a terse overview of the role of each actor in each use case.
 \subsubsection*{Description of the Presented Use Cases}
 % I see that usually professor uses the camel case format or whatever it is. I dont think it is the best but for the moment I will stick with it
 \begin{itemize}
-    \item \textbf{IngestData: }The system receives a continuous stream of JSON packets from the aircraft sensors. First  This process includes the mandatory validation of packet syntax and structure.
+    \item \textbf{IngestData: }The system receives a continuous stream of JSON packets from the aircraft sensors. This process includes the mandatory validation of packet syntax and structure.
     \item \textbf{DetectCorruptionCases: }Triggered during ingestion, the system filters out invalid packets. It specifically identifies malformed JSON, schema errors (missing mandatory fields), and type errors (invalid data formats).
     % eventual specilization for this use case
     \item \textbf{MonitorSystemStatus: }The system aggregates valid packets in batches and later evaluates the state of the spacecraft given a set of monitoring rules in \verb|rules.json|.
@@ -296,7 +296,7 @@ The system is comprised of the following components:
     % \item \textbf{InvalidPacketsFilter}: filters out syntactically invalid packets; %[Mike: having a dedicated component for the filtering isn't rendudant? We can put the filtering logic within the Data Injector in order to reduce latency] [Tob: si sono d'accordo con Mike. Tralaltro il filter non conserva uno stato ma decide semplicemente se il pacchetto è corretto o no. In più ci rende l'implementazione dell'Ingestor più semplice]
     \item \textbf{BatchAccumulator}: accumulates filtered (hence valid) packets in a local batch file for further processing, it must accumulate up to a specified batch file dimension;
     \item \textbf{RuleLoader}: reads and provides access to static configurations and rules, specifically monitoring rules from \verb|rules.json|. Moreover, it handles the reordering of these rules given a \textit{PRIORITY} parameter;
-    \item \textbf{ThreadSafeBuffer}: collects the complete batches accumulated in the Batch Accumulator and appends them in a queue structure;
+    \item \textbf{ThreadSafeBuffer}: collects the complete batches accumulated in the BatchAccumulator and appends them in a queue structure;
     \item \textbf{RuleEngine}: pops the first element from the ThreadSafeBuffer's queue and applies the previously loaded rules to the batch according to a priority value (low, medium, high);
     \item \textbf{MeasDatabase:} database where we store previous measurements associated to each sensor. Specifically used to evaluate step-difference and stateful rules;
     \item \textbf{OutputDispatcher}: directs the evaluation results to the correct files. If no rules are violated, the batch files is appended to \verb|valid_data.csv|, otherwise nothing is written to \verb|valid_data.csv|, while all the violated rules are reported on \verb|alarms.log|.
@@ -344,7 +344,7 @@ The RuleLoader component was originally conceived following the Factory Method p
 In the actual implementation, this was simplified into a Simple Factory approach: a single loadRules method dispatches object creation through an if/elseif chain based on the rule "type" field, with dedicated private parsing methods (parseSimpleRule, parseStepDifferenceRule, parseStatefulRule, parseLogicalCorrelationRule) for each concrete type. While this does not constitute a formal GoF pattern, it preserves the core intent of centralising and decoupling rule instantiation from the rest of the system.
 
 \subsection{Sequence diagrams}
-A sequence diagram shows how objects interact with each other over time in a system. It helps visualize the order of messages and operations between objects.
+A sequence diagram shows how objects interact with each other over time in a system. It helps visualise the order of messages and operations between objects.
 
 \medskip
 The following sequence diagrams correspond to different scenarios that highlight the main functionalities of the system.
@@ -404,7 +404,7 @@ The following decisions regard the choices made to ensure the AstraLog-HPC envir
 \begin{itemize}
     \item The system adopts an Event-Driven Architecture \textbf{(EDA)} using a message broker in order to collect JSON packets coming from spacecraft's sensor. With this approach the system is able to manage the stream of data coming from the aircraft in an aynchronous way. The MQTT Broker topic acts as a collector guaranteeing zero data loss.
     \item The filtering of packets received by the system is performed with a parsing function inside the \textbf{DataIngestor} component that evaluates the correctness of JSON syntax.
-    \item \textbf{Rule Engine} needs to maintain the state of previous measurements of sensors in order to check the validity of \textit{STATEFUL} rules. To do so, it is required a structure that acts as a memory and maps each \textit{sensor\_id} to the past measurements. This idea was later formalized into the MeasDatabase component.
+    \item \textbf{RuleEngine} needs to maintain the state of previous measurements of sensors in order to check the validity of \textit{STATEFUL} rules. To do so, it is required a structure that acts as a memory and maps each \textit{sensor\_id} to the past measurements. This idea was later formalized into the MeasDatabase component.
     \item The design supports dual-mode operation: embedded execution for real time onboard ingestion and HPC cluster execution via SLURM for high-volume data anlysis. 
 \end{itemize}
 

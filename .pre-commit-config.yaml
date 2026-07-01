@@ -7,7 +7,7 @@ files: '^(src/|tests/)'
 
 repos:
   # 1. General Repository Hygiene 
-  #(Strictly limited to C++ source/header files), so no Reale stuff 
+  # (Strictly limited to C++ source/header files), so other stuff
   # gets touched nor tex or SVD files
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
